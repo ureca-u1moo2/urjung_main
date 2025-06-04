@@ -1,0 +1,32 @@
+name: 기능 구현/리팩터링 작업
+description: 구현 또는 리팩터링 작업 추가
+title: "[feat] "
+labels: ["feature", "backend"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📌 작업 개요
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 작업 설명
+      placeholder: 이 작업은 어떤 작업인가요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: 작업 체크리스트
+      value: |
+        - [ ] 컨트롤러
+        - [ ] 서비스
+        - [ ] DTO/도메인
+        - [ ] Mapper
+        - [ ] 테스트 코드 작성
+    validations:
+      required: false
