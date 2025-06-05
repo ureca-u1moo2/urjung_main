@@ -1,7 +1,7 @@
 package com.eureka.ip.team1.urjung_main.chatbot.controller;
 
-import com.eureka.ip.team1.urjung_main.chatbot.ChatRequestDto;
-import com.eureka.ip.team1.urjung_main.chatbot.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.facade.ChatInteractionFacade;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
 import lombok.RequiredArgsConstructor;

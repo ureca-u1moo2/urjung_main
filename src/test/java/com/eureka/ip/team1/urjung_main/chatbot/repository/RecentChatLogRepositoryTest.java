@@ -21,9 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.eureka.ip.team1.urjung_main.chatbot.Content;
-import com.eureka.ip.team1.urjung_main.chatbot.Part;
-import com.eureka.ip.team1.urjung_main.chatbot.RecentChatLogRepository;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.Content;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.Part;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

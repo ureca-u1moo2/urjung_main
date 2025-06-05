@@ -1,4 +1,4 @@
-package com.eureka.ip.team1.urjung_main.chatbot;
+package com.eureka.ip.team1.urjung_main.chatbot.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

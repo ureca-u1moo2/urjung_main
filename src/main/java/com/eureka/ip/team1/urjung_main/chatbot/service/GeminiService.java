@@ -1,7 +1,7 @@
 package com.eureka.ip.team1.urjung_main.chatbot.service;
 
-import com.eureka.ip.team1.urjung_main.chatbot.ChatRequestDto;
-import com.eureka.ip.team1.urjung_main.chatbot.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.common.exception.ChatBotException;
 import com.eureka.ip.team1.urjung_main.common.exception.InternalServerErrorException;
 import lombok.extern.slf4j.Slf4j;

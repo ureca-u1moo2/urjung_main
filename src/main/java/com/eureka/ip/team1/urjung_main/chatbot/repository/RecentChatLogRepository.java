@@ -1,11 +1,11 @@
-package com.eureka.ip.team1.urjung_main.chatbot;
+package com.eureka.ip.team1.urjung_main.chatbot.repository;
 
 import java.util.List;
 
+import com.eureka.ip.team1.urjung_main.chatbot.dto.Content;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.eureka.ip.team1.urjung_main.common.enums.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
