@@ -26,7 +26,7 @@ body:
         - [ ] 컨트롤러
         - [ ] 서비스
         - [ ] DTO/도메인
-        - [ ] Mapper
+        - [ ] 레포지토리
         - [ ] 테스트 코드 작성
     validations:
       required: false
