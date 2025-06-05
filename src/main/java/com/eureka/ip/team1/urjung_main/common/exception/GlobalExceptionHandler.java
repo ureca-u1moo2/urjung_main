@@ -100,4 +100,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
+
+    @ExceptionHandler(ChatBotException.class)
+    public ResponseEntity handleChatBotException(ChatBotException exception){
+        ApiResponse<Object> apiResponse = ApiResponse.builder()
+                .result(Result.FAIL)
+                .message(exception.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+    }
 }
