@@ -4,10 +4,9 @@ import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.common.exception.ChatBotException;
 import com.eureka.ip.team1.urjung_main.common.exception.InternalServerErrorException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -16,19 +15,13 @@ import java.util.Map;
 
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class GeminiService implements ChatBotService {
     @Value("${gemini.api.key}")
     private String apiKey;
-    @Value("${gemini.api.url}")
-    private String url;
     private final WebClient webClient;
-
-    public GeminiService() {
-        this.webClient = WebClient.builder()
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-    }
+    private final String geminiFullPath;
 
     @Override
     public ChatResponseDto handleUserMessage(String userId, ChatRequestDto chatRequestDto) {
@@ -47,7 +40,10 @@ public class GeminiService implements ChatBotService {
         // WebClient 호출
         try {
             Map response = webClient.post()
-                    .uri(url + "?key=" + apiKey)
+                    .uri(uriBuilder -> uriBuilder
+                            .path(geminiFullPath)
+                            .queryParam("key", apiKey)
+                            .build())
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(Map.class)
