@@ -22,6 +22,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         //  사용자 메세지 저장
         //  사용자 최근 대화 내용 불러오기
         //  챗봇 응답 요청
+        log.info("[채팅 세션 Id] : {}",requestDto.getSessionId());
         Flux<ChatResponseDto> rawResponse = chatBotService.handleUserMessage(userId, requestDto);
         Flux<ChatResponseDto> loggingResponse = rawResponse
                 .doOnNext(msg -> log.info("[챗봇 출력] {}", msg.getMessage()))
