@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import com.eureka.ip.team1.urjung_main.chatbot.document.PermanentChatLog;
@@ -15,7 +16,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.dto.Part;
 import com.eureka.ip.team1.urjung_main.chatbot.repository.PermanentChatLogRepository;
 import com.eureka.ip.team1.urjung_main.chatbot.repository.RecentChatLogRepository;
 import com.eureka.ip.team1.urjung_main.common.exception.InternalServerErrorException;
-import com.mongodb.DuplicateKeyException;
 
 import lombok.RequiredArgsConstructor;
 
