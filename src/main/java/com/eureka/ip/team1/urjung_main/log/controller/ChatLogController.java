@@ -22,15 +22,15 @@ public class ChatLogController {
     @PostMapping("/dummy")
     public ResponseEntity<String> saveDummyLog() throws IOException {
         ChatLogDto dummy = new ChatLogDto(
-                "user126",
-                "session-004",
+                "user110",
+                "session-001",
                 Instant.now(),
-                "상담사랑 연결하고 싶어요",
-                "상담원 연결",
-                "U+데이터ON 요금제를 추천드립니다.",
+                "가장 비싼 요금제를 알려줘",
+                "요금제 정보",
+                "5G 프리미엄 요금제를 추천드립니다.",
                 List.of("U+데이터ON", "5G 슬림", "5G 프리미엄"),
-                "U+ 데이터ON",
-                290L
+                "5G 프리미엄",
+                200L
         );
 
         logService.saveChatLog(dummy);
