@@ -1,11 +1,13 @@
 package com.eureka.ip.team1.urjung_main.chatbot.dto;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
 @ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 public class Part {
 	
