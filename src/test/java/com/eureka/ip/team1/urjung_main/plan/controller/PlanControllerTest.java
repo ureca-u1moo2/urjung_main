@@ -31,8 +31,47 @@ public class PlanControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+//    @Test
+//    @DisplayName("요금제 목록 조회 성공")
+//    void getPlans_success() throws Exception {
+//        // given
+//        PlanDto plan1 = PlanDto.builder()
+//                .id("uuid-1")
+//                .name("Plan 1")
+//                .price(30000)
+//                .description("Description 1")
+//                .dataAmount(10000L)
+//                .callAmount(500L)
+//                .smsAmount(200L)
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//
+//        when(planService.getAllPlans()).thenReturn(Arrays.asList(plan1));
+//
+//        // when & then
+//        mockMvc.perform(get("/api/plans"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.result").value("SUCCESS"))
+//                .andExpect(jsonPath("$.data[0].id").value("uuid-1"))
+//                .andExpect(jsonPath("$.data[0].name").value("Plan 1"));
+//    }
+//
+//    @Test
+//    @DisplayName("요금제 목록 조회 - 빈 리스트 반환")
+//    void getPlans_emptyList() throws Exception {
+//        // given
+//        when(planService.getAllPlans()).thenReturn(Collections.emptyList());
+//
+//        // when & then
+//        mockMvc.perform(get("/api/plans"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.result").value("SUCCESS"))
+//                .andExpect(jsonPath("$.data").isEmpty());
+//    }
+
+    // 요금제 목록 조회 조건
     @Test
-    @DisplayName("요금제 목록 조회 성공")
+    @DisplayName("요금제 목록 조회 성공 (정렬 파라미터 popular)")
     void getPlans_success() throws Exception {
         // given
         PlanDto plan1 = PlanDto.builder()
@@ -46,10 +85,10 @@ public class PlanControllerTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(planService.getAllPlans()).thenReturn(Arrays.asList(plan1));
+        when(planService.getPlansSorted("popular")).thenReturn(Arrays.asList(plan1));
 
         // when & then
-        mockMvc.perform(get("/api/plans"))
+        mockMvc.perform(get("/api/plans").param("sortBy", "popular"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
                 .andExpect(jsonPath("$.data[0].id").value("uuid-1"))
@@ -57,13 +96,13 @@ public class PlanControllerTest {
     }
 
     @Test
-    @DisplayName("요금제 목록 조회 - 빈 리스트 반환")
+    @DisplayName("요금제 목록 조회 - 빈 리스트 반환 (정렬 파라미터 price)")
     void getPlans_emptyList() throws Exception {
         // given
-        when(planService.getAllPlans()).thenReturn(Collections.emptyList());
+        when(planService.getPlansSorted("price")).thenReturn(Collections.emptyList());
 
         // when & then
-        mockMvc.perform(get("/api/plans"))
+        mockMvc.perform(get("/api/plans").param("sortBy", "price"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
                 .andExpect(jsonPath("$.data").isEmpty());
