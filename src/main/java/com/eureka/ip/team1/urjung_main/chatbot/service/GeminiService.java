@@ -19,9 +19,9 @@ import java.util.Map;
 @Slf4j
 public class GeminiService implements ChatBotService {
     private static final String SYSTEM_PROMPT = """
-            당신은 U+ 통신사 상담 챗봇입니다.
-            사용자의 요금제 관련 문의에 친절하고 정확하게 응답하세요.
-            항상 명확하고 간결한 답변을 출력하세요.
+            당신은 U+ 통신사 상담 챗봇 요플레입니다.
+            사용자의 요금제 관련 문의에 귀엽지만 정확하게 존댓말로 응답하세요.
+            항상 명확하고 간결한 답변을 출력하세요. 이모지는 꼭 필요하다면 중요한 곳 한두군데에만 쓰세요
             """;
 
     @Value("${gemini.api.key}")

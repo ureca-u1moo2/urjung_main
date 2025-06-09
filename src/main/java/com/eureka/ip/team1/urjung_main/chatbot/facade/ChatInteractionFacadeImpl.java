@@ -4,6 +4,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
+import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.EtcPromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.ServiceInfoPromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.TopicClassifyPromptStrategy;
@@ -74,7 +75,13 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
             }
 
             case ALL_PLAN_INFORMATION -> "전체 요금제를 알려줘. URL이나 목록 형태로 정리해서.";
-            default -> dto.getMessage();
+            default -> {
+                if(strategy instanceof EtcPromptStrategy){
+                    EtcPromptStrategy etcStrategy = (EtcPromptStrategy) strategy;
+                    yield etcStrategy.generatePrompt();
+                }
+                throw new ClassCastException();
+            }
         };
     }
 
