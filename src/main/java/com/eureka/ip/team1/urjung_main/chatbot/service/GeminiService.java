@@ -4,7 +4,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ClassifiedTopicResult;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.common.exception.ChatBotException;
-import com.eureka.ip.team1.urjung_main.common.exception.InternalServerErrorException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +18,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class GeminiService implements ChatBotService {
+    private static final String SYSTEM_PROMPT = """
+            당신은 U+ 통신사 상담 챗봇입니다.
+            사용자의 요금제 관련 문의에 친절하고 정확하게 응답하세요.
+            항상 명확하고 간결한 답변을 출력하세요.
+            """;
 
     @Value("${gemini.api.key}")
     private String apiKey;
@@ -34,7 +38,7 @@ public class GeminiService implements ChatBotService {
 
     @Override
     public Mono<ClassifiedTopicResult> classifyTopic(String prompt, String message) {
-        Map<String, Object> requestBody = buildChatRequestBody(prompt,message);
+        Map<String, Object> requestBody = buildChatRequestBody(prompt, message);
 
         return sendChatRequest(requestBody)
                 .map(this::extractClassifiedResult)
@@ -55,15 +59,17 @@ public class GeminiService implements ChatBotService {
                 .bodyToMono(Map.class);
     }
 
-    private Map<String, Object> buildChatRequestBody(String prompt, String message) {
+    private Map<String, Object> buildChatRequestBody(String subPrompt, String userMessage) {
         Map<String, Object> systemInstruction = Map.of(
                 "role", "system",
-                "parts", List.of(Map.of("text", prompt))
+                "parts", List.of(Map.of("text", SYSTEM_PROMPT + "\n\n"))
         );
 
         Map<String, Object> userContent = Map.of(
                 "role", "user",
-                "parts", List.of(Map.of("text", message))
+                "parts", List.of(
+                        Map.of("text", subPrompt + "\n\n" + userMessage)
+                )
         );
 
         return Map.of(
