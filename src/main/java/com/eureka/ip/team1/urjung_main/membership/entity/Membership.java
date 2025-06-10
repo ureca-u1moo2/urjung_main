@@ -22,7 +22,7 @@ public class Membership {
     private String membershipName;
 
     @Column(nullable = false)
-    private int require;
+    private int requireAmount;
 
     @Column(nullable = false)
     private Double giftDiscount;
