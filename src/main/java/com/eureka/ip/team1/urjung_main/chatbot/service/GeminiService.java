@@ -52,7 +52,7 @@ public class GeminiService implements ChatBotService {
 
     @Override
     public Mono<ClassifiedTopicResult> classifyTopic(String prompt, String message) {
-        Map<String, Object> requestBody = buildChatRequestBody(prompt, message);
+        Map<String, Object> requestBody = buildTopicClassifyRequestBody(prompt, message);
 
         return sendChatRequest(requestBody)
                 .map(this::extractClassifiedResult)
@@ -72,6 +72,26 @@ public class GeminiService implements ChatBotService {
                 .retrieve()
                 .bodyToMono(Map.class);
     }
+
+    private Map<String, Object> buildTopicClassifyRequestBody(String systemPrompt, String userMessage) {
+        Map<String, Object> systemInstruction = Map.of(
+                "role", "system",
+                "parts", List.of(Map.of("text", systemPrompt + "\n\n"))
+        );
+
+        Map<String, Object> userContent = Map.of(
+                "role", "user",
+                "parts", List.of(
+                        Map.of("text",  userMessage)
+                )
+        );
+
+        return Map.of(
+                "systemInstruction", systemInstruction,
+                "contents", List.of(userContent)
+        );
+    }
+
 
     private Map<String, Object> buildChatRequestBody(String subPrompt, String userMessage) {
         Map<String, Object> systemInstruction = Map.of(
@@ -94,11 +114,10 @@ public class GeminiService implements ChatBotService {
 
     private ChatbotRawResponseDto extractRawChatBotResponse(Map<String, Object> response) {
         String raw = extractTextFromResponse(response);
-        raw = raw.substring(7, raw.length() - 4);
         log.info(raw);
         try {
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(raw);
+            JsonNode root = mapper.readTree(extractPureJson(raw));
 
             String reply = root.has("reply") ? root.get("reply").asText() : raw;
 
@@ -118,6 +137,15 @@ public class GeminiService implements ChatBotService {
             log.warn(e.getMessage());
             throw new ChatBotException();
         }
+    }
+
+    private String extractPureJson(String rawResponse) {
+        int start = rawResponse.indexOf("{");
+        int end = rawResponse.lastIndexOf("}");
+        if (start != -1 && end != -1 && start < end) {
+            return rawResponse.substring(start, end + 1);
+        }
+        throw new IllegalArgumentException("JSON 형식이 잘못되었습니다.");
     }
 
     private ClassifiedTopicResult extractClassifiedResult(Map<String, Object> response) {
