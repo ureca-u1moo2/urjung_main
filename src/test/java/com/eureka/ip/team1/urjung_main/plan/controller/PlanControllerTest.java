@@ -1,31 +1,32 @@
 package com.eureka.ip.team1.urjung_main.plan.controller;
 
-import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
-import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
-import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
+import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PlanController.class)
 public class PlanControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private PlanService planService;
 
     @Autowired
@@ -70,6 +71,7 @@ public class PlanControllerTest {
 //    }
 
     // 요금제 목록 조회 조건
+
     @Test
     @DisplayName("요금제 목록 조회 성공 (정렬 파라미터 popular)")
     void getPlans_success() throws Exception {
