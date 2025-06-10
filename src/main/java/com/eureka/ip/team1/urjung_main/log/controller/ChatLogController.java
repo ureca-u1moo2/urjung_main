@@ -19,21 +19,21 @@ public class ChatLogController {
 
     private final ElasticsearchLogService logService;
 
-    @PostMapping("/dummy")
-    public ResponseEntity<String> saveDummyLog() throws IOException {
-        ChatLogDto dummy = new ChatLogDto(
-                "user110",
-                "session-001",
-                Instant.now(),
-                "가장 비싼 요금제를 알려줘",
-                "요금제 정보",
-                "5G 프리미엄 요금제를 추천드립니다.",
-                List.of("U+데이터ON", "5G 슬림", "5G 프리미엄"),
-                "5G 프리미엄",
-                200L
-        );
-
-        logService.saveChatLog(dummy);
-        return ResponseEntity.ok("야호 저장 완료!");
-    }
+//    @PostMapping("/dummy")
+//    public ResponseEntity<String> saveDummyLog() throws IOException {
+//        ChatLogDto dummy = new ChatLogDto(
+//                "user110",
+//                "session-001",
+//                Instant.now(),
+//                "가장 비싼 요금제를 알려줘",
+//                "요금제 정보",
+//                "5G 프리미엄 요금제를 추천드립니다.",
+//                List.of("U+데이터ON", "5G 슬림", "5G 프리미엄"),
+//                "5G 프리미엄",
+//                200L
+//        );
+//
+//        logService.saveChatLog(dummy);
+//        return ResponseEntity.ok("야호 저장 완료!");
+//    }
 }
