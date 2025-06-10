@@ -132,11 +132,12 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 
     private String generatePromptByTopic(ChatRequestDto dto, Topic topic) {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
+        List<PlanDto> plans = planService.getPlansSorted("popular");
+        String plansJson = JsonUtil.toJson(plans);
         return switch (topic) {
             case RECOMMENDATION_PLAN -> "사용자의 요금제 이용 패턴에 맞는 요금제를 추천해줘.";
             case PLAN_DETAIL -> {
-                List<PlanDto> plans = planService.getPlansSorted("popular");
-                String plansJson = JsonUtil.toJson(plans);
+
                 if (strategy instanceof PlanDetailPromptStrategy) {
                     PlanDetailPromptStrategy planDetailStrategy = (PlanDetailPromptStrategy) strategy;
                     yield planDetailStrategy.generatePrompt(plansJson);
@@ -159,6 +160,13 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 throw new ClassCastException();
             }
 
+            case FILTERED_PLAN_LIST -> {
+                if (strategy instanceof FilteredPlanPromptStrategy) {
+                    FilteredPlanPromptStrategy filteredPlanStrategy = (FilteredPlanPromptStrategy) strategy;
+                    yield filteredPlanStrategy.generatePrompt(plansJson);
+                }
+                throw new ClassCastException();
+            }
             default -> {
                 if (strategy instanceof EtcPromptStrategy) {
                     EtcPromptStrategy etcStrategy = (EtcPromptStrategy) strategy;
