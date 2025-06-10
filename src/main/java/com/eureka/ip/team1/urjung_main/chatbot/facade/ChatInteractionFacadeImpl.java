@@ -8,11 +8,13 @@ import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,10 +33,20 @@ import java.util.List;
 public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatBotService chatBotService;
     private final PromptStrategyFactory promptStrategyFactory;
+
+    private final ForbiddenWordService forbiddenWordService;
     private final ElasticsearchLogService elasticsearchLogService;
     private final PlanService planService;
+
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
+        // 금칙어 필터링 우선 수행
+        if (forbiddenWordService.containsForbiddenWord(requestDto.getMessage())) {
+            ChatResponseDto responseDto = ChatResponseDto.builder()
+                    .message("입력할 수 없는 단어가 포함되어 있습니다.")
+                    .build();
+            return Flux.just(responseDto);
+        }
         // 1    : 상태 확인 → 성향 분석 중이면 별도 처리
 //        if (isInPersonalityAnalysisState(userId)) {
 //            return handlePersonalityAnalysis(userId, requestDto);
