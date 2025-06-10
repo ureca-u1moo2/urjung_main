@@ -9,8 +9,11 @@ import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFa
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
+import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +34,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final PromptStrategyFactory promptStrategyFactory;
     private final ElasticsearchLogService elasticsearchLogService;
     private final EmbeddingService embeddingService;
-
+    private final PlanService planService;
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
         // 1    : 상태 확인 → 성향 분석 중이면 별도 처리
@@ -101,7 +104,15 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         return switch (topic) {
             case RECOMMENDATION_PLAN -> "사용자의 요금제 이용 패턴에 맞는 요금제를 추천해줘.";
-            case PLAN_DETAIL -> "해당 요금제에 대해 자세히 알려줘. 특히 혜택, 가격, 데이터 정보 위주로.";
+            case PLAN_DETAIL -> {
+                List<PlanDto> plans = planService.getPlansSorted("popular");
+                String plansJson = JsonUtil.toJson(plans);
+                if (strategy instanceof PlanDetailPromptStrategy) {
+                    PlanDetailPromptStrategy planDetailStrategy = (PlanDetailPromptStrategy) strategy;
+                    yield planDetailStrategy.generatePrompt(plansJson);
+                }
+                throw new ClassCastException();
+            }
             case INFO -> {
                 if (strategy instanceof ServiceInfoPromptStrategy) {
                     ServiceInfoPromptStrategy infoStrategy = (ServiceInfoPromptStrategy) strategy;
