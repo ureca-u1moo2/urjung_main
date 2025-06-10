@@ -9,6 +9,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.ServiceInfoPromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.TopicClassifyPromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,9 +22,16 @@ import reactor.core.publisher.Mono;
 public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatBotService chatBotService;
     private final PromptStrategyFactory promptStrategyFactory;
-
+    private final ForbiddenWordService forbiddenWordService;
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
+        // 금칙어 필터링 우선 수행
+        if (forbiddenWordService.containsForbiddenWord(requestDto.getMessage())) {
+            ChatResponseDto responseDto = ChatResponseDto.builder()
+                    .message("입력할 수 없는 단어가 포함되어 있습니다.")
+                    .build();
+            return Flux.just(responseDto);
+        }
         // 1    : 상태 확인 → 성향 분석 중이면 별도 처리
 //        if (isInPersonalityAnalysisState(userId)) {
 //            return handlePersonalityAnalysis(userId, requestDto);
