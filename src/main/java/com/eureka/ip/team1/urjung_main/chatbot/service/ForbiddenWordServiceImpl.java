@@ -66,9 +66,20 @@ public class ForbiddenWordServiceImpl implements ForbiddenWordService {
         return false;   // 문장 전체를 돌았는데 금칙어가 없으면 false
     }
 
+    /**
+     * 입력 문자열을 정규화:
+     * - 한글, 영문, 숫자만 남기고 나머지 특수문자는 제거
+     * - 공백, 언더바, 기호 등을 제거해서 우회 방지
+     */
+    private String normalize(String text) {
+        return text.replaceAll("[^가-힣a-zA-Z0-9]", "");
+    }
+
+
     @Override
     public String censor (String text) {
-        return containsForbiddenWord(text)
+        String normalized = normalize(text);
+        return containsForbiddenWord(normalized)
                 ? "입력할 수 없는 단어가 포함되어 있습니다."
                 : " 호출 되었습니다.";
     }
