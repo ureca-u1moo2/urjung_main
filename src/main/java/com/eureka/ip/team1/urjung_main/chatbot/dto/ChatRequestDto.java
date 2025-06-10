@@ -8,10 +8,4 @@ import lombok.Getter;
 public class ChatRequestDto {
     private String message;
     private String sessionId;
-    private String prompt;
-
-    public ChatRequestDto withMessage(String prompt) {
-        this.prompt = prompt;
-        return this;
-    }
 }

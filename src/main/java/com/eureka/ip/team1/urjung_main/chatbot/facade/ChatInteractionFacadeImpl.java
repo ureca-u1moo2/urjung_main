@@ -1,20 +1,31 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
+import com.eureka.ip.team1.urjung_main.chatbot.dto.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.EtcPromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.ServiceInfoPromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.TopicClassifyPromptStrategy;
+import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
+import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
+import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
+import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +33,11 @@ import reactor.core.publisher.Mono;
 public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatBotService chatBotService;
     private final PromptStrategyFactory promptStrategyFactory;
+
     private final ForbiddenWordService forbiddenWordService;
+    private final ElasticsearchLogService elasticsearchLogService;
+    private final PlanService planService;
+
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
         // 금칙어 필터링 우선 수행
@@ -64,16 +79,47 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
         String prompt = generatePromptByTopic(requestDto, topic);
-        Mono<ChatResponseDto> rawResponse = chatBotService.handleUserMessage(prompt, requestDto.getMessage());
 
-        return attachLoggingAndBuffer(rawResponse);
+        return chatBotService.handleUserMessage(prompt, requestDto.getMessage())
+                .map(response -> attachButtonsIfNeeded(response, topic))
+                .flatMap(response -> {
+                    try {
+                        return saveChatLog(userId, requestDto, response, topic)
+                                .thenReturn(response);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
+
+    private ChatResponseDto attachButtonsIfNeeded(ChatResponseDto response, Topic topic) {
+        if (topic == Topic.ALL_PLAN_INFORMATION) {
+            List<Button> buttons = List.of(
+                    Button.builder()
+                            .label("전체 요금 보러가기")
+                            .type(ButtonType.URL)
+                            .value("https://naver.com")
+                            .build()
+            );
+            response.setButtons(buttons);
+        }
+        return response;
+    }
+
 
     private String generatePromptByTopic(ChatRequestDto dto, Topic topic) {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         return switch (topic) {
             case RECOMMENDATION_PLAN -> "사용자의 요금제 이용 패턴에 맞는 요금제를 추천해줘.";
-            case PLAN_DETAIL -> "해당 요금제에 대해 자세히 알려줘. 특히 혜택, 가격, 데이터 정보 위주로.";
+            case PLAN_DETAIL -> {
+                List<PlanDto> plans = planService.getPlansSorted("popular");
+                String plansJson = JsonUtil.toJson(plans);
+                if (strategy instanceof PlanDetailPromptStrategy) {
+                    PlanDetailPromptStrategy planDetailStrategy = (PlanDetailPromptStrategy) strategy;
+                    yield planDetailStrategy.generatePrompt(plansJson);
+                }
+                throw new ClassCastException();
+            }
             case INFO -> {
                 if (strategy instanceof ServiceInfoPromptStrategy) {
                     ServiceInfoPromptStrategy infoStrategy = (ServiceInfoPromptStrategy) strategy;
@@ -82,9 +128,15 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 throw new ClassCastException();
             }
 
-            case ALL_PLAN_INFORMATION -> "전체 요금제를 알려줘. URL이나 목록 형태로 정리해서.";
+            case ALL_PLAN_INFORMATION -> {
+                if(strategy instanceof AllPlanPromptStrategy){
+                    AllPlanPromptStrategy allPlanStrategy = (AllPlanPromptStrategy) strategy;
+                    yield allPlanStrategy.generatePrompt();
+                }
+                throw new ClassCastException();
+            }
             default -> {
-                if(strategy instanceof EtcPromptStrategy){
+                if (strategy instanceof EtcPromptStrategy) {
                     EtcPromptStrategy etcStrategy = (EtcPromptStrategy) strategy;
                     yield etcStrategy.generatePrompt();
                 }
@@ -93,12 +145,25 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         };
     }
 
-    private Mono<ChatResponseDto> attachLoggingAndBuffer(Mono<ChatResponseDto> mono) {
-        return mono
-                .doOnNext(msg -> log.info("[챗봇 출력] {}", msg.getMessage()))
-                .flatMap(msg ->
-                        // 저장로직 추가
-                        Mono.just(msg)
+    private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic) throws IOException {
+        return Mono.fromRunnable(() -> {
+            try {
+                ChatLogDto chatLogDto = new ChatLogDto(
+                        userId,
+                        requestDto.getSessionId(),
+                        Instant.now(),
+                        requestDto.getMessage(),
+                        topic,
+                        response.getMessage(),
+                        null,
+                        null,
+                        null
                 );
+                elasticsearchLogService.saveChatLog(chatLogDto); // 동기 호출
+            } catch (Exception e) {
+                throw new RuntimeException("Chat log 저장 중 오류 발생", e);
+            }
+        });
     }
+
 }
