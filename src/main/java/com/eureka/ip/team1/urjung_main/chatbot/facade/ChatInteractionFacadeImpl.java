@@ -8,6 +8,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
+import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatBotService chatBotService;
     private final PromptStrategyFactory promptStrategyFactory;
     private final ElasticsearchLogService elasticsearchLogService;
+    private final EmbeddingService embeddingService;
 
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
@@ -69,6 +71,9 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 .map(response -> attachButtonsIfNeeded(response, topic))
                 .flatMap(response -> {
                     try {
+                        // 질문 문장을 벡터화해서 ES Questions 인덱스에 저장
+                        embeddingService.indexWithEmbedding(requestDto.getMessage());
+
                         return saveChatLog(userId, requestDto, response, topic)
                                 .thenReturn(response);
                     } catch (IOException e) {
