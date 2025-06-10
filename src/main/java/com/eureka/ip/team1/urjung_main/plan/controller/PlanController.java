@@ -20,9 +20,16 @@ public class PlanController {
     private final PlanService planService;
 
     // 전체 요금제 목록 조회 API
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<List<PlanDto>>> getPlans() {
+//        List<PlanDto> plans = planService.getAllPlans();
+
+    // 요금제 조회 필터
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PlanDto>>> getPlans() {
-        List<PlanDto> plans = planService.getAllPlans();
+    public ResponseEntity<?> getPlans(@RequestParam(defaultValue = "popular") String sortBy) {
+        List<PlanDto> plans = planService.getPlansSorted(sortBy);
+
+
 
         return ResponseEntity.ok(
                 ApiResponse.<List<PlanDto>>builder()
