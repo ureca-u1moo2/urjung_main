@@ -3,10 +3,13 @@ package com.eureka.ip.team1.urjung_main.chatbot.repository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @SpringBootTest
-@Transactional
 class PermanentChatLogRepositoryTest {
 
 	@Autowired
 	private PermanentChatLogRepository permanentChatLogRepository;
 	
+    private List<String> createdTestIds = new ArrayList<>();
+
 	private String userId = UUID.randomUUID().toString();
 	private String sessionId = UUID.randomUUID().toString();
 	private List<Content> messages = List.of(
@@ -42,15 +46,23 @@ class PermanentChatLogRepositoryTest {
 		String sessionId2 = UUID.randomUUID().toString();
 		String sessionId3 = UUID.randomUUID().toString();
 		
-		PermanentChatLog chatLog = PermanentChatLog.createChatLog(userId, sessionId, messages);
-		PermanentChatLog chatLog1 = PermanentChatLog.createChatLog(userId, sessionId1, messages);
-		PermanentChatLog chatLog2 = PermanentChatLog.createChatLog(userId, sessionId2, messages);
-		PermanentChatLog chatLog3 = PermanentChatLog.createChatLog(userId, sessionId3, messages);
-		
-		permanentChatLogRepository.save(chatLog);
-		permanentChatLogRepository.save(chatLog1);
-		permanentChatLogRepository.save(chatLog2);
-		permanentChatLogRepository.save(chatLog3);
+        List<PermanentChatLog> testLogs = List.of(
+                PermanentChatLog.createChatLog(userId, sessionId, messages),
+                PermanentChatLog.createChatLog(userId, sessionId1, messages),
+                PermanentChatLog.createChatLog(userId, sessionId2, messages),
+                PermanentChatLog.createChatLog(userId, sessionId3, messages)
+        );
+        
+        createdTestIds = permanentChatLogRepository.saveAll(testLogs)
+                .stream()
+                .map(PermanentChatLog::getId)
+                .collect(Collectors.toList());
+	}
+	
+	@AfterEach
+	void cleanUp() {
+		permanentChatLogRepository.deleteAllById(createdTestIds);
+		createdTestIds.clear();
 	}
 	
 	@Test

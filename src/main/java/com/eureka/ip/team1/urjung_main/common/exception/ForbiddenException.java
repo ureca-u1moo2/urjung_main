@@ -7,4 +7,5 @@ public class ForbiddenException extends RuntimeException{
     public ForbiddenException() {
         super(FORBIDDEN);
     }
+    public ForbiddenException(String message) { super(message);} // 리뷰 본인 작성글만 수정 가능
 }
