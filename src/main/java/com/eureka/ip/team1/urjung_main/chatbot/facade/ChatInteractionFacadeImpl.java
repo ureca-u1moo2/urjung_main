@@ -1,19 +1,21 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
+import com.eureka.ip.team1.urjung_main.chatbot.dto.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.EtcPromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.ServiceInfoPromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.TopicClassifyPromptStrategy;
+import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +58,23 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
         String prompt = generatePromptByTopic(requestDto, topic);
-        Mono<ChatResponseDto> rawResponse = chatBotService.handleUserMessage(prompt, requestDto.getMessage());
+        Mono<ChatResponseDto> rawResponse = chatBotService.handleUserMessage(prompt, requestDto.getMessage())
+                .map(chatResponseDto -> {
+                            List<Button> buttons = null;
+                            if (topic == Topic.ALL_PLAN_INFORMATION) {
+                                buttons = new ArrayList<>();
+                                Button button = Button.builder()
+                                        .label("전체 요금 보러가기")
+                                        .type(ButtonType.URL)
+                                        .value("https://naver.com")
+                                        .build();
+
+                                buttons.add(button);
+                            }
+                            chatResponseDto.setButtons(buttons);
+                            return chatResponseDto;
+                        }
+                );
 
         return attachLoggingAndBuffer(rawResponse);
     }
@@ -74,9 +92,15 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 throw new ClassCastException();
             }
 
-            case ALL_PLAN_INFORMATION -> "전체 요금제를 알려줘. URL이나 목록 형태로 정리해서.";
+            case ALL_PLAN_INFORMATION -> {
+                if(strategy instanceof AllPlanPromptStrategy){
+                    AllPlanPromptStrategy allPlanStrategy = (AllPlanPromptStrategy) strategy;
+                    yield allPlanStrategy.generatePrompt();
+                }
+                throw new ClassCastException();
+            }
             default -> {
-                if(strategy instanceof EtcPromptStrategy){
+                if (strategy instanceof EtcPromptStrategy) {
                     EtcPromptStrategy etcStrategy = (EtcPromptStrategy) strategy;
                     yield etcStrategy.generatePrompt();
                 }
