@@ -1,12 +1,16 @@
 package com.eureka.ip.team1.urjung_main.membership.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.UUID;
 
 
 @Entity
+@Getter
+@Setter
 public class Membership {
     @Id
     @GeneratedValue(generator = "uuid2")

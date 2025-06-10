@@ -39,28 +39,28 @@ import com.eureka.ip.team1.urjung_main.user.repository.UserRepository;
 public class AuthServiceImplTest {
 	@InjectMocks
 	private AuthServiceImpl authService;
-	
+
 	@Mock
 	private AuthenticationManager authenticationManager;
-	
+
 	@Mock
 	private TokenProvider tokenProvider;
-	
+
 	@Mock
 	private UserRepository userRepository;
-	
+
 	@Mock
 	private MembershipRepository membershipRepository;
-	
+
 	@Mock
 	private RefreshTokenRepository refreshTokenRepository;
 
 	@Mock
 	private RefreshTokenService refreshTokenService;
-	
+
 	@Mock
 	private PasswordEncoder passwordEncoder;
-	
+
 	@Test
 	void login_Success() {
 	    String email = "test@example.com";
@@ -90,7 +90,7 @@ public class AuthServiceImplTest {
 	    assertEquals(3600L, response.getData().getAccessTokenExpiresIn());
 	}
 
-	
+
 	@Test
 	void login_Fail_InvalidCredentials() {
 	    String email = "invalid@example.com";
@@ -104,7 +104,7 @@ public class AuthServiceImplTest {
 	    assertEquals(Result.FAIL, response.getResult());
 	    assertEquals("Login failed: Invalid credentials", response.getMessage());
 	}
-	
+
     @Test
     void signup_Success() {
         UserDto userDto = new UserDto();
@@ -126,7 +126,7 @@ public class AuthServiceImplTest {
         assertEquals(Result.SUCCESS, response.getResult());
         verify(userRepository, times(1)).save(any(User.class));
     }
-    
+
     @Test
     void signup_Fail_EmailAlreadyExists() {
         UserDto userDto = new UserDto();
@@ -139,7 +139,7 @@ public class AuthServiceImplTest {
         assertEquals(Result.FAIL, response.getResult());
         assertEquals("Email already exists", response.getMessage());
     }
-    
+
     @Test
     void signup_Fail_MembershipNotFound() {
         UserDto userDto = new UserDto();
@@ -153,7 +153,7 @@ public class AuthServiceImplTest {
         assertEquals(Result.FAIL, response.getResult());
         assertEquals("An error occurred during signup", response.getMessage());
     }
-    
+
     @Test
     void logout_Success() {
         String refreshToken = "valid-refresh-token";
