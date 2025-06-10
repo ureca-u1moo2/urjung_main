@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.log.dto;
 
+import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ public class ChatLogDto {
     private String sessionId;
     private Instant timestamp;
     private String userMessage;
-    private String intent;
+    private Topic intent;
     private String botResponse;
     private List<String> recommendedItems;
     private String selectedItem;
