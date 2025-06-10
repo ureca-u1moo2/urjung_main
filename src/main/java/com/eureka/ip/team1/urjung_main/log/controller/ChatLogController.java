@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.log.controller;
 
+import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class ChatLogController {
                 "session-004",
                 Instant.now(),
                 "상담사랑 연결하고 싶어요",
-                "상담원 연결",
+                Topic.INFO,
                 "U+데이터ON 요금제를 추천드립니다.",
                 List.of("U+데이터ON", "5G 슬림", "5G 프리미엄"),
                 "U+ 데이터ON",
