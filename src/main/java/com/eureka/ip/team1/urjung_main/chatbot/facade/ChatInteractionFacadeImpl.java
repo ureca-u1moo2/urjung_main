@@ -90,7 +90,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     List<Button> buttons = new ArrayList<>();
 
                     // 1. 전체 요금제 바로가기 버튼
-                    if (topic != Topic.INFO || topic != Topic.RECOMMENDATION_PLAN || topic != Topic.MY_USAGE_INFORMATION || topic != Topic.ETC) {
+                    if (topic != Topic.INFO && topic != Topic.RECOMMENDATION_PLAN && topic != Topic.MY_USAGE_INFORMATION && topic != Topic.ETC) {
                         buttons.add(Button.builder()
                                 .label("전체 요금 보러가기")
                                 .type(ButtonType.URL)
