@@ -9,7 +9,10 @@ import java.util.List;
 public interface PlanService {
 
     // 요금제 목록 조회
-    List<PlanDto> getAllPlans();
+//    List<PlanDto> getAllPlans();
+
+    // 요금제 목록 필터링
+    List<PlanDto> getPlansSorted(String sortBy);
 
     // 요금제 상세 페이지
     PlanDetailDto getPlanDetail(String planId);

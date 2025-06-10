@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h2>유사 질문 추천 시스템</h2>
+
+<input type="text" id="queryInput" placeholder="질문을 입력하세요..." style="width: 300px;">
+<button onclick="search()">검색</button>
+
+<h3>유사한 질문 TOP 3</h3>
+<ul id="results"></ul>
+
+<script>
+    function search() {
+        const query = document.getElementById("queryInput").value;
+        const resultsEl = document.getElementById("results");
+        resultsEl.innerHTML = ""; // 기존 결과 초기화
+
+        fetch(`http://localhost:8080/api/questions/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    resultsEl.innerHTML = "<li>유사한 질문이 없습니다.</li>";
+                } else {
+                    data.forEach(q => {
+                        const li = document.createElement("li");
+                        li.textContent = q;
+                        resultsEl.appendChild(li);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("에러:", err);
+                resultsEl.innerHTML = "<li>검색 중 오류 발생</li>";
+            });
+    }
+</script>
+
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.plan.service;
 
+import com.eureka.ip.team1.urjung_main.common.exception.InvalidInputException;
 import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
@@ -19,28 +20,71 @@ public class PlanServiceImpl implements PlanService {
 
     private final PlanRepository planRepository;
 
-    // 요금제 전체 목록 조회
-    @Override
-    public List<PlanDto> getAllPlans() {
-        List<Plan> plans = planRepository.findAll();
+//    // 요금제 전체 목록 조회
+//    @Override
+//    public List<PlanDto> getAllPlans() {
+//        List<Plan> plans = planRepository.findAll();
+//
+//        return plans.stream()
+//                .map(this::convertToDto)
+//                .collect(Collectors.toList());
+//    }
+//
+//    private PlanDto convertToDto(Plan plan) {
+//        return PlanDto.builder()
+//                .id(plan.getId())
+//                .name(plan.getName())
+//                .price(plan.getPrice())
+//                .description(plan.getDescription())
+//                .dataAmount(plan.getDataAmount())
+//                .callAmount(plan.getCallAmount())
+//                .smsAmount(plan.getSmsAmount())
+//                .createdAt(plan.getCreatedAt())
+//                .build();
+//    }
 
-        return plans.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+//    // 요금제 목록 필터링
+@Override
+public List<PlanDto> getPlansSorted(String sortBy) {
+    List<Plan> plans;
+
+    switch (sortBy) {
+        case "priceAsc":
+            plans = planRepository.findAllByOrderByPriceAsc();
+            break;
+        case "priceDesc":
+            plans = planRepository.findAllByOrderByPriceDesc();
+            break;
+        case "dataAsc":
+            plans = planRepository.findAllByOrderByDataAmountAsc();
+            break;
+        case "dataDesc":
+            plans = planRepository.findAllByOrderByDataAmountDesc();
+            break;
+        case "popular":
+        default:
+            plans = planRepository.findPopularPlans(); // 커스텀 쿼리 필요
+            break;
     }
 
-    private PlanDto convertToDto(Plan plan) {
+    return plans.stream()
+            .map(this::convertToPlanDto)
+            .collect(Collectors.toList());
+}
+
+    private PlanDto convertToPlanDto(Plan plan) {
         return PlanDto.builder()
                 .id(plan.getId())
                 .name(plan.getName())
                 .price(plan.getPrice())
-                .description(plan.getDescription())
                 .dataAmount(plan.getDataAmount())
                 .callAmount(plan.getCallAmount())
                 .smsAmount(plan.getSmsAmount())
                 .createdAt(plan.getCreatedAt())
                 .build();
     }
+
+
 
     // 요금제 상세 페이지 조회
     @Override
