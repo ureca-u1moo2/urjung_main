@@ -1,8 +1,10 @@
 package com.eureka.ip.team1.urjung_main.chatbot.service;
 
-import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
-import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordServiceImpl;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,13 +13,9 @@ import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
+import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
+import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ForbiddenWordServiceImplTest {
