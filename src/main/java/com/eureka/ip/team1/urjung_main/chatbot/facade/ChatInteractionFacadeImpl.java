@@ -7,6 +7,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
@@ -38,6 +39,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ElasticsearchLogService elasticsearchLogService;
     private final PlanService planService;
     private final EmbeddingService embeddingService;
+    private final ChatLogService chatLogService;
 
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
@@ -56,6 +58,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         // 2 : 토픽 분류 → 응답 흐름 위임
         return chatBotService.classifyTopic(requestDto.getMessage())
                 .flatMapMany(response -> {
+                    chatLogService.saveRecentAndPermanentChatLog(ChatLogRequestDto.createChatLogRequestDto(requestDto.getSessionId(),userId,"user",requestDto.getMessage()));
                     Topic topic = response.getTopic();
                     String waitMessage = response.getWaitMessage();
                     Mono<ChatResponseDto> waitingResponse = Mono.just(ChatResponseDto.builder()
@@ -86,7 +89,17 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 .map(raw -> assembleResponse(raw, topic))
                 .flatMap(response -> {
                     long latency = System.currentTimeMillis() - startTime;
-                    return persistLogAndEmbedding(userId, requestDto, response, topic, latency)
+                    // 1. Mongo 저장 (채팅 로그 기록)
+                    Mono<Void> logMono = saveMongoLog(userId, requestDto, "model", response);
+
+                    // 2. 임베딩 저장 (중복 체크 포함)
+                    Mono<Void> embeddingMono = saveEmbeddingIfNeeded(requestDto.getMessage());
+
+                    // 3. Elastic 로그 저장
+                    Mono<Void> elasticMono = saveElasticsearchLog(userId, requestDto, response, topic, latency);
+
+                    // 병렬 수행 후 원래 응답 반환
+                    return Mono.when(logMono, embeddingMono, elasticMono)
                             .thenReturn(response);
                 });
     }
@@ -143,25 +156,35 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         );
     }
 
-    private Mono<Void> persistLogAndEmbedding(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
-        try {
-            log.info("response cards: {}", response.getCards());
-            if (!embeddingService.alreadyExists(requestDto.getMessage())) {
-                log.info("New question, embedding...");
-                embeddingService.indexWithEmbedding(requestDto.getMessage());
-            } else {
-                log.info("Already embedded.");
-            }
-            return saveChatLog(userId, requestDto, response, topic, latency);
-        } catch (IOException e) {
-            log.error("로그 저장 실패", e);
-            return Mono.empty(); // 저장 실패하더라도 응답은 반환
-        }
+    private Mono<Void> saveMongoLog(String userId, ChatRequestDto requestDto, String role, ChatResponseDto response) {
+        return Mono.fromRunnable(() -> {
+            String message = role.equals("user") ? requestDto.getMessage() : response.getMessage();
+            ChatLogRequestDto logDto = ChatLogRequestDto.createChatLogRequestDto(
+                    requestDto.getSessionId(), userId, role, message
+            );
+            chatLogService.saveRecentAndPermanentChatLog(logDto);
+        });
     }
 
-    private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) throws IOException {
+    private Mono<Void> saveEmbeddingIfNeeded(String message) {
         return Mono.fromRunnable(() -> {
             try {
+                if (!embeddingService.alreadyExists(message)) {
+                    log.info("New question, embedding...");
+                    embeddingService.indexWithEmbedding(message);
+                } else {
+                    log.info("Already embedded.");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private Mono<Void> saveElasticsearchLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
+        return Mono.fromRunnable(() -> {
+            try {
+                if (response == null || topic == null) return; // 사용자 메시지 저장 시 무시
                 ChatLogDto chatLogDto = new ChatLogDto(
                         userId,
                         requestDto.getSessionId(),
@@ -173,7 +196,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                         null,
                         latency
                 );
-                elasticsearchLogService.saveChatLog(chatLogDto); // 동기 호출
+                elasticsearchLogService.saveChatLog(chatLogDto);
             } catch (Exception e) {
                 throw new RuntimeException("Chat log 저장 중 오류 발생", e);
             }
