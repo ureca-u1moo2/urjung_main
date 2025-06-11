@@ -5,12 +5,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.ETC_BASE_PROMPT;
+
 @Component
-public class EtcPromptStrategy implements NoArgsPromptStrategy{
-    private static final String ETC_BASE_PROMPT =
-            """
-                  우리 서비스와 관계없는 질문입니다. 간단하지만 재치있게 우리 서비스로의 유도로 응대하세요.
-                    """;
+public class EtcPromptStrategy implements NoArgsPromptStrategy {
+
     @Override
     public String generatePrompt() {
         return ETC_BASE_PROMPT;

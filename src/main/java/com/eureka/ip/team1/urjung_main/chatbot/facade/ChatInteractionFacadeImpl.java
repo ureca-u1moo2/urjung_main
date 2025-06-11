@@ -1,21 +1,17 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
-import com.eureka.ip.team1.urjung_main.chatbot.dto.Button;
-import com.eureka.ip.team1.urjung_main.chatbot.dto.Card;
-import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
-import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
-import com.eureka.ip.team1.urjung_main.chatbot.enums.CardType;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
+import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
-import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +22,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeNoArgsStrategy;
@@ -59,13 +54,12 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 //        }
 
         // 2 : 토픽 분류 → 응답 흐름 위임
-        TopicClassifyPromptStrategy topicClassifyPromptStrategy = new TopicClassifyPromptStrategy();
-        String classifyPrompt = topicClassifyPromptStrategy.generatePrompt();
-        return chatBotService.classifyTopic(classifyPrompt, requestDto.getMessage())
+        return chatBotService.classifyTopic(requestDto.getMessage())
                 .flatMapMany(response -> {
                     Topic topic = response.getTopic();
                     String waitMessage = response.getWaitMessage();
                     Mono<ChatResponseDto> waitingResponse = Mono.just(ChatResponseDto.builder()
+                            .type(ChatResponseType.WAITING)
                             .message(waitMessage)
                             .build());
 
@@ -84,68 +78,20 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 //    }
 
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
-        String prompt = generatePromptByTopic(requestDto, topic);
+        String prompt = generatePromptByTopic(topic);
 
         long startTime = System.currentTimeMillis();
 
         return chatBotService.handleUserMessage(prompt, requestDto.getMessage()) // returns Mono<ChatbotRawResponseDto>
-                .flatMap(raw -> {
-                    // 가공: raw → ChatResponseDto
-                    ChatResponseDto.ChatResponseDtoBuilder builder = ChatResponseDto.builder()
-                            .message(raw.getReply());
-
-                    List<Button> buttons = new ArrayList<>();
-
-                    // 1. 전체 요금제 바로가기 버튼
-                    if (topic != Topic.INFO && topic != Topic.RECOMMENDATION_PLAN && topic != Topic.MY_USAGE_INFORMATION && topic != Topic.ETC) {
-                        buttons.add(Button.builder()
-                                .label("전체 요금 보러가기")
-                                .type(ButtonType.URL)
-                                .value("https://naver.com") // 실제 URL로 교체
-                                .build());
-                    }
-
-                    List<Card> cards = new ArrayList<>();
-                    // 조건 2: 추천 요금제가 존재하면 planId 기준으로 버튼 생성
-                    if (raw.getPlanIds() != null && !raw.getPlanIds().isEmpty()) {
-                        List<PlanDetailDto> list = raw.getPlanIds().stream()
-                                .map(id -> planService.getPlanDetail(id))
-                                .toList();
-
-                        cards.addAll(list.stream()
-                                .map(plan -> Card.builder()
-                                        .type(CardType.PLAN)
-                                        .value(plan)
-                                        .build())
-                                .toList());
-                    }
-
-                    ChatResponseDto response = builder
-                            .buttons(buttons)
-                            .cards(cards)
-                            .build();
-
-                    long endTime = System.currentTimeMillis();
-                    long latency = endTime - startTime;
-                    // 저장 후 반환
-                    try {
-                        log.info("response : {}", response.getCards());
-                        if (!embeddingService.alreadyExists(requestDto.getMessage())) {
-                            System.out.println("new questions");
-                            embeddingService.indexWithEmbedding(requestDto.getMessage());
-                        }else {
-                            System.out.println("already inserted");
-                        }
-                        return saveChatLog(userId, requestDto, response, topic, latency)
-                                .thenReturn(response);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                .map(raw -> assembleResponse(raw, topic))
+                .flatMap(response -> {
+                    long latency = System.currentTimeMillis() - startTime;
+                    return persistLogAndEmbedding(userId, requestDto, response, topic, latency)
+                            .thenReturn(response);
                 });
     }
 
-
-    private String generatePromptByTopic(ChatRequestDto dto, Topic topic) {
+    private String generatePromptByTopic(Topic topic) {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         List<PlanDto> plans = planService.getPlansSorted("popular");
         String plansJson = JsonUtil.toJson(plans);
@@ -155,12 +101,62 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
             case PLAN_DETAIL, COMPARE_PLAN_WITHOUT_MY_PLAN, FILTERED_PLAN_LIST ->
                     invokeSingleArgStrategy(strategy, plansJson);
 
-            case INFO, ALL_PLAN_INFORMATION ->
-                    invokeNoArgsStrategy(strategy);
+            case INFO, ALL_PLAN_INFORMATION -> invokeNoArgsStrategy(strategy);
 
-            default ->
-                    invokeNoArgsStrategy(strategy); // 기타 토픽도 NoArgs로 처리
+            default -> invokeNoArgsStrategy(strategy); // 기타 토픽도 NoArgs로 처리
         };
+    }
+
+    private ChatResponseDto assembleResponse(ChatbotRawResponseDto raw, Topic topic) {
+        List<Button> buttons = createButtons(topic);
+        List<Card> cards = createCards(raw.getPlanIds());
+        return ChatResponseDto.builder()
+                .type(ChatResponseType.MAIN_REPLY)
+                .message(raw.getReply())
+                .buttons(buttons)
+                .cards(cards)
+                .build();
+    }
+
+    private List<Card> createCards(List<String> planIds) {
+        if (planIds == null || planIds.isEmpty()) return List.of();
+
+        return planIds.stream()
+                .map(planService::getPlanDetail)
+                .map(plan -> Card.builder()
+                        .value(plan)
+                        .build())
+                .toList();
+    }
+
+    private List<Button> createButtons(Topic topic) {
+        if (List.of(Topic.INFO, Topic.RECOMMENDATION_PLAN, Topic.MY_USAGE_INFORMATION, Topic.ETC).contains(topic)) {
+            return List.of();
+        }
+
+        return List.of(
+                Button.builder()
+                        .label("전체 요금 보러가기")
+                        .type(ButtonType.URL)
+                        .value("https://naver.com") // TODO: 실제 URL
+                        .build()
+        );
+    }
+
+    private Mono<Void> persistLogAndEmbedding(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
+        try {
+            log.info("response cards: {}", response.getCards());
+            if (!embeddingService.alreadyExists(requestDto.getMessage())) {
+                log.info("New question, embedding...");
+                embeddingService.indexWithEmbedding(requestDto.getMessage());
+            } else {
+                log.info("Already embedded.");
+            }
+            return saveChatLog(userId, requestDto, response, topic, latency);
+        } catch (IOException e) {
+            log.error("로그 저장 실패", e);
+            return Mono.empty(); // 저장 실패하더라도 응답은 반환
+        }
     }
 
     private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) throws IOException {
@@ -183,5 +179,4 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
             }
         });
     }
-
 }
