@@ -1,10 +1,8 @@
 package com.eureka.ip.team1.urjung_main.chatbot.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-
-import java.util.List;
-
+import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
+import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
-import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class ForbiddenWordServiceImplTest {
@@ -26,18 +26,17 @@ class ForbiddenWordServiceImplTest {
     @Mock
     private ForbiddenWordRepository forbiddenWordRepository;
 
-
     @BeforeEach
     void setUp() {
         // Mock 데이터 정의
         List<ForbiddenWord> mockForbiddenWords = List.of(
-                new ForbiddenWord("바보"),
-                new ForbiddenWord("멍청이"),
-                new ForbiddenWord("시발"),
-                new ForbiddenWord("ㅅㅂ"),
-                new ForbiddenWord("씨발"),
-                new ForbiddenWord("병신"),
-                new ForbiddenWord("개새끼")
+                createForbiddenWord("바보"),
+                createForbiddenWord("멍청이"),
+                createForbiddenWord("시발"),
+                createForbiddenWord("ㅅㅂ"),
+                createForbiddenWord("씨발"),
+                createForbiddenWord("병신"),
+                createForbiddenWord("개새끼")
         );
 
         //given
@@ -75,18 +74,17 @@ class ForbiddenWordServiceImplTest {
         assertThat(result).isEqualTo("호출되었습니다.");
     }
 
-
     @DisplayName("buildFailureLinks 에서 while 루프 강제 실행 테스트")
     @Test
     void testBuildFailureLinksWhileLoopExecuted() {
         // given
         List<ForbiddenWord> mockForbiddenWords = List.of(
-                new ForbiddenWord("개병"),
-                new ForbiddenWord("개병신"),
-                new ForbiddenWord("병신")
+                createForbiddenWord("개병"),
+                createForbiddenWord("개병신"),
+                createForbiddenWord("병신")
         );
 
-        BDDMockito.given(forbiddenWordRepository.findAll())
+        given(forbiddenWordRepository.findAll())
                 .willReturn(mockForbiddenWords);
 
         ForbiddenWordServiceImpl service = new ForbiddenWordServiceImpl(forbiddenWordRepository);
@@ -100,6 +98,14 @@ class ForbiddenWordServiceImplTest {
         assertThat(result).isTrue();
     }
 
-
+    // ForbiddenWord 테스트용 생성 메서드
+    private ForbiddenWord createForbiddenWord(String word) {
+        ForbiddenWord fw = new ForbiddenWord();
+        fw.setWord(word);
+        fw.setWordId(java.util.UUID.randomUUID());
+        fw.setWordUpdate(java.time.LocalDateTime.now());
+        fw.setWordDesc("test-desc");
+        fw.setWordClass("test-class");
+        return fw;
+    }
 }
-
