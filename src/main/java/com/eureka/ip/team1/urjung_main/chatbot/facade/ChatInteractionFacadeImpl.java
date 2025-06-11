@@ -2,6 +2,7 @@ package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
 import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
@@ -58,6 +59,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     Topic topic = response.getTopic();
                     String waitMessage = response.getWaitMessage();
                     Mono<ChatResponseDto> waitingResponse = Mono.just(ChatResponseDto.builder()
+                            .type(ChatResponseType.WAITING)
                             .message(waitMessage)
                             .build());
 
@@ -76,7 +78,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 //    }
 
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
-        String prompt = generatePromptByTopic(requestDto, topic);
+        String prompt = generatePromptByTopic(topic);
 
         long startTime = System.currentTimeMillis();
 
@@ -89,7 +91,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 });
     }
 
-    private String generatePromptByTopic(ChatRequestDto dto, Topic topic) {
+    private String generatePromptByTopic(Topic topic) {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         List<PlanDto> plans = planService.getPlansSorted("popular");
         String plansJson = JsonUtil.toJson(plans);
@@ -109,6 +111,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         List<Button> buttons = createButtons(topic);
         List<Card> cards = createCards(raw.getPlanIds());
         return ChatResponseDto.builder()
+                .type(ChatResponseType.MAIN_REPLY)
                 .message(raw.getReply())
                 .buttons(buttons)
                 .cards(cards)
