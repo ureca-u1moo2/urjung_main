@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,7 +27,7 @@ public class PlanReviewRepositoryTest {
         // given
         PlanReview review = PlanReview.builder()
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(5)
                 .content("리뷰 저장 테스트")
                 .createdAt(LocalDateTime.now())
@@ -38,7 +39,7 @@ public class PlanReviewRepositoryTest {
         // then
         assertThat(savedReview.getId()).isNotNull();
         assertThat(savedReview.getPlanId()).isEqualTo("plan-1");
-        assertThat(savedReview.getUserId()).isEqualTo(1L);
+        assertThat(savedReview.getUserId()).isEqualTo("1");
         assertThat(savedReview.getRating()).isEqualTo(5);
         assertThat(savedReview.getContent()).isEqualTo("리뷰 저장 테스트");
     }
@@ -49,7 +50,7 @@ public class PlanReviewRepositoryTest {
         // given
         PlanReview review1 = PlanReview.builder()
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(5)
                 .content("리뷰1")
                 .createdAt(LocalDateTime.now())
@@ -57,7 +58,7 @@ public class PlanReviewRepositoryTest {
 
         PlanReview review2 = PlanReview.builder()
                 .planId("plan-1")
-                .userId(2L)
+                .userId("2")
                 .rating(4)
                 .content("리뷰2")
                 .createdAt(LocalDateTime.now())
@@ -79,7 +80,7 @@ public class PlanReviewRepositoryTest {
         // given
         PlanReview review = PlanReview.builder()
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(5)
                 .content("findById 테스트")
                 .createdAt(LocalDateTime.now())
@@ -101,7 +102,7 @@ public class PlanReviewRepositoryTest {
         // given
         PlanReview review = PlanReview.builder()
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(3)
                 .content("삭제 테스트")
                 .createdAt(LocalDateTime.now())
