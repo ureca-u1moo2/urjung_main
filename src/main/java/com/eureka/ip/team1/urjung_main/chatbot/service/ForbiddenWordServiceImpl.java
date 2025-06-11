@@ -1,5 +1,7 @@
 package com.eureka.ip.team1.urjung_main.chatbot.service;
 
+import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
+import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
@@ -8,62 +10,100 @@ import java.util.*;
 @Service
 public class ForbiddenWordServiceImpl implements ForbiddenWordService {
 
-    // trie 의 한 노드를 표현하는 내부 클래스 라고 합니다.
-    private static class  TrieNode {
-        Map<Character, TrieNode> children = new HashMap<>();    // 자식 문자 노드들
-        boolean isEnd = false;  // 하나의 금칙어의 끝 문자인지 표시
+    private final ForbiddenWordRepository forbiddenWordRepository;
+
+    public ForbiddenWordServiceImpl(ForbiddenWordRepository forbiddenWordRepository) {
+        this.forbiddenWordRepository = forbiddenWordRepository;
     }
 
-    private final TrieNode root = new TrieNode();   // trie 의 루트 노드 (비어있는 상태에서 시작)
+    // 노드 정의
+    private static class TrieNode {
+        Map<Character, TrieNode> children = new HashMap<>();
+        TrieNode fail = null;       // 실패 링크
+        boolean isEnd = false;      // 금칙어 끝 표시
+    }
 
-    /**
-     * 서비스가 시작될 때 자동으로 실행되는 초기화 메서드
-     * 여기서 금칙어들을 trie 에 등록
-     */
+    private final TrieNode root = new TrieNode();
 
+    // 초기화
     @PostConstruct
     public void init() {
-        // 우선은 하드코딩으로 금칙어 목록을 짰습니다.
-        List<String> forbiddenWords = Arrays.asList("바보", "멍청이", "시발", "병신",
-                "ㅂㅅ", "ㅄ", "개새끼" );
-        // 금칙어 리스트를 하나씩 trie 에 삽입
-        forbiddenWords.forEach(this::insert);
+        List<String> forbiddenWords = forbiddenWordRepository.findAll()// 테스트용 디비 금칙어 호출
+                .stream()
+                .map(ForbiddenWord::getWord)
+                .toList();
+
+        System.out.println("=== 금칙어 리스트 ===");
+        forbiddenWords.forEach(System.out::println);
+
+//      List<String> forbiddenWords = Arrays.asList("바보", "멍청이", "시발", "병신", "ㅂㅅ", "ㅄ", "개새끼");
+
+        // 1) Trie에 삽입
+        for (String w : forbiddenWords) insert(w);
+
+        // 2) 실패 링크 계산
+        buildFailureLinks();
     }
 
-    /**
-     * trie 에 단어를 삽입하는 메서드
-     * 예 : "바보" -> "바" 노드 만들고 -> "보" 노드 만들고 -> 마지막 글자에 isEnd = true
-     */
-
+    // Trie 삽입
     private void insert(String word) {
-        TrieNode node = root;   // root 노드부터 시작
+
+        TrieNode node = root;
         for (char c : word.toCharArray()) {
-            // 문자를 하나씩 따라가며 노드 생성 또는 이동
             node = node.children.computeIfAbsent(c, k -> new TrieNode());
         }
-        node.isEnd = true;  // 단어의 마지막 글자에 도달했으면 금칙어 끝 표시
+        node.isEnd = true;
     }
 
-    /**
-     문장 안에 금칙어가 포함되어있는지 검사하는 메서드
-     문장의 각 위치(i) 부터 시작해서 trie 에 따라가며 금칙어와 일치하는 부분이 있는지 확인
-     한번이라도 발견되면 true 반환
-     */
+    // 실패 링크 계산
+    private void buildFailureLinks() {
+        Queue<TrieNode> q = new ArrayDeque<>();
+        // 루트의 자식들은 실패 링크를 루트로
+        root.fail = root;
+        for (TrieNode child : root.children.values()) {
+            child.fail = root;
+            q.add(child);
+        }
+        // BFS로 다음 레벨 처리
+        while (!q.isEmpty()) {
+            TrieNode curr = q.poll();
+            for (Map.Entry<Character, TrieNode> e : curr.children.entrySet()) {
+                char c = e.getKey();
+                TrieNode next = e.getValue();
 
-    private boolean containsForbiddenWord(String text) {
-        for (int i = 0; i < text.length(); i++) {
-            TrieNode node = root;
-            int j = i;
+                // 실패 링크를 curr.fail에서 c를 따라 내려가며 찾기
+                TrieNode f = curr.fail;
+                while (f != root && !f.children.containsKey(c)) {
+                    f = f.fail;
+                }
+                if (f.children.containsKey(c)) {
+                    next.fail = f.children.get(c);
+                } else {
+                    next.fail = root;
+                }
+                // 실패 링크가 금칙어 끝이면 전파
+                next.isEnd |= next.fail.isEnd;
 
-            // 문장의 i번째부터 j번째까지 문자로 trie 를 탐색
-            while (j < text.length() && node.children.containsKey(text.charAt(j))) {
-                node = node.children.get(text.charAt(j));
-                // 금칙어의 끝에 도달한 경우 (일치하는 금칙어 발견)
-                if (node.isEnd) return true;
-                j++;    // 다음 문자로 이동
+                q.add(next);
             }
         }
-        return false;   // 문장 전체를 돌았는데 금칙어가 없으면 false
+    }
+
+    // 한 번에 스캔하며 금칙어 검사 // facade 에서 사용할 수 있도록 private -> public 으로 변경
+    @Override
+    public boolean containsForbiddenWord(String text) {
+        String normalized = normalize(text);
+        TrieNode node = root;
+        for (char c : normalized.toCharArray()) {   // text -> normalized 로 변경
+            // 자식이 없으면 실패 링크 따라 올라가기
+            while (node != root && !node.children.containsKey(c)) {
+                node = node.fail;
+            }
+            // 있으면 내려가기, 없으면 루트 유지
+            node = node.children.getOrDefault(c, root);
+            if (node.isEnd) return true;  // 금칙어 끝 노드 도달
+        }
+        return false;
     }
 
     /**
@@ -77,10 +117,10 @@ public class ForbiddenWordServiceImpl implements ForbiddenWordService {
 
 
     @Override
-    public String censor (String text) {
+    public String censor(String text) {
         String normalized = normalize(text);
         return containsForbiddenWord(normalized)
                 ? "입력할 수 없는 단어가 포함되어 있습니다."
-                : " 호출 되었습니다.";
+                : "호출되었습니다.";
     }
 }
