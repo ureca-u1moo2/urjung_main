@@ -51,8 +51,8 @@ public class GeminiService implements ChatBotService {
     }
 
     @Override
-    public Mono<ClassifiedTopicResult> classifyTopic(String prompt, String message) {
-        Map<String, Object> requestBody = buildTopicClassifyRequestBody(prompt, message);
+    public Mono<ClassifiedTopicResult> classifyTopic(String message) {
+        Map<String, Object> requestBody = buildTopicClassifyBody(message);
 
         return sendChatRequest(requestBody)
                 .map(this::extractClassifiedResult)

@@ -2,7 +2,6 @@ package com.eureka.ip.team1.urjung_main.chatbot.prompt.generator;
 
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.TopicClassifyPromptStrategy;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,10 +22,6 @@ public class PromptStrategyFactory {
         for (PromptStrategy strategy : strategies) {
             strategy.support().ifPresent(topic -> strategyMap.put(topic, strategy));
         }
-    }
-
-    public PromptStrategy getTopicClassifyStrategy() {
-        return new TopicClassifyPromptStrategy();
     }
 
     public PromptStrategy getStrategy(Topic topic) {

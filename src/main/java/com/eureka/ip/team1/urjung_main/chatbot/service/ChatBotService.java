@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono;
 public interface ChatBotService {
     Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message);
 
-    Mono<ClassifiedTopicResult> classifyTopic(String prompt, String message);
+    Mono<ClassifiedTopicResult> classifyTopic(String message);
 }

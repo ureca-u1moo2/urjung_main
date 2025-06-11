@@ -5,7 +5,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
-import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.TopicClassifyPromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
@@ -54,9 +53,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 //        }
 
         // 2 : 토픽 분류 → 응답 흐름 위임
-        TopicClassifyPromptStrategy topicClassifyPromptStrategy = new TopicClassifyPromptStrategy();
-        String classifyPrompt = topicClassifyPromptStrategy.generatePrompt();
-        return chatBotService.classifyTopic(classifyPrompt, requestDto.getMessage())
+        return chatBotService.classifyTopic(requestDto.getMessage())
                 .flatMapMany(response -> {
                     Topic topic = response.getTopic();
                     String waitMessage = response.getWaitMessage();
@@ -147,14 +144,14 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         try {
             log.info("response cards: {}", response.getCards());
             if (!embeddingService.alreadyExists(requestDto.getMessage())) {
-                log.info("📌 New question, embedding...");
+                log.info("New question, embedding...");
                 embeddingService.indexWithEmbedding(requestDto.getMessage());
             } else {
-                log.info("✔ Already embedded.");
+                log.info("Already embedded.");
             }
             return saveChatLog(userId, requestDto, response, topic, latency);
         } catch (IOException e) {
-            log.error("❌ 로그 저장 실패", e);
+            log.error("로그 저장 실패", e);
             return Mono.empty(); // 저장 실패하더라도 응답은 반환
         }
     }
