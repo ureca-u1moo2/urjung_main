@@ -26,16 +26,21 @@ public class EmbeddingConfig {
             client.indices().create(c -> c
                     .index("questions")
                     .mappings(m -> m
-                            .properties("content", p -> p.text(t -> t))
+                            .properties("content", p -> p
+                                    .text(t -> t
+                                            .fields("keyword", ft -> ft.keyword(k -> k))
+                                    )
+                            )
                             .properties("embedding", p -> p
                                     .denseVector(d -> d
                                             .dims(768)
                                             .index(true)
-                                            .similarity("cosine") // 코사인 유사도 사용
+                                            .similarity("cosine")
                                     )
                             )
                     )
             );
         }
     }
+
 }

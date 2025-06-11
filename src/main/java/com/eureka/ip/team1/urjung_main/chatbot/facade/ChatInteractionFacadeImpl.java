@@ -12,6 +12,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.*;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
+import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
@@ -41,6 +42,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ForbiddenWordService forbiddenWordService;
     private final ElasticsearchLogService elasticsearchLogService;
     private final PlanService planService;
+    private final EmbeddingService embeddingService;
 
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
@@ -84,6 +86,8 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
         String prompt = generatePromptByTopic(requestDto, topic);
 
+        long startTime = System.currentTimeMillis();
+
         return chatBotService.handleUserMessage(prompt, requestDto.getMessage()) // returns Mono<ChatbotRawResponseDto>
                 .flatMap(raw -> {
                     // 가공: raw → ChatResponseDto
@@ -121,10 +125,18 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                             .cards(cards)
                             .build();
 
+                    long endTime = System.currentTimeMillis();
+                    long latency = endTime - startTime;
                     // 저장 후 반환
                     try {
                         log.info("response : {}", response.getCards());
-                        return saveChatLog(userId, requestDto, response, topic)
+                        if (!embeddingService.alreadyExists(requestDto.getMessage())) {
+                            System.out.println("new questions");
+                            embeddingService.indexWithEmbedding(requestDto.getMessage());
+                        }else {
+                            System.out.println("already inserted");
+                        }
+                        return saveChatLog(userId, requestDto, response, topic, latency)
                                 .thenReturn(response);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -151,7 +163,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         };
     }
 
-    private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic) throws IOException {
+    private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) throws IOException {
         return Mono.fromRunnable(() -> {
             try {
                 ChatLogDto chatLogDto = new ChatLogDto(
@@ -163,7 +175,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                         response.getMessage(),
                         null,
                         null,
-                        null
+                        latency
                 );
                 elasticsearchLogService.saveChatLog(chatLogDto); // 동기 호출
             } catch (Exception e) {

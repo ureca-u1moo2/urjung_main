@@ -52,8 +52,8 @@ public class SecurityConfig {
                         request -> {
                             // 위 두개의 경로에 대한 요청은 인증/인가 처리를 하지 않겠다.
                             request.requestMatchers(
-                                    "/",
-                                    "/api/**"  
+                                    "/**", //잠시 해지
+                                    "/api/**"
                                     ).permitAll()
                                     .anyRequest().authenticated();
                         }
