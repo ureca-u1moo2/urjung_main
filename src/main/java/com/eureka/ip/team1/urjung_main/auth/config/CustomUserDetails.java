@@ -17,6 +17,7 @@ public class CustomUserDetails implements UserDetails {
 
     private final Collection<? extends GrantedAuthority> authorities;
 
+    public String getUserId() { return user.getUserId(); };
     @Override public String getUsername() { return user.getEmail(); }
     @Override public String getPassword() {
         System.out.println("로그 UserDetail 비밀번호 반환 : " +user.getPassword());
