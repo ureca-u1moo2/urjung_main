@@ -68,9 +68,7 @@ public class RecentChatLogRepository {
 		if(size - MAX_MESSAGES > 0) {
 			 Long trimSize = size - MAX_MESSAGES;
 			
-			for(int i = 0; i < trimSize; i++) {
-				stringRedisTemplate.opsForList().rightPop(key);
-			}
+			 stringRedisTemplate.opsForList().trim(key, 0, MAX_MESSAGES - 1);
 		}
 	}
 	
