@@ -10,9 +10,6 @@ import java.util.List;
 public class ChatResponseDto {
     private String message;
     private List<Button> buttons;
-
-    public void setButtons(List<Button> buttons){
-        this.buttons = buttons;
-    }
+    private List<Card> cards;
 }
 
