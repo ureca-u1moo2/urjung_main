@@ -28,6 +28,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeNoArgsStrategy;
+import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeSingleArgStrategy;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -136,44 +139,15 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         String plansJson = JsonUtil.toJson(plans);
         return switch (topic) {
             case RECOMMENDATION_PLAN -> "사용자의 요금제 이용 패턴에 맞는 요금제를 추천해줘.";
-            case PLAN_DETAIL -> {
 
-                if (strategy instanceof PlanDetailPromptStrategy) {
-                    PlanDetailPromptStrategy planDetailStrategy = (PlanDetailPromptStrategy) strategy;
-                    yield planDetailStrategy.generatePrompt(plansJson);
-                }
-                throw new ClassCastException();
-            }
-            case INFO -> {
-                if (strategy instanceof ServiceInfoPromptStrategy) {
-                    ServiceInfoPromptStrategy infoStrategy = (ServiceInfoPromptStrategy) strategy;
-                    yield infoStrategy.generatePrompt();
-                }
-                throw new ClassCastException();
-            }
+            case PLAN_DETAIL, COMPARE_PLAN_WITHOUT_MY_PLAN, FILTERED_PLAN_LIST ->
+                    invokeSingleArgStrategy(strategy, plansJson);
 
-            case ALL_PLAN_INFORMATION -> {
-                if (strategy instanceof AllPlanPromptStrategy) {
-                    AllPlanPromptStrategy allPlanStrategy = (AllPlanPromptStrategy) strategy;
-                    yield allPlanStrategy.generatePrompt();
-                }
-                throw new ClassCastException();
-            }
+            case INFO, ALL_PLAN_INFORMATION ->
+                    invokeNoArgsStrategy(strategy);
 
-            case FILTERED_PLAN_LIST -> {
-                if (strategy instanceof FilteredPlanPromptStrategy) {
-                    FilteredPlanPromptStrategy filteredPlanStrategy = (FilteredPlanPromptStrategy) strategy;
-                    yield filteredPlanStrategy.generatePrompt(plansJson);
-                }
-                throw new ClassCastException();
-            }
-            default -> {
-                if (strategy instanceof EtcPromptStrategy) {
-                    EtcPromptStrategy etcStrategy = (EtcPromptStrategy) strategy;
-                    yield etcStrategy.generatePrompt();
-                }
-                throw new ClassCastException();
-            }
+            default ->
+                    invokeNoArgsStrategy(strategy); // 기타 토픽도 NoArgs로 처리
         };
     }
 
