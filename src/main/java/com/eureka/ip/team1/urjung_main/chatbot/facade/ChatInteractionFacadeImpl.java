@@ -160,6 +160,14 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 throw new ClassCastException();
             }
 
+            case COMPARE_PLAN_WITHOUT_MY_PLAN -> {
+                if (strategy instanceof ComparePlanPromptStrategy) {
+                    ComparePlanPromptStrategy comparePlanStrategy = (ComparePlanPromptStrategy) strategy;
+                    yield comparePlanStrategy.generatePrompt(plansJson);
+                }
+                throw new ClassCastException();
+            }
+
             case FILTERED_PLAN_LIST -> {
                 if (strategy instanceof FilteredPlanPromptStrategy) {
                     FilteredPlanPromptStrategy filteredPlanStrategy = (FilteredPlanPromptStrategy) strategy;
