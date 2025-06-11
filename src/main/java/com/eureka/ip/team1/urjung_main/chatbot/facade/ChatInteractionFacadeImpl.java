@@ -70,14 +70,23 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
         String prompt = generatePromptByTopic(requestDto, topic);
 
+        // 응답 latency 측정 (Log 분석용)
+        long startTime = System.currentTimeMillis();
+
         return chatBotService.handleUserMessage(prompt, requestDto.getMessage())
                 .map(response -> attachButtonsIfNeeded(response, topic))
                 .flatMap(response -> {
+                    long endTime = System.currentTimeMillis();
+                    long latency = endTime - startTime;
                     try {
-                        // 질문 문장을 벡터화해서 ES Questions 인덱스에 저장
-                        embeddingService.indexWithEmbedding(requestDto.getMessage());
-
-                        return saveChatLog(userId, requestDto, response, topic)
+                        // 질문 문장을 벡터화해서 ES Questions 인덱스에 저장 (단, 추천 질문은 중복 저장 X)
+                        if (!embeddingService.alreadyExists(requestDto.getMessage())){
+                            System.out.println("new questions");
+                            embeddingService.indexWithEmbedding(requestDto.getMessage());
+                        }else{
+                            System.out.println("Don't Save : Duplicate questions");
+                        }
+                        return saveChatLog(userId, requestDto, response, topic, latency)
                                 .thenReturn(response);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -138,7 +147,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         };
     }
 
-    private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic) throws IOException {
+    private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic , long latencyMs) throws IOException {
         return Mono.fromRunnable(() -> {
             try {
                 ChatLogDto chatLogDto = new ChatLogDto(
@@ -150,7 +159,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                         response.getMessage(),
                         null,
                         null,
-                        null
+                        latencyMs
                 );
                 elasticsearchLogService.saveChatLog(chatLogDto); // 동기 호출
             } catch (Exception e) {

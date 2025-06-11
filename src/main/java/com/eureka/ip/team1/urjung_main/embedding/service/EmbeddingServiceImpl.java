@@ -73,15 +73,17 @@ public class EmbeddingServiceImpl implements EmbeddingService {
                 .toList();
     }
 
-
-    public void bulkIndexQuestions(List<String> questions) throws IOException {
-        for (String question : questions) {
-            try {
-                indexWithEmbedding(question);
-            } catch (IOException e) {
-                System.err.println("실패: " + question);
-            }
-        }
+    // 추천 질문 선택 시 중복 저장 방지
+    public boolean alreadyExists(String question) throws IOException{
+        var result = esClient.search(s -> s
+                        .index("questions")
+                        .query(q -> q.term(t -> t.field("content.keyword").value(question))),
+                Map.class
+        );
+        return !result.hits().hits().isEmpty();
     }
+
+
+
 }
 
