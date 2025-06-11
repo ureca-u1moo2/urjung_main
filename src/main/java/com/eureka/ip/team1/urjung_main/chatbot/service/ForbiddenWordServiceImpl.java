@@ -5,6 +5,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepositor
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLOutput;
 import java.util.*;
 
 @Service
@@ -44,6 +45,25 @@ public class ForbiddenWordServiceImpl implements ForbiddenWordService {
         // 2) 실패 링크 계산
         buildFailureLinks();
     }
+
+    //관리자 페이지에서 금칙어를 관리하기 위한 부분 관리자 부분 붙으면 주석 풀어서 진행하겠습니다.
+//    public void reloadForbiddenWords() {
+//        synchronized (root) {
+//            root.children.clear();
+//            root.fail = root;
+//            root.isEnd = false;
+//
+//            List<String> forbiddenWords = forbiddenWordRepository.findAll()
+//                    .stream()
+//                    .map(ForbiddenWord::getWord)
+//                    .toList();
+//
+//            for (String w : forbiddenWords) insert(w);
+//            buildFailureLinks();
+//
+//            System.out.println("금칙어 재로딩 완료");
+//        }
+//    }
 
     // Trie 삽입
     private void insert(String word) {
