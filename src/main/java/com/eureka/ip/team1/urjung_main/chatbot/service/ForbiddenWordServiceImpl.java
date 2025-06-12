@@ -47,23 +47,24 @@ public class ForbiddenWordServiceImpl implements ForbiddenWordService {
     }
 
     //관리자 페이지에서 금칙어를 관리하기 위한 부분 관리자 부분 붙으면 주석 풀어서 진행하겠습니다.
-//    public void reloadForbiddenWords() {
-//        synchronized (root) {
-//            root.children.clear();
-//            root.fail = root;
-//            root.isEnd = false;
-//
-//            List<String> forbiddenWords = forbiddenWordRepository.findAll()
-//                    .stream()
-//                    .map(ForbiddenWord::getWord)
-//                    .toList();
-//
-//            for (String w : forbiddenWords) insert(w);
-//            buildFailureLinks();
-//
-//            System.out.println("금칙어 재로딩 완료");
-//        }
-//    }
+    @Override
+    public void reloadForbiddenWords() {
+        synchronized (root) {
+            root.children.clear();
+            root.fail = root;
+            root.isEnd = false;
+
+            List<String> forbiddenWords = forbiddenWordRepository.findAll()
+                    .stream()
+                    .map(ForbiddenWord::getWord)
+                    .toList();
+
+            for (String w : forbiddenWords) insert(w);
+            buildFailureLinks();
+
+            System.out.println("금칙어 재로딩 완료");
+        }
+    }
 
     // Trie 삽입
     private void insert(String word) {
@@ -132,7 +133,8 @@ public class ForbiddenWordServiceImpl implements ForbiddenWordService {
      * - 공백, 언더바, 기호 등을 제거해서 우회 방지
      */
     private String normalize(String text) {
-        return text.replaceAll("[^가-힣a-zA-Z0-9]", "");
+        return text.replaceAll("[^가-힣a-zA-Z0-9]", "")
+                .toLowerCase();
     }
 
 
