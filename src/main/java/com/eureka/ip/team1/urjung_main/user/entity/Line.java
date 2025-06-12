@@ -53,6 +53,10 @@ public class Line {
     @JoinColumn(name = "plan_id", insertable = false, updatable = false)
     private Plan plan;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
     @PrePersist
     public void onCreate() {
         this.id = UUID.randomUUID().toString();
