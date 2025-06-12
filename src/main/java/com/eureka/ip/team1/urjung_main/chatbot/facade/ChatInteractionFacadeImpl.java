@@ -143,20 +143,55 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         );
     }
 
-    private Mono<Void> persistLogAndEmbedding(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
-        try {
-            log.info("response cards: {}", response.getCards());
-            if (!embeddingService.alreadyExists(requestDto.getMessage())) {
-                log.info("New question, embedding...");
-                embeddingService.indexWithEmbedding(requestDto.getMessage());
-            } else {
-                log.info("Already embedded.");
-            }
-            return saveChatLog(userId, requestDto, response, topic, latency);
-        } catch (IOException e) {
-            log.error("로그 저장 실패", e);
-            return Mono.empty(); // 저장 실패하더라도 응답은 반환
-        }
+    private Mono<ChatResponseDto> persistLogAndEmbedding(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
+        return embeddingService.alreadyExists(requestDto.getMessage())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        log.info("new question");
+                        return embeddingService.indexWithEmbedding(requestDto.getMessage())
+                                .then(Mono.defer(() -> {
+                                    try {
+                                        return saveChatLog(userId, requestDto, response, topic, latency);
+                                    } catch (IOException e) {
+                                        return Mono.error(e);
+                                    }
+                                }));
+
+                    } else {
+                        log.info("already inserted");
+                        return Mono.defer(() -> {
+                            try {
+                                return saveChatLog(userId, requestDto, response, topic, latency);
+                            } catch (IOException e) {
+                                return Mono.error(e);
+                            }
+                        });
+                    }
+                })
+                .thenReturn(response)
+                .onErrorResume(e -> {
+                    log.error("임베딩 저장 중 에러 발생 ㅠㅠ", e);
+                    return Mono.error(new RuntimeException("임베딩 저장 중 오류 발생 ㅠㅠ", e));
+                });
+    }
+
+
+    private String generatePromptByTopic(ChatRequestDto dto, Topic topic) {
+        PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
+        List<PlanDto> plans = planService.getPlansSorted("popular");
+        String plansJson = JsonUtil.toJson(plans);
+        return switch (topic) {
+            case RECOMMENDATION_PLAN -> "사용자의 요금제 이용 패턴에 맞는 요금제를 추천해줘.";
+
+            case PLAN_DETAIL, COMPARE_PLAN_WITHOUT_MY_PLAN, FILTERED_PLAN_LIST ->
+                    invokeSingleArgStrategy(strategy, plansJson);
+
+            case INFO, ALL_PLAN_INFORMATION ->
+                    invokeNoArgsStrategy(strategy);
+
+            default ->
+                    invokeNoArgsStrategy(strategy); // 기타 토픽도 NoArgs로 처리
+        };
     }
 
     private Mono<Void> saveChatLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) throws IOException {
@@ -179,4 +214,5 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
             }
         });
     }
+
 }

@@ -1,44 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>유사 질문 추천</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 50px;
+            background-color: #f7f7f7;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .search-container {
+            position: relative;
+            width: 400px;
+        }
+
+        #queryInput {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 45px;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .suggestions li {
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+
+        .suggestions li:hover {
+            background-color: #f1f1f1;
+        }
+
+        .no-results {
+            color: #999;
+            padding: 10px 16px;
+        }
+    </style>
 </head>
 <body>
 <h2>유사 질문 추천 시스템</h2>
 
-<input type="text" id="queryInput" placeholder="질문을 입력하세요..." style="width: 300px;">
-<button onclick="search()">검색</button>
-
-<h3>유사한 질문 TOP 3</h3>
-<ul id="results"></ul>
+<div class="search-container">
+    <input type="text" id="queryInput" placeholder="질문을 입력하세요..." oninput="debouncedSearch()">
+    <ul id="results" class="suggestions"></ul>
+</div>
 
 <script>
+    let debounceTimeout;
+
+    function debouncedSearch() {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(search, 450); // 딜레이
+    }
+
     function search() {
-        const query = document.getElementById("queryInput").value;
+        const query = document.getElementById("queryInput").value.trim();
         const resultsEl = document.getElementById("results");
-        resultsEl.innerHTML = ""; // 기존 결과 초기화
+
+        if (!query) {
+            resultsEl.innerHTML = "";
+            return;
+        }
 
         fetch(`http://localhost:8080/api/questions/search?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
+                resultsEl.innerHTML = "";
+
                 if (data.length === 0) {
-                    resultsEl.innerHTML = "<li>유사한 질문이 없습니다.</li>";
+                    const li = document.createElement("li");
+                    li.className = "no-results";
+                    li.textContent = "유사한 질문이 없습니다.";
+                    resultsEl.appendChild(li);
                 } else {
                     data.forEach(q => {
                         const li = document.createElement("li");
                         li.textContent = q;
+                        li.onclick = () => {
+                            document.getElementById("queryInput").value = q;
+                            resultsEl.innerHTML = "";
+                        };
                         resultsEl.appendChild(li);
                     });
                 }
             })
             .catch(err => {
                 console.error("에러:", err);
-                resultsEl.innerHTML = "<li>검색 중 오류 발생</li>";
+                resultsEl.innerHTML = "<li class='no-results'>검색 중 오류 발생</li>";
             });
     }
 </script>
-
-
 </body>
 </html>
