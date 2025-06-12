@@ -28,7 +28,7 @@ public interface UsageRepository extends JpaRepository<MonthlyUsage, UUID> {
             )
             from MonthlyUsage m join m.line l
             where l.userId = :userId
-            order by m.month desc
+            order by m.month desc, l.planId asc
             """
     )
     List<UsageResponseDto> findAllUsagesByUserId(
@@ -51,7 +51,7 @@ public interface UsageRepository extends JpaRepository<MonthlyUsage, UUID> {
             where l.userId = :userId
             and extract(year from m.month) = :year
             and extract(month from m.month) = :month
-            order by m.month desc
+            order by m.month desc, l.planId asc
             """
     )
     List<UsageResponseDto> findAllUsagesByUserIdAndMonth(
@@ -76,6 +76,7 @@ public interface UsageRepository extends JpaRepository<MonthlyUsage, UUID> {
             where l.userId = :userId
             and extract(year from m.month) = extract(year from current_date)
             and extract(month from m.month) = extract(month from current_date)
+            order by l.planId asc
             """
     )
     List<UsageResponseDto> findCurrentMonthUsagesByUserId(
@@ -129,5 +130,28 @@ public interface UsageRepository extends JpaRepository<MonthlyUsage, UUID> {
             @Param("planId") String planId,
             @Param("year") int year,
             @Param("month") int month
+    );
+
+    @Query(
+            """
+            select new com.eureka.ip.team1.urjung_main.user.dto.UsageResponseDto(
+                l.planId,
+                l.phoneNumber,
+                extract(year from m.month),
+                extract(month from m.month),
+                m.data,
+                m.callMinute,
+                m.message
+            )
+            from MonthlyUsage m join m.line l
+            where l.userId = :userId
+            and l.phoneNumber = :phoneNumber
+            and extract(year from m.month) = extract(year from current_date)
+            and extract(month from m.month) = extract(month from current_date)
+            """
+    )
+    Optional<UsageResponseDto> findCurrentMonthUsageByUserIdAndPhoneNumber(
+            @Param("userId") String userId,
+            @Param("phoneNumber") String phoneNumber
     );
 }

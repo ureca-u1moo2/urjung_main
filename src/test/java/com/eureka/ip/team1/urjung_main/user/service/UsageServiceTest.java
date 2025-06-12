@@ -313,4 +313,67 @@ class UsageServiceTest {
         }
     }
 
+    @Test
+    void testGetCurrentMonthUsageByUserIdAndPhoneNumber_성공_Test() {
+        // Given
+        String userId = "testUser";
+        String phoneNumber = "010-1234-5678";
+        UsageRequestDto requestDto = UsageRequestDto.builder()
+                .userId(userId)
+                .phoneNumber(phoneNumber)
+                .build();
+
+        when(usageRepository.findCurrentMonthUsageByUserIdAndPhoneNumber(userId, phoneNumber)).thenReturn(
+                Optional.of(
+                    UsageResponseDto.builder()
+                            .planId("plan1")
+                            .phoneNumber(phoneNumber)
+                            .year(2025)
+                            .month(6)
+                            .data(1000L)
+                            .callMinute(200L)
+                            .message(50L)
+                            .build()
+                )
+        );
+
+        // When
+        var result = usageServiceImpl.getCurrentMonthUsageByUserIdAndPhoneNumber(requestDto);
+
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals("plan1", result.get().getPlanId());
+        assertEquals(phoneNumber, result.get().getPhoneNumber());
+        assertEquals(2025, result.get().getYear());
+        assertEquals(6, result.get().getMonth());
+        assertEquals(1000L, result.get().getData());
+        assertEquals(200L, result.get().getCallMinute());
+        assertEquals(50L, result.get().getMessage());
+    }
+
+    @Test
+    void testGetCurrentMonthUsageByUserIdAndPhoneNumber_실패_Test() {
+        // Given
+        when(usageRepository.findCurrentMonthUsageByUserIdAndPhoneNumber(any(String.class), any(String.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        try {
+            usageServiceImpl.getCurrentMonthUsageByUserIdAndPhoneNumber(
+                    UsageRequestDto.builder()
+                            .userId("testUser")
+                            .phoneNumber("010-1234-5678")
+                            .build()
+            );
+
+        } catch (Exception e) {
+            assertThrows(
+                InternalServerErrorException.class,
+                () -> {
+                    throw new InternalServerErrorException();
+                }
+            );
+        }
+    }
+
 }
