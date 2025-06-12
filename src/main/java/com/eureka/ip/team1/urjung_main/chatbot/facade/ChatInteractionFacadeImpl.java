@@ -50,15 +50,17 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     .build();
             return Flux.just(responseDto);
         }
-        // 1    : 상태 확인 → 성향 분석 중이면 별도 처리
+        // 1 : 상태 확인 → 성향 분석 중이면 별도 처리
 //        if (isInPersonalityAnalysisState(userId)) {
 //            return handlePersonalityAnalysis(userId, requestDto);
 //        }
-
         // 2 : 토픽 분류 → 응답 흐름 위임
-        return chatBotService.classifyTopic(requestDto.getMessage())
+
+        List<Content> recentChatHistory = chatLogService.getRecentChatHistory(userId, requestDto.getSessionId());
+        String recentChayHistoryJson = JsonUtil.toJson(recentChatHistory);
+        return chatBotService.classifyTopic(requestDto.getMessage(), recentChayHistoryJson)
                 .flatMapMany(response -> {
-                    chatLogService.saveRecentAndPermanentChatLog(ChatLogRequestDto.createChatLogRequestDto(requestDto.getSessionId(),userId,"user",requestDto.getMessage()));
+                    chatLogService.saveRecentAndPermanentChatLog(ChatLogRequestDto.createChatLogRequestDto(requestDto.getSessionId(), userId, "user", requestDto.getMessage()));
                     Topic topic = response.getTopic();
                     String waitMessage = response.getWaitMessage();
                     Mono<ChatResponseDto> waitingResponse = Mono.just(ChatResponseDto.builder()
@@ -66,7 +68,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                             .message(waitMessage)
                             .build());
 
-                    return Flux.concat(waitingResponse, handleByTopic(userId, requestDto, topic));
+                    return Flux.concat(waitingResponse, handleByTopic(userId, requestDto, recentChayHistoryJson, topic));
                 });
     }
 
@@ -80,12 +82,12 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 //        return Flux.just(ChatResponseDto.of("성향 분석 중입니다. 다음 질문에 답해주세요."));
 //    }
 
-    private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, Topic topic) {
+    private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, String recentChatHistory, Topic topic) {
         String prompt = generatePromptByTopic(topic);
 
         long startTime = System.currentTimeMillis();
 
-        return chatBotService.handleUserMessage(prompt, requestDto.getMessage()) // returns Mono<ChatbotRawResponseDto>
+        return chatBotService.handleUserMessage(prompt, requestDto.getMessage(), recentChatHistory) // returns Mono<ChatbotRawResponseDto>
                 .map(raw -> assembleResponse(raw, topic))
                 .flatMap(response -> {
                     long latency = System.currentTimeMillis() - startTime;
@@ -111,10 +113,9 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         return switch (topic) {
             case RECOMMENDATION_PLAN -> "사용자의 요금제 이용 패턴에 맞는 요금제를 추천해줘.";
 
-            case PLAN_DETAIL, COMPARE_PLAN_WITHOUT_MY_PLAN, FILTERED_PLAN_LIST ->
-                    invokeSingleArgStrategy(strategy, plansJson);
+            case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN -> invokeSingleArgStrategy(strategy, plansJson);
 
-            case INFO, ALL_PLAN_INFORMATION -> invokeNoArgsStrategy(strategy);
+            case INFO -> invokeNoArgsStrategy(strategy);
 
             default -> invokeNoArgsStrategy(strategy); // 기타 토픽도 NoArgs로 처리
         };
