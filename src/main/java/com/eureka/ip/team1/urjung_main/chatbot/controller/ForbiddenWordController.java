@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/filter")
+@RequestMapping("/filter")  // 관리자가 금칙어 관리시 갱신되는 컨트롤러 입니다
 public class ForbiddenWordController {
 
     private final ForbiddenWordService forbiddenWordService;
