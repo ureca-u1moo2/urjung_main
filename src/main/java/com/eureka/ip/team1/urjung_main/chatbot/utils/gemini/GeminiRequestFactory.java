@@ -8,17 +8,19 @@ import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages
 import static com.eureka.ip.team1.urjung_main.chatbot.constants.GeminiConstants.*;
 
 public class GeminiRequestFactory {
-    public static Map<String, Object> buildChatBody(String topicPrompt, String userMessage) {
+    public static Map<String, Object> buildChatBody(String topicPrompt, String message, String recentChatHistory) {
         return Map.of(
-                SYSTEM_INSTRUCTION, createSystem(SYSTEM_PROMPT),
-                CONTENTS, List.of(createUserContent(topicPrompt + userMessage))
+                SYSTEM_INSTRUCTION, createSystem(SYSTEM_PROMPT + "\n" + topicPrompt),
+                CONTENTS, List.of(createUserContent("이것은 최근 대화 기록 입니다 : " + recentChatHistory)
+                        , createUserContent("\n이것은 현재 사용자의 메세지입니다" + message))
         );
     }
 
-    public static Map<String, Object> buildTopicClassifyBody(String userMessage) {
+    public static Map<String, Object> buildTopicClassifyBody(String message, String recentChatHistory) {
         return Map.of(
                 SYSTEM_INSTRUCTION, createSystem(getTopicClassifyPrompt()),
-                CONTENTS, List.of(createUserContent(userMessage))
+                CONTENTS, List.of(createUserContent("이것은 최근 대화 기록 입니다 : " + recentChatHistory)
+                        , createUserContent("\n이것은 현재 사용자의 메세지입니다" + message))
         );
     }
 

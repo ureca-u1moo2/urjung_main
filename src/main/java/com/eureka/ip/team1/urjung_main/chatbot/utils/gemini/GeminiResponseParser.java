@@ -20,7 +20,7 @@ public class GeminiResponseParser {
 
     public static ChatbotRawResponseDto toChatbotResponse(String rawJson) {
         try {
-            log.info("rawJson : {}",rawJson);
+            log.info("rawJson : {}", rawJson);
             JsonNode root = mapper.readTree(extractPureJson(rawJson));
             String reply = root.has(FIELD_REPLY) ? root.get(FIELD_REPLY).asText() : rawJson;
 
@@ -40,6 +40,7 @@ public class GeminiResponseParser {
     }
 
     public static ClassifiedTopicResult toTopicResult(String raw) {
+        log.info("topic raw : {}", raw);
         String[] split = raw.split(":", 2);
         String topicStr = split[0].trim();
         String waitMessage = (split.length > 1) ? split[1].trim() : "";

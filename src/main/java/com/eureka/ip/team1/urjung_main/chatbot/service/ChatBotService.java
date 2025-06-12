@@ -5,7 +5,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.dto.ClassifiedTopicResult;
 import reactor.core.publisher.Mono;
 
 public interface ChatBotService {
-    Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message);
+    Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message, String recentHistory);
 
-    Mono<ClassifiedTopicResult> classifyTopic(String message);
+    Mono<ClassifiedTopicResult> classifyTopic(String message, String recentHistory);
 }

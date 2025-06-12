@@ -16,7 +16,7 @@ public class ComparePlanPromptStrategy implements SingleArgsPromptStrategy {
 
     @Override
     public Optional<Topic> support() {
-        return Optional.of(Topic.COMPARE_PLAN_WITHOUT_MY_PLAN);
+        return Optional.of(Topic.COMPARE_PLAN);
     }
 
 

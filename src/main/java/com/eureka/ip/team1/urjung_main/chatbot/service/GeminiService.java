@@ -29,24 +29,22 @@ public class GeminiService implements ChatBotService {
 
 
     @Override
-    public Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message) {
-        Map<String, Object> requestBody = buildChatBody(prompt, message);
+    public Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message, String recentChatHistory) {
+        Map<String, Object> requestBody = buildChatBody(prompt, message, recentChatHistory);
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)
                 .map(GeminiResponseParser::toChatbotResponse);
     }
 
     @Override
-    public Mono<ClassifiedTopicResult> classifyTopic(String message) {
-        Map<String, Object> requestBody = buildTopicClassifyBody(message);
+    public Mono<ClassifiedTopicResult> classifyTopic(String message, String recentChatHistory) {
+        Map<String, Object> requestBody = buildTopicClassifyBody(message, recentChatHistory);
+
 
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)
                 .map(GeminiResponseParser::toTopicResult)
-                .onErrorResume(e -> {
-                    log.warn("토픽 분류 실패: {}", e.getMessage());
-                    return Mono.just(new ClassifiedTopicResult(Topic.ETC, "잠시만 기다려주세요"));
-                });
+                .onErrorResume(e -> Mono.just(new ClassifiedTopicResult(Topic.ETC, "잠시만 기다려주세요")));
     }
 
     private Mono<Map> sendChatRequest(Map<String, Object> requestBody) {

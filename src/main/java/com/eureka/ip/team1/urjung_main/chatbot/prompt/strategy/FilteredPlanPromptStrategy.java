@@ -5,18 +5,18 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.FILTERED_PLAN_BASE_PROMPT;
+import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.PLAN_LIST;
 
 @Component
 public class FilteredPlanPromptStrategy implements SingleArgsPromptStrategy {
     @Override
     public String generatePrompt(String plans) {
-        return FILTERED_PLAN_BASE_PROMPT + "\n" + plans;
+        return PLAN_LIST + "\n" + plans;
     }
 
     @Override
     public Optional<Topic> support() {
-        return Optional.of(Topic.FILTERED_PLAN_LIST);
+        return Optional.of(Topic.PLAN_LIST);
     }
 
 
