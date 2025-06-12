@@ -128,19 +128,35 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     long endTime = System.currentTimeMillis();
                     long latency = endTime - startTime;
                     // 저장 후 반환
-                    try {
-                        log.info("response : {}", response.getCards());
-                        if (!embeddingService.alreadyExists(requestDto.getMessage())) {
-                            System.out.println("new questions");
-                            embeddingService.indexWithEmbedding(requestDto.getMessage());
-                        }else {
-                            System.out.println("already inserted");
-                        }
-                        return saveChatLog(userId, requestDto, response, topic, latency)
-                                .thenReturn(response);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    return embeddingService.alreadyExists(requestDto.getMessage())
+                            .flatMap(exists -> {
+                                if (!exists) {
+                                    log.info("new question");
+                                    return embeddingService.indexWithEmbedding(requestDto.getMessage())
+                                            .then(Mono.defer(() -> {
+                                                try {
+                                                    return saveChatLog(userId, requestDto, response, topic, latency);
+                                                } catch (IOException e) {
+                                                    return Mono.error(e);
+                                                }
+                                            }));
+
+                                } else {
+                                    log.info("already inserted");
+                                    return Mono.defer(() -> {
+                                        try {
+                                            return saveChatLog(userId, requestDto, response, topic, latency);
+                                        } catch (IOException e) {
+                                            return Mono.error(e);
+                                        }
+                                    });
+                                }
+                            })
+                            .thenReturn(response)
+                            .onErrorResume(e -> {
+                                log.error("임베딩 저장 중 에러 발생 ㅠㅠ", e);
+                                return Mono.error(new RuntimeException("임베딩 저장 중 오류 발생 ㅠㅠ", e));
+                            });
                 });
     }
 
