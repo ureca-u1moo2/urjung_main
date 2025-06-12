@@ -1,13 +1,16 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
 import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
+import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
@@ -23,6 +26,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeNoArgsStrategy;
@@ -40,6 +44,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final PlanService planService;
     private final EmbeddingService embeddingService;
     private final ChatLogService chatLogService;
+    private final ChatStateService chatStateService;
 
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
@@ -50,37 +55,57 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     .build();
             return Flux.just(responseDto);
         }
-        // 1 : 상태 확인 → 성향 분석 중이면 별도 처리
-//        if (isInPersonalityAnalysisState(userId)) {
-//            return handlePersonalityAnalysis(userId, requestDto);
-//        }
+        // 1 : 상태 확인
+        return chatStateService.getState(requestDto.getSessionId())
+                .doOnNext(chatState -> log.info(chatState.name()))
+                .flatMapMany(state -> routeByState(state, userId, requestDto));
+
+
         // 2 : 토픽 분류 → 응답 흐름 위임
+//        List<Content> recentChatHistory = chatLogService.getRecentChatHistory(userId, requestDto.getSessionId());
+//        String recentChayHistoryJson = JsonUtil.toJson(recentChatHistory);
+//        return chatBotService.classifyTopic(requestDto.getMessage(), recentChayHistoryJson)
+//                .flatMapMany(response -> {
+//                    chatLogService.saveRecentAndPermanentChatLog(ChatLogRequestDto.createChatLogRequestDto(requestDto.getSessionId(), userId, "user", requestDto.getMessage()));
+//                    Topic topic = response.getTopic();
+//                    String waitMessage = response.getWaitMessage();
+//                    Mono<ChatResponseDto> waitingResponse = Mono.just(ChatResponseDto.builder()
+//                            .type(ChatResponseType.WAITING)
+//                            .message(waitMessage)
+//                            .build());
+//
+//                    return Flux.concat(waitingResponse, handleByTopic(userId, requestDto, recentChayHistoryJson, topic));
+//                });
+    }
 
+    private Flux<ChatResponseDto> routeByState(ChatState state, String userId, ChatRequestDto requestDto) {
+        if (state == ChatState.WAITING_FOR_LINE_SELECTION) {
+            return Flux.just(ChatResponseDto.builder().build());
+        }
+
+        return handleDefaultFlow(userId, requestDto);
+    }
+
+    private Flux<ChatResponseDto> handleDefaultFlow(String userId, ChatRequestDto requestDto) {
         List<Content> recentChatHistory = chatLogService.getRecentChatHistory(userId, requestDto.getSessionId());
-        String recentChayHistoryJson = JsonUtil.toJson(recentChatHistory);
-        return chatBotService.classifyTopic(requestDto.getMessage(), recentChayHistoryJson)
-                .flatMapMany(response -> {
-                    chatLogService.saveRecentAndPermanentChatLog(ChatLogRequestDto.createChatLogRequestDto(requestDto.getSessionId(), userId, "user", requestDto.getMessage()));
-                    Topic topic = response.getTopic();
-                    String waitMessage = response.getWaitMessage();
-                    Mono<ChatResponseDto> waitingResponse = Mono.just(ChatResponseDto.builder()
-                            .type(ChatResponseType.WAITING)
-                            .message(waitMessage)
-                            .build());
+        String recentChatHistoryJson = JsonUtil.toJson(recentChatHistory);
 
-                    return Flux.concat(waitingResponse, handleByTopic(userId, requestDto, recentChayHistoryJson, topic));
+        return chatBotService.classifyTopic(requestDto.getMessage(), recentChatHistoryJson)
+                .flatMapMany(response -> {
+                    chatLogService.saveRecentAndPermanentChatLog(
+                            ChatLogRequestDto.createChatLogRequestDto(requestDto.getSessionId(), userId, "user", requestDto.getMessage())
+                    );
+
+                    Mono<ChatResponseDto> waitMessage = Mono.just(
+                            ChatResponseDto.builder()
+                                    .type(ChatResponseType.WAITING)
+                                    .message(response.getWaitMessage())
+                                    .build()
+                    );
+
+                    return Flux.concat(waitMessage, handleByTopic(userId, requestDto, recentChatHistoryJson, response.getTopic()));
                 });
     }
-
-    private boolean isInPersonalityAnalysisState(String userId) {
-        // 나중에 구현
-        return false;
-    }
-
-//    private Flux<ChatResponseDto> handlePersonalityAnalysis(String userId, ChatRequestDto dto) {
-//        // 향후 성향 분석 질문 분기 로직
-//        return Flux.just(ChatResponseDto.of("성향 분석 중입니다. 다음 질문에 답해주세요."));
-//    }
 
     private Mono<ChatResponseDto> handleByTopic(String userId, ChatRequestDto requestDto, String recentChatHistory, Topic topic) {
         String prompt = generatePromptByTopic(topic);
