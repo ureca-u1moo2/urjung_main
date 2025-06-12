@@ -20,7 +20,7 @@
     <tr>
       <td align="center" style="width: 25%; padding: 20px;">
         <img src="https://i.imgur.com/FvDXAXD.png" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;" alt="Team Member 1"/><br />
-        <sub><b>[@taeaeaexin](https://github.com/taeaeaexin)</b></sub><br />
+        <sub><b>@taeaeaexin</b></sub><br />
         <sub>Back Office</sub>
       </td>
       <td align="center" style="width: 25%; padding: 20px;">
