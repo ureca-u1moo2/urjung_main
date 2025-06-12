@@ -1,9 +1,13 @@
 package com.eureka.ip.team1.urjung_main.user.repository;
 
+import com.eureka.ip.team1.urjung_main.membership.entity.Membership;
+import com.eureka.ip.team1.urjung_main.membership.repository.MembershipRepository;
 import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
 import com.eureka.ip.team1.urjung_main.plan.repository.PlanRepository;
 import com.eureka.ip.team1.urjung_main.user.entity.Line;
 import com.eureka.ip.team1.urjung_main.user.entity.Line.LineStatus;
+import com.eureka.ip.team1.urjung_main.user.entity.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,10 +34,32 @@ public class LineRepositoryTest {
     @Autowired
     private PlanRepository planRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private MembershipRepository membershipRepository;
+
     @Test
     @DisplayName("existsByUserIdAndPlanIdAndStatus - 존재할 때 true 반환")
     void existsByUserIdAndPlanIdAndStatus_shouldReturnTrueWhenExists() {
         // given
+        Membership membership = new Membership();
+        membership.setMembershipName("Basic");
+        membership.setGiftDiscount(25.0);
+        membership.setRequireAmount(1000);
+        membershipRepository.save(membership);
+
+        User user = userRepository.save(User.builder()
+                .userId("test-user")
+                .name("Test User")
+                .email("Test@test.com")
+                .password("password")
+                .birth(LocalDate.of(1990, 1, 1))
+                .gender("M")
+                .membership(membership)
+                .build());
+
         Plan plan = planRepository.save(Plan.builder()
                 .name("Test Plan")
                 .price(10000)
@@ -42,7 +69,7 @@ public class LineRepositoryTest {
                 .description("Test plan description")
                 .build());
 
-        String userId = "test-user";
+        String userId = user.getUserId();
         String planId = plan.getId();
 
         Line line = Line.builder()
