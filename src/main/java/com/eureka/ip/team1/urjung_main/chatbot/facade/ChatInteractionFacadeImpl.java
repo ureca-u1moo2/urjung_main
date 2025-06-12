@@ -168,19 +168,19 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     }
 
     private Mono<Void> saveEmbeddingIfNeeded(String message) {
-        return Mono.fromRunnable(() -> {
-            try {
-                if (!embeddingService.alreadyExists(message)) {
-                    log.info("New question, embedding...");
-                    embeddingService.indexWithEmbedding(message);
-                } else {
-                    log.info("Already embedded.");
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return embeddingService.alreadyExists(message)
+                .flatMap(exists -> {
+                    if (exists) {
+                        log.info("Already embedded.");
+                        return Mono.empty();
+                    } else {
+                        log.info("New question, embedding...");
+                        embeddingService.indexWithEmbedding(message);
+                        return Mono.empty();
+                    }
+                });
     }
+
 
     private Mono<Void> saveElasticsearchLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
         return Mono.fromRunnable(() -> {

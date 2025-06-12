@@ -114,8 +114,7 @@ public class UsageController {
             @PathVariable("planId") String planId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-//        String userId = userDetails.getUserId();
-        String userId = "4fcdaa60-7f04-4850-86f7-a391f9077fce";
+        String userId = userDetails.getUserId();
 
         usageRequestDto.setUserId(userId);
         usageRequestDto.setPlanId(planId);

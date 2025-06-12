@@ -31,7 +31,25 @@ class UsageRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        // 1. Plan 데이터 삽입
+        // 0. Membership 데이터 삽입
+        jdbcTemplate.update(
+                "INSERT INTO membership (id, membership_name, gift_discount, require_amount) VALUES (?, ?, ?, ?)",
+                "membership001", "Basic", 10, 5000
+        );
+
+        // 1. User 데이터 삽입
+        jdbcTemplate.update(
+                "INSERT INTO user (user_id, name, email, password, gender, birth, membership_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "user123", "홍길동", "test@test.com", "password", "M", "1990-01-01", "membership001"
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO user (user_id, name, email, password, gender, birth, membership_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "user456", "김철수", "test2@test.com", "password", "M", "1992-02-02", "membership001"
+        );
+
+
+        // 2. Plan 데이터 삽입
         jdbcTemplate.update(
                 "INSERT INTO plan (plan_id, plan_name, price, created_at) VALUES (?, ?, ?, ?)",
                 "plan001", "기본 요금제", 50000, java.sql.Timestamp.valueOf(LocalDateTime.now())
@@ -42,10 +60,10 @@ class UsageRepositoryTest {
                 "plan002", "프리미엄 요금제", 70000, java.sql.Timestamp.valueOf(LocalDateTime.now())
         );
 
-        // 2. Line 데이터 삽입
+        // 3. Line 데이터 삽입
         jdbcTemplate.update(
                 "INSERT INTO line (line_id, user_id, plan_id, phone_number, status, start_date, end_date, discounted_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                "line001", "user123", "plan001", "010-2323-2323", "active",
+                "line001", "user123", "plan001", "123-2323-2323", "active",
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 5, 10, 12, 0)),
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 10, 10, 12, 0)),
                 50000
@@ -53,7 +71,7 @@ class UsageRepositoryTest {
 
         jdbcTemplate.update(
                 "INSERT INTO line (line_id, user_id, plan_id, phone_number, status, start_date, end_date, discounted_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                "line002", "user123", "plan002", "010-9876-5432", "active",
+                "line002", "user123", "plan002", "123-9876-5432", "active",
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 5, 10, 12, 0)),
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 10, 10, 12, 0)),
                 60000
@@ -143,5 +161,15 @@ class UsageRepositoryTest {
         assertEquals("plan002", usageByUserIdAndPlanIdAndMonth.get().getPlanId());
         assertEquals(6, usageByUserIdAndPlanIdAndMonth.get().getMonth());
     }
+
+    @Test
+    void findCurrentMonthUsageByUserIdAndPhoneNumber() {
+        Optional<UsageResponseDto> currentMonthUsageByUserIdAndPhoneNumber = usageRepository.findCurrentMonthUsageByUserIdAndPhoneNumber("user123", "123-2323-2323");
+
+        log.info("currentMonthUsageByUserIdAndPhoneNumber : {}", currentMonthUsageByUserIdAndPhoneNumber);
+
+        assertEquals("123-2323-2323", currentMonthUsageByUserIdAndPhoneNumber.get().getPhoneNumber());
+    }
+
 }
 

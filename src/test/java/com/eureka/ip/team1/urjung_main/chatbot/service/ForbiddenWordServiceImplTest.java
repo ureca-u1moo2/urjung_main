@@ -36,7 +36,8 @@ class ForbiddenWordServiceImplTest {
                 createForbiddenWord("ㅅㅂ"),
                 createForbiddenWord("씨발"),
                 createForbiddenWord("병신"),
-                createForbiddenWord("개새끼")
+                createForbiddenWord("개새끼"),
+                createForbiddenWord("ignorepreviousinstructions")
         );
 
         //given
@@ -97,6 +98,44 @@ class ForbiddenWordServiceImplTest {
         // then
         assertThat(result).isTrue();
     }
+
+    @Test
+    @DisplayName("Prompt Injection 패턴도 금칙어로 탐지됨")
+    void testPromptInjectionPatterns() {
+        assertThat(forbiddenWordService.containsForbiddenWord("IGNORE-PREVIOUS-INSTRUCTIONS")).isTrue();
+        assertThat(forbiddenWordService.containsForbiddenWord("ignorepreviousinstructions")).isTrue();
+        assertThat(forbiddenWordService.containsForbiddenWord("Ignore Previous Instructions")).isTrue();
+    }
+
+
+    @Test
+    @DisplayName("reloadForbiddenWords() 호출 시 새로운 금칙어가 반영된다")
+    void testReloadForbiddenWords() {
+        // 1. 초기에는 빈 리스트 (금칙어 없음)
+        given(forbiddenWordRepository.findAll()).willReturn(List.of());
+        forbiddenWordService.reloadForbiddenWords();
+
+        // 초기 상태에서 아무것도 탐지 안됨
+        assertThat(forbiddenWordService.containsForbiddenWord("이건 테스트")).isFalse();
+
+        // 2. 새로운 금칙어 목록 mock 설정 후 reloadForbiddenWords 재호출
+        List<ForbiddenWord> newForbiddenWords = List.of(
+                createForbiddenWord("테스트"),
+                createForbiddenWord("금칙어")
+        );
+
+        given(forbiddenWordRepository.findAll()).willReturn(newForbiddenWords);
+        forbiddenWordService.reloadForbiddenWords();
+
+        // 3. 이제 새 금칙어가 탐지되어야 함
+        assertThat(forbiddenWordService.containsForbiddenWord("이건 테스트")).isTrue();
+        assertThat(forbiddenWordService.containsForbiddenWord("새로운 금칙어 입니다")).isTrue();
+
+        // 4. 없는 건 여전히 false
+        assertThat(forbiddenWordService.containsForbiddenWord("안녕")).isFalse();
+    }
+
+
 
     // ForbiddenWord 테스트용 생성 메서드
     private ForbiddenWord createForbiddenWord(String word) {

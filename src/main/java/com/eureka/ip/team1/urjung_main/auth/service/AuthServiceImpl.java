@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService{
 			log.debug("login end");
 			
 			UserDto userDto = new UserDto();
+			userDto.setUserId(user.getUserId());
 			userDto.setName(user.getName());
 			userDto.setGender(user.getGender());
 			userDto.setBirth(user.getBirth());

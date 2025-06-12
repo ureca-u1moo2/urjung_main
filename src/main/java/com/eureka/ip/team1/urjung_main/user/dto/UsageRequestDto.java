@@ -16,6 +16,8 @@ public class UsageRequestDto {
 
     private String planId;
 
+    private String phoneNumber;
+
     private Integer year;
 
     private Integer month;

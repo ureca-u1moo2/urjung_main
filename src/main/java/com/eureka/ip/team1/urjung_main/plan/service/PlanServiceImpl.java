@@ -59,7 +59,15 @@ public List<PlanDto> getPlansSorted(String sortBy) {
             plans = planRepository.findAllByOrderByDataAmountAsc();
             break;
         case "dataDesc":
-            plans = planRepository.findAllByOrderByDataAmountDesc();
+//            plans = planRepository.findAllByOrderByDataAmountDesc();
+//            break;
+            // 무제한 데이터 정렬 기준 추가
+            plans = planRepository.findAll(); // 정렬 없이 전체 불러오기
+            plans.sort((p1, p2) -> {
+                long d1 = (p1.getDataAmount() != null && p1.getDataAmount() == -1) ? Long.MAX_VALUE : p1.getDataAmount();
+                long d2 = (p2.getDataAmount() != null && p2.getDataAmount() == -1) ? Long.MAX_VALUE : p2.getDataAmount();
+                return Long.compare(d2, d1); // 내림차순 정렬
+            });
             break;
         case "popular":
         default:

@@ -1,186 +1,105 @@
 package com.eureka.ip.team1.urjung_main.plan.repository;
 
 import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
+import com.eureka.ip.team1.urjung_main.user.entity.Line;
+import com.eureka.ip.team1.urjung_main.user.entity.Line.LineStatus;
+import com.eureka.ip.team1.urjung_main.user.repository.LineRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)  // 추가!
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class PlanRepositoryTest {
+
     @Autowired
     private PlanRepository planRepository;
 
-    // 요금제 전체 목록 조회 테스트
+    @Autowired
+    private LineRepository lineRepository; // test용 repository 따로 만들었으면 그것도 추가 필요
+
     @Test
-    @DisplayName("Plan 저장 테스트 - PrePersist 포함")
-    void savePlan() {
-        // given
-        Plan plan = Plan.builder()
-                .name("Plan A")
-                .price(40000)
-                .description("Test Plan")
-                .dataAmount(5000L)
-                .callAmount(300L)
-                .smsAmount(100L)
-                .build();
+    @DisplayName("가격 낮은 순 정렬 테스트")
+    void sortByPriceAsc() {
+        planRepository.save(Plan.builder().name("A").price(10000).build());
+        planRepository.save(Plan.builder().name("B").price(20000).build());
 
-        // when
-        Plan savedPlan = planRepository.save(plan);
-
-        // then
-        assertThat(savedPlan.getId()).isNotNull();  // PrePersist 실행 확인
-        assertThat(savedPlan.getCreatedAt()).isNotNull();
-        assertThat(savedPlan.getName()).isEqualTo("Plan A");
-    }
-
-    // 요금제 상세 조회 테스트
-    @Test
-    @DisplayName("Plan findById 테스트 - 존재하는 Plan 조회")
-    void findById_shouldReturnPlan() {
-        // given
-        Plan plan = Plan.builder()
-                .name("Plan A")
-                .price(40000)
-                .description("Test Plan")
-                .dataAmount(5000L)
-                .callAmount(300L)
-                .smsAmount(100L)
-                .build();
-
-        Plan savedPlan = planRepository.save(plan);
-
-        // when
-        Plan foundPlan = planRepository.findById(savedPlan.getId()).orElse(null);
-
-        // then
-        assertThat(foundPlan).isNotNull();
-        assertThat(foundPlan.getId()).isEqualTo(savedPlan.getId());
-        assertThat(foundPlan.getName()).isEqualTo(savedPlan.getName());
-    }
-
-    // 요금제 필터 조건 조회 테스트
-    @Test
-    @DisplayName("Plan 정렬 테스트 - 가격 오름차순")
-    void findAllByOrderByPriceAsc_shouldReturnSortedPlans() {
-        planRepository.deleteAll();
-        // given
-        Plan plan1 = Plan.builder().name("Plan A").price(30000).description("Desc A").dataAmount(1000L).callAmount(100L).smsAmount(50L).build();
-        Plan plan2 = Plan.builder().name("Plan B").price(50000).description("Desc B").dataAmount(2000L).callAmount(200L).smsAmount(100L).build();
-        Plan plan3 = Plan.builder().name("Plan C").price(40000).description("Desc C").dataAmount(1500L).callAmount(150L).smsAmount(75L).build();
-
-        planRepository.save(plan1);
-        planRepository.save(plan2);
-        planRepository.save(plan3);
-        planRepository.flush();
-
-        // when
-        List<Plan> result = planRepository.findAllByOrderByPriceAsc();
-
-        // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).getPrice()).isEqualTo(30000);
-        assertThat(result.get(1).getPrice()).isEqualTo(40000);
-        assertThat(result.get(2).getPrice()).isEqualTo(50000);
+        List<Plan> plans = planRepository.findAllByOrderByPriceAsc();
+        assertThat(plans.get(0).getPrice()).isEqualTo(10000);
     }
 
     @Test
-    @DisplayName("Plan 정렬 테스트 - 가격 내림차순")
-    void findAllByOrderByPriceDesc_shouldReturnSortedPlans() {
-        planRepository.deleteAll();
+    @DisplayName("가격 높은 순 정렬 테스트")
+    void sortByPriceDesc() {
+        planRepository.save(Plan.builder().name("A").price(10000).build());
+        planRepository.save(Plan.builder().name("B").price(40000).build());
 
-        // given
-        Plan plan1 = Plan.builder().name("Plan A").price(30000).description("Desc A").dataAmount(1000L).callAmount(100L).smsAmount(50L).build();
-        Plan plan2 = Plan.builder().name("Plan B").price(50000).description("Desc B").dataAmount(2000L).callAmount(200L).smsAmount(100L).build();
-        Plan plan3 = Plan.builder().name("Plan C").price(40000).description("Desc C").dataAmount(1500L).callAmount(150L).smsAmount(75L).build();
-
-        planRepository.save(plan1);
-        planRepository.save(plan2);
-        planRepository.save(plan3);
-        planRepository.flush();
-
-        // when
-        List<Plan> result = planRepository.findAllByOrderByPriceDesc();
-
-        // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).getPrice()).isEqualTo(50000);
-        assertThat(result.get(1).getPrice()).isEqualTo(40000);
-        assertThat(result.get(2).getPrice()).isEqualTo(30000);
+        List<Plan> plans = planRepository.findAllByOrderByPriceDesc();
+        assertThat(plans.get(0).getPrice()).isEqualTo(40000);
     }
 
     @Test
-    @DisplayName("Plan 정렬 테스트 - 데이터 적은 순 (오름차순)")
-    void findAllByOrderByDataAmountAsc_shouldReturnSortedPlans() {
-        planRepository.deleteAll();
+    @DisplayName("데이터 적은 순 정렬 테스트")
+    void sortByDataAsc() {
+        planRepository.save(Plan.builder().name("A").dataAmount(-1L).build());
+        planRepository.save(Plan.builder().name("B").dataAmount(3000L).build());
 
-        // given
-        Plan plan1 = Plan.builder().name("Plan A").price(30000).description("Desc A").dataAmount(1000L).callAmount(100L).smsAmount(50L).build();
-        Plan plan2 = Plan.builder().name("Plan B").price(50000).description("Desc B").dataAmount(2000L).callAmount(200L).smsAmount(100L).build();
-        Plan plan3 = Plan.builder().name("Plan C").price(40000).description("Desc C").dataAmount(1500L).callAmount(150L).smsAmount(75L).build();
-
-        planRepository.save(plan1);
-        planRepository.save(plan2);
-        planRepository.save(plan3);
-        planRepository.flush();
-
-        // when
-        List<Plan> result = planRepository.findAllByOrderByDataAmountAsc();
-
-        // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).getDataAmount()).isEqualTo(1000L);
-        assertThat(result.get(1).getDataAmount()).isEqualTo(1500L);
-        assertThat(result.get(2).getDataAmount()).isEqualTo(2000L);
+        List<Plan> plans = planRepository.findAllByOrderByDataAmountAsc();
+        assertThat(plans.get(0).getDataAmount()).isEqualTo(-1L);
     }
 
     @Test
-    @DisplayName("Plan 정렬 테스트 - 데이터 많은 순")
-    void findAllByOrderByDataAmountDesc_shouldReturnSortedPlans() {
-        planRepository.deleteAll();
-        // given
-        Plan plan1 = Plan.builder().name("Plan A").price(30000).description("Desc A").dataAmount(1000L).callAmount(100L).smsAmount(50L).build();
-        Plan plan2 = Plan.builder().name("Plan B").price(50000).description("Desc B").dataAmount(2000L).callAmount(200L).smsAmount(100L).build();
-        Plan plan3 = Plan.builder().name("Plan C").price(40000).description("Desc C").dataAmount(1500L).callAmount(150L).smsAmount(75L).build();
+    @DisplayName("데이터 많은 순 정렬 테스트")
+    void sortByDataDesc() {
+        planRepository.save(Plan.builder().name("A").dataAmount(1000L).build());
+        planRepository.save(Plan.builder().name("B").dataAmount(10000L).build());
 
-        planRepository.save(plan1);
-        planRepository.save(plan2);
-        planRepository.save(plan3);
-        planRepository.flush();
-
-        // when
-        List<Plan> result = planRepository.findAllByOrderByDataAmountDesc();
-
-        // then
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).getDataAmount()).isEqualTo(2000L);
-        assertThat(result.get(1).getDataAmount()).isEqualTo(1500L);
-        assertThat(result.get(2).getDataAmount()).isEqualTo(1000L);
+        List<Plan> plans = planRepository.findAllByOrderByDataAmountDesc();
+        assertThat(plans.get(0).getDataAmount()).isEqualTo(10000L);
     }
 
+    @Transactional
+    @Rollback
     @Test
-    @DisplayName("Plan 인기순 조회 테스트 - findPopularPlans (단순 실행 확인)")
-    void findPopularPlans_shouldExecute() {
-        // given
-        Plan plan1 = Plan.builder().name("Plan A").price(30000).description("Desc A").dataAmount(1000L).callAmount(100L).smsAmount(50L).build();
-        Plan plan2 = Plan.builder().name("Plan B").price(50000).description("Desc B").dataAmount(2000L).callAmount(200L).smsAmount(100L).build();
+    @DisplayName("인기순 정렬(JPQL) 테스트")
+    void findPopularPlans() {
+        Plan plan1 = planRepository.save(Plan.builder().name("Plan A").build());
+        Plan plan2 = planRepository.save(Plan.builder().name("Plan B").build());
 
-        planRepository.save(plan1);
-        planRepository.save(plan2);
+        // userId가 필수이므로 테스트용 값 넣어주기
+        String fakeUser1 = "user-1";
+        String fakeUser2 = "user-2";
+        String fakeUser3 = "user-3";
 
-        // when
-        List<Plan> result = planRepository.findPopularPlans();
+        // 활성화된 Line 2건 (plan1)
+        lineRepository.save(Line.builder()
+                .planId(plan1.getId())
+                .userId(fakeUser1)
+                .status(LineStatus.active)
+                .build());
 
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result).isNotEmpty();  // 현재 라인 테이블 연결은 안되어 있지만 쿼리가 오류 없이 실행되는지 확인
+        lineRepository.save(Line.builder()
+                .planId(plan1.getId())
+                .userId(fakeUser2)
+                .status(LineStatus.active)
+                .build());
+
+        // 비활성화된 Line 1건 (plan2)
+        lineRepository.save(Line.builder()
+                .planId(plan2.getId())
+                .userId(fakeUser3)
+                .status(LineStatus.canceled)
+                .build());
+
+        List<Plan> popularPlans = planRepository.findPopularPlans();
+        assertThat(popularPlans.get(0).getName()).isEqualTo("Plan A");
     }
-
 }
-

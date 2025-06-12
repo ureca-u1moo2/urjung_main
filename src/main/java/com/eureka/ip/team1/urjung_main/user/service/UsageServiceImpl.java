@@ -80,4 +80,17 @@ public class UsageServiceImpl implements UsageService {
             throw new InternalServerErrorException();
         }
     }
+
+    @Override
+    public Optional<UsageResponseDto> getCurrentMonthUsageByUserIdAndPhoneNumber(UsageRequestDto usageRequestDto) {
+        try {
+            return usageRepository.findCurrentMonthUsageByUserIdAndPhoneNumber(
+                    usageRequestDto.getUserId(),
+                    usageRequestDto.getPhoneNumber()
+            );
+        } catch (Exception e) {
+            log.info("error : {}", e.getMessage());
+            throw new InternalServerErrorException();
+        }
+    }
 }
