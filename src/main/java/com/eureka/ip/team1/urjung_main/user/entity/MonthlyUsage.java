@@ -1,16 +1,11 @@
 package com.eureka.ip.team1.urjung_main.user.entity;
 
-import co.elastic.clients.util.DateTime;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -20,8 +15,12 @@ public class MonthlyUsage {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @Column(name = "id", columnDefinition = "BINARY(16)")
-    private UUID id;
+    @Column(columnDefinition = "BINARY(16)")
+    private UUID monthlyUsageId;
+
+    @ManyToOne
+    @JoinColumn(name = "line_id")
+    private Line line;
 
     @Column(nullable = false)
     private LocalDate month;

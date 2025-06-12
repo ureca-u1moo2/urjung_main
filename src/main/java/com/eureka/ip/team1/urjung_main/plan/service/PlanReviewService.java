@@ -14,12 +14,12 @@ public interface PlanReviewService {
 
     // 요금제 리뷰 등록
 //    void createReview(String planId, Long userId, PlanReviewRequestDto requestDto);
-    PlanReviewResponseDto createReview(String planId, Long userId, PlanReviewRequestDto requestDto);
+    PlanReviewResponseDto createReview(String planId, String userId, PlanReviewRequestDto requestDto);
 
     // 요금제 리뷰 수정
-    void updateReview(String planId, String reviewId, Long userId, PlanReviewUpdateDto updateDto);
+    void updateReview(String planId, String reviewId, String userId, PlanReviewUpdateDto updateDto);
 
     // 요금제 리뷰 삭제
-    void deleteReview(String planId, String reviewId, Long userId);
+    void deleteReview(String planId, String reviewId, String userId);
 
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@WithMockUser(username = "testuser", roles = {"USER"})
 class PlanReviewServiceTest {
 
     @Mock
@@ -41,7 +43,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(5)
                 .content("좋아요!")
                 .createdAt(LocalDateTime.now())
@@ -70,7 +72,7 @@ class PlanReviewServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        PlanReviewResponseDto response = planReviewService.createReview("plan-1", 1L, requestDto);
+        PlanReviewResponseDto response = planReviewService.createReview("plan-1", "1", requestDto);
 
         // then
         assertThat(response.getRating()).isEqualTo(4);
@@ -84,7 +86,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(3)
                 .content("이전 내용")
                 .createdAt(LocalDateTime.now())
@@ -98,7 +100,7 @@ class PlanReviewServiceTest {
         updateDto.setContent("수정된 내용");
 
         // when
-        planReviewService.updateReview("plan-1", "review-1", 1L, updateDto);
+        planReviewService.updateReview("plan-1", "review-1", "1", updateDto);
 
         // then
         assertThat(review.getRating()).isEqualTo(5);
@@ -112,7 +114,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(2L)  // 다른 사용자
+                .userId("2")  // 다른 사용자
                 .rating(3)
                 .content("이전 내용")
                 .createdAt(LocalDateTime.now())
@@ -127,7 +129,7 @@ class PlanReviewServiceTest {
 
         // then
         assertThrows(ForbiddenException.class, () -> {
-            planReviewService.updateReview("plan-1", "review-1", 1L, updateDto);  // 요청자 userId = 1L
+            planReviewService.updateReview("plan-1", "review-1", "1", updateDto);  // 요청자 userId = 1L
         });
     }
 
@@ -138,7 +140,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(3)
                 .content("이전 내용")
                 .createdAt(LocalDateTime.now())
@@ -153,7 +155,7 @@ class PlanReviewServiceTest {
 
         // then
         assertThrows(com.eureka.ip.team1.urjung_main.common.exception.InvalidInputException.class, () -> {
-            planReviewService.updateReview("wrong-plan-id", "review-1", 1L, updateDto);
+            planReviewService.updateReview("wrong-plan-id", "review-1", "1", updateDto);
         });
     }
 
@@ -164,7 +166,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(5)
                 .content("삭제할 리뷰")
                 .createdAt(LocalDateTime.now())
@@ -174,7 +176,7 @@ class PlanReviewServiceTest {
                 .thenReturn(Optional.of(review));
 
         // when
-        planReviewService.deleteReview("plan-1", "review-1", 1L);
+        planReviewService.deleteReview("plan-1", "review-1", "1");
 
         // then
         verify(planReviewRepository, times(1)).delete(review);
@@ -187,7 +189,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(2L)  // 다른 사용자
+                .userId("2")  // 다른 사용자
                 .rating(5)
                 .content("삭제할 리뷰")
                 .createdAt(LocalDateTime.now())
@@ -198,7 +200,7 @@ class PlanReviewServiceTest {
 
         // then
         assertThrows(ForbiddenException.class, () -> {
-            planReviewService.deleteReview("plan-1", "review-1", 1L);  // 요청자 userId = 1L
+            planReviewService.deleteReview("plan-1", "review-1", "1");  // 요청자 userId = 1L
         });
     }
 
@@ -209,7 +211,7 @@ class PlanReviewServiceTest {
         PlanReview review = PlanReview.builder()
                 .id("review-1")
                 .planId("plan-1")
-                .userId(1L)
+                .userId("1")
                 .rating(5)
                 .content("삭제할 리뷰")
                 .createdAt(LocalDateTime.now())
@@ -220,7 +222,7 @@ class PlanReviewServiceTest {
 
         // then
         assertThrows(com.eureka.ip.team1.urjung_main.common.exception.InvalidInputException.class, () -> {
-            planReviewService.deleteReview("wrong-plan-id", "review-1", 1L);
+            planReviewService.deleteReview("wrong-plan-id", "review-1", "1");
         });
     }
 }

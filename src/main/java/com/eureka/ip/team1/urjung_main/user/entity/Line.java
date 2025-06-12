@@ -27,8 +27,8 @@ public class Line {
     private String planId;
 
     @Enumerated(EnumType.STRING)
-//    @Column(name = "status", columnDefinition = "ENUM('active', 'canceled') DEFAULT 'active'")
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "ENUM('active', 'canceled') DEFAULT 'active'")
+//    @Column(name = "status", nullable = false)
     private LineStatus status;
 
     @Column(name = "start_date", nullable = false)
@@ -45,8 +45,8 @@ public class Line {
     private int discountedPrice;
 
     // 요금제 해지 일
-    @Column(name = "terminated_at")
-    private LocalDateTime terminatedAt;
+//    @Column(name = "terminated_at")
+//    private LocalDateTime terminatedAt;
 
     // Plan 연관 객체 (조회용)
     @ManyToOne(fetch = FetchType.LAZY)

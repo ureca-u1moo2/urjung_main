@@ -20,4 +20,10 @@ public class PlanDto {
     private Long callAmount;
     private Long smsAmount;
     private LocalDateTime createdAt;
+
+    // 데이터 무제한 인 경우
+    public String getDataAmountText() {
+        if (dataAmount != null && dataAmount < 0) return "무제한";
+        return dataAmount + "GB";
+    }
 }

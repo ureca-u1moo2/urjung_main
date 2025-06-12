@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class PlanReviewResponseDto {
 
     private String id;
-    private Long userId;
+    private String userId;
     private int rating;
     private String content;
     private LocalDateTime createdAt;

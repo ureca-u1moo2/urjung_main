@@ -5,15 +5,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.PLANT_DETAIL_BASE_PROMPT;
+
 @Component
-public class PlanDetailPromptStrategy implements SingleArgsPromptStrategy{
-    private static final String PLANT_DETAIL_BASE_PROMPT =
-            """
-                  아래의 요금제 목록에서 사용자가 원하는 플랜을 찾아 답하세요. description부분을 읽고 최대한 친절히 답하세요
-                    """;
+public class PlanDetailPromptStrategy implements SingleArgsPromptStrategy {
+
     @Override
     public String generatePrompt(String plans) {
-        return PLANT_DETAIL_BASE_PROMPT+"\n"+plans;
+        return PLANT_DETAIL_BASE_PROMPT + "\n" + plans;
     }
 
     @Override

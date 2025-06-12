@@ -17,7 +17,7 @@ import reactor.core.publisher.Flux;
 public class ChatBotController {
     private final ChatInteractionFacade chatInteractionFacade;
 
-    @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ChatResponseDto> chat(@RequestBody ChatRequestDto requestDto) {
         return chatInteractionFacade.chat("1", requestDto);
     }
