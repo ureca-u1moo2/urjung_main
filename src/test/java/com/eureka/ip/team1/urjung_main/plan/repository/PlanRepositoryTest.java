@@ -49,11 +49,11 @@ public class PlanRepositoryTest {
     @Test
     @DisplayName("데이터 적은 순 정렬 테스트")
     void sortByDataAsc() {
-        planRepository.save(Plan.builder().name("A").dataAmount(1000L).build());
+        planRepository.save(Plan.builder().name("A").dataAmount(-1L).build());
         planRepository.save(Plan.builder().name("B").dataAmount(3000L).build());
 
         List<Plan> plans = planRepository.findAllByOrderByDataAmountAsc();
-        assertThat(plans.get(0).getDataAmount()).isEqualTo(1000L);
+        assertThat(plans.get(0).getDataAmount()).isEqualTo(-1L);
     }
 
     @Test
@@ -71,8 +71,8 @@ public class PlanRepositoryTest {
     @Test
     @DisplayName("인기순 정렬(JPQL) 테스트")
     void findPopularPlans() {
-        Plan plan1 = planRepository.save(Plan.builder().name("A").build());
-        Plan plan2 = planRepository.save(Plan.builder().name("B").build());
+        Plan plan1 = planRepository.save(Plan.builder().name("Plan A").build());
+        Plan plan2 = planRepository.save(Plan.builder().name("Plan B").build());
 
         // userId가 필수이므로 테스트용 값 넣어주기
         String fakeUser1 = "user-1";
@@ -100,6 +100,6 @@ public class PlanRepositoryTest {
                 .build());
 
         List<Plan> popularPlans = planRepository.findPopularPlans();
-        assertThat(popularPlans.get(0).getName()).isEqualTo("A");
+        assertThat(popularPlans.get(0).getName()).isEqualTo("Plan A");
     }
 }
