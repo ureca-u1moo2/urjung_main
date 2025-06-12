@@ -42,7 +42,7 @@ public class PlanReviewServiceImpl implements PlanReviewService {
     // 요금제 리뷰 등록
     @Override
     @Transactional
-    public PlanReviewResponseDto createReview(String planId, Long userId, PlanReviewRequestDto requestDto) {
+    public PlanReviewResponseDto createReview(String planId, String userId, PlanReviewRequestDto requestDto) {
         PlanReview review = PlanReview.builder()
                 .planId(planId)
                 .userId(userId)
@@ -65,7 +65,7 @@ public class PlanReviewServiceImpl implements PlanReviewService {
     // 요금제 리뷰 수정
     @Override
     @Transactional
-    public void updateReview(String planId, String reviewId, Long userId, PlanReviewUpdateDto updateDto) {
+    public void updateReview(String planId, String reviewId, String userId, PlanReviewUpdateDto updateDto) {
         PlanReview review = planReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다"));
 
@@ -85,7 +85,7 @@ public class PlanReviewServiceImpl implements PlanReviewService {
     // 요금제 리뷰 삭제
     @Override
     @Transactional
-    public void deleteReview(String planId, String reviewId, Long userId) {
+    public void deleteReview(String planId, String reviewId, String userId) {
         PlanReview review = planReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다"));
 

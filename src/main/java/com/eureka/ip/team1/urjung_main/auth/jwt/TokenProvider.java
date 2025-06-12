@@ -90,7 +90,8 @@ public class TokenProvider {
 	// 반대로 client 가 접속 할 때마다, DB Access <- 이건 큰 부담
 	public Authentication getAuthentication(String token) {
 		UserDetails userDetails = customUserDetailsService.loadUserByUsername(this.getUsernameFromToken(token));
-		return new UsernamePasswordAuthenticationToken( userDetails.getUsername(), "", userDetails.getAuthorities());
+		//return new UsernamePasswordAuthenticationToken( userDetails.getUsername(), "", userDetails.getAuthorities());
+		return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
 	}
 	
 	// jwt 로 부터 username 추출

@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.plan.controller;
 
+import com.eureka.ip.team1.urjung_main.auth.config.CustomUserDetails;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
 import com.eureka.ip.team1.urjung_main.common.enums.Result;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanReviewRequestDto;
@@ -8,6 +9,7 @@ import com.eureka.ip.team1.urjung_main.plan.dto.PlanReviewUpdateDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,10 +37,12 @@ public class PlanReviewController {
     @PostMapping("/{planId}/reviews")
     public ResponseEntity<ApiResponse<Void>> createReview(
             @PathVariable String planId,
-            @RequestBody PlanReviewRequestDto requestDto
+            @RequestBody PlanReviewRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         // 임시 userId → 추후 로그인 인증 정보에서 가져오는 걸로 수정 예정
-        Long userId = 1L;  // 예: 현재 테스트용으로 임시로 userId=1 사용
+//        Long userId = 1L;  // 예: 현재 테스트용으로 임시로 userId=1 사용
+        String userId = userDetails.getUserId();
 
         planReviewService.createReview(planId, userId, requestDto);
 
@@ -53,9 +57,11 @@ public class PlanReviewController {
     public ResponseEntity<ApiResponse<Void>> updateReview(
             @PathVariable String planId,
             @PathVariable String reviewId,
-            @RequestBody PlanReviewUpdateDto updateDto
+            @RequestBody PlanReviewUpdateDto updateDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = 1L;  // 임시
+//        Long userId = 1L;  // 임시
+        String userId = userDetails.getUserId();
 
         planReviewService.updateReview(planId, reviewId, userId, updateDto);
 
@@ -69,9 +75,11 @@ public class PlanReviewController {
     @DeleteMapping("/{planId}/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @PathVariable String planId,
-            @PathVariable String reviewId
+            @PathVariable String reviewId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = 1L;  // 임시 userId
+//        Long userId = 1L;  // 임시 userId
+        String userId = userDetails.getUserId();
 
         planReviewService.deleteReview(planId, reviewId, userId);
 

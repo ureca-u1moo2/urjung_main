@@ -25,7 +25,7 @@ public class PlanReview {
     private String planId;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
