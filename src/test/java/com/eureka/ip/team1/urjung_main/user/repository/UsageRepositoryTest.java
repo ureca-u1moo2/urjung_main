@@ -45,7 +45,7 @@ class UsageRepositoryTest {
         // 2. Line 데이터 삽입
         jdbcTemplate.update(
                 "INSERT INTO line (line_id, user_id, plan_id, phone_number, status, start_date, end_date, discounted_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                "line001", "user123", "plan001", "010-2323-2323", "active",
+                "line001", "user123", "plan001", "123-2323-2323", "active",
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 5, 10, 12, 0)),
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 10, 10, 12, 0)),
                 50000
@@ -53,7 +53,7 @@ class UsageRepositoryTest {
 
         jdbcTemplate.update(
                 "INSERT INTO line (line_id, user_id, plan_id, phone_number, status, start_date, end_date, discounted_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                "line002", "user123", "plan002", "010-9876-5432", "active",
+                "line002", "user123", "plan002", "123-9876-5432", "active",
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 5, 10, 12, 0)),
                 java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 10, 10, 12, 0)),
                 60000
@@ -143,5 +143,15 @@ class UsageRepositoryTest {
         assertEquals("plan002", usageByUserIdAndPlanIdAndMonth.get().getPlanId());
         assertEquals(6, usageByUserIdAndPlanIdAndMonth.get().getMonth());
     }
+
+    @Test
+    void findCurrentMonthUsageByUserIdAndPhoneNumber() {
+        Optional<UsageResponseDto> currentMonthUsageByUserIdAndPhoneNumber = usageRepository.findCurrentMonthUsageByUserIdAndPhoneNumber("user123", "123-2323-2323");
+
+        log.info("currentMonthUsageByUserIdAndPhoneNumber : {}", currentMonthUsageByUserIdAndPhoneNumber);
+
+        assertEquals("123-2323-2323", currentMonthUsageByUserIdAndPhoneNumber.get().getPhoneNumber());
+    }
+
 }
 
