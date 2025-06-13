@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifie
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScore;
 import com.eureka.ip.team1.urjung_main.embedding.config.PlanEmbeddingFormatter;
+import com.eureka.ip.team1.urjung_main.embedding.enums.RankScoreType;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDocument;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanResultDto;
 import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
@@ -19,10 +20,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -163,99 +163,77 @@ public class PlanIndexingServiceImpl implements PlanIndexingService {
     }
 
     public Map<String, Float> generateRankScores(Plan plan) {
-        Map<String, Float> scores = new HashMap<>();
+        EnumMap<RankScoreType, Float> scoreMap = new EnumMap<>(RankScoreType.class);
 
-        // 1. 데이터 사용량 기준
-        if (plan.getDataAmount() >= 20480) { // 20GB 이상
-            scores.put("data_heavy", 1.0f);
+        if (plan.getDataAmount() >= 20480) {
+            scoreMap.put(RankScoreType.DATA_HEAVY, 1.0f);
         } else if (plan.getDataAmount() >= 10240) {
-            scores.put("data_heavy", 0.8f);
+            scoreMap.put(RankScoreType.DATA_HEAVY, 0.8f);
         }
 
-        // 2. 통화량 기준
         if (plan.getCallAmount() >= 99999) {
-            scores.put("call_heavy", 1.0f);
-        } else if (plan.getCallAmount() >= 300) {
-            scores.put("call_heavy", 0.7f);
+            scoreMap.put(RankScoreType.CALL_HEAVY, 1.0f);
         }
 
-        // 3. 가격 기준
         if (plan.getPrice() <= 15000) {
-            scores.put("low_price", 1.0f);
+            scoreMap.put(RankScoreType.LOW_PRICE, 1.0f);
         } else if (plan.getPrice() <= 25000) {
-            scores.put("low_price", 0.8f);
+            scoreMap.put(RankScoreType.LOW_PRICE, 0.8f);
         }
 
-        // 4. 시니어 친화
         if (plan.getCallAmount() >= 300 && plan.getPrice() <= 25000) {
-            scores.put("senior_friendly", 1.0f);
+            scoreMap.put(RankScoreType.SENIOR_FRIENDLY, 1.0f);
         }
 
-        // 5. 학생/청소년
         String lowerName = plan.getName().toLowerCase();
         String lowerDesc = plan.getDescription() == null ? "" : plan.getDescription().toLowerCase();
+
         if (lowerName.contains("청소년") || lowerDesc.contains("청소년") || lowerName.contains("학생")) {
-            scores.put("student_friendly", 1.0f);
+            scoreMap.put(RankScoreType.STUDENT_FRIENDLY, 1.0f);
         }
 
-        // 6. 스트리밍 관련
         if (lowerName.contains("유튜브") || lowerDesc.contains("영상") || plan.getDataAmount() >= 30000) {
-            scores.put("streaming", 1.0f);
+            scoreMap.put(RankScoreType.STREAMING, 1.0f);
         }
 
-        // 7. 해외/로밍
         if (lowerName.contains("해외") || lowerName.contains("로밍") || lowerDesc.contains("로밍")) {
-            scores.put("roaming", 1.0f);
+            scoreMap.put(RankScoreType.ROAMING, 1.0f);
         }
 
-        return scores;
+        return scoreMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().field(),
+                        Map.Entry::getValue
+                ));
     }
 
-    private List<FunctionScore> getDynamicRankFunctions(String queryText) {
+
+
+    public List<FunctionScore> getDynamicRankFunctions(String queryText) {
         List<FunctionScore> functions = new ArrayList<>();
         String lower = queryText.toLowerCase();
 
-        if (lower.contains("어르신") || lower.contains("시니어") || lower.contains("노인")) {
-            functions.add(FunctionScore.of(f -> f
-                    .fieldValueFactor(ff -> ff
-                            .field("rank_scores.senior_friendly")
-                            .factor(2.0)
-                            .modifier(FieldValueFactorModifier.Sqrt)
-                            .missing(0.0)
-                    )
-            ));
-        }
-        if (lower.contains("데이터 많이") || lower.contains("영상") || lower.contains("유튜브") || lower.contains("스트리밍")) {
-            functions.add(FunctionScore.of(f -> f
-                    .fieldValueFactor(ff -> ff
-                            .field("rank_scores.data_heavy")
-                            .factor(2.0)
-                            .modifier(FieldValueFactorModifier.Sqrt)
-                            .missing(0.0)
-                    )
-            ));
-        }
-        if (lower.contains("학생") || lower.contains("청소년") || lower.contains("미성년자")) {
-            functions.add(FunctionScore.of(f -> f
-                    .fieldValueFactor(ff -> ff
-                            .field("rank_scores.student_friendly")
-                            .factor(2.0)
-                            .modifier(FieldValueFactorModifier.Sqrt)
-                            .missing(0.0)
-                    )
-            ));
-        }
-        if (lower.contains("가격") || lower.contains("저렴") || lower.contains("싼") || lower.contains("알뜰")) {
-            functions.add(FunctionScore.of(f -> f
-                    .fieldValueFactor(ff -> ff
-                            .field("rank_scores.low_price")
-                            .factor(2.0)
-                            .modifier(FieldValueFactorModifier.Sqrt)
-                            .missing(0.0)
-                    )
-            ));
-        }
+        Map<Predicate<String>, RankScoreType> keywordMap = Map.of(
+                q -> q.contains("어르신") || q.contains("시니어") || q.contains("노인"), RankScoreType.SENIOR_FRIENDLY,
+                q -> q.contains("학생") || q.contains("청소년") || q.contains("미성년자"), RankScoreType.STUDENT_FRIENDLY,
+                q -> q.contains("영상") || q.contains("스트리밍") || q.contains("유튜브"), RankScoreType.DATA_HEAVY,
+                q -> q.contains("저렴") || q.contains("가격") || q.contains("알뜰") || q.contains("싼"), RankScoreType.LOW_PRICE
+        );
+
+        keywordMap.forEach((predicate, type) -> {
+            if (predicate.test(lower)) {
+                functions.add(FunctionScore.of(f -> f
+                        .fieldValueFactor(ff -> ff
+                                .field(type.field())
+                                .factor(2.0)
+                                .modifier(FieldValueFactorModifier.Sqrt)
+                                .missing(0.0)
+                        )
+                ));
+            }
+        });
 
         return functions;
     }
+
 }
