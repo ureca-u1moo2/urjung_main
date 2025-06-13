@@ -34,6 +34,9 @@ public class PlanEmbeddingConfig {
                                     .index(true)
                                     .similarity("cosine")
                             ))
+                            .properties("rank_scores", p -> p
+                                    .rankFeatures(rf -> rf)
+                            )
                     )
             );
 
