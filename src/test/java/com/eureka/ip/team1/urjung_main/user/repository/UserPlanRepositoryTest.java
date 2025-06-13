@@ -101,7 +101,8 @@ class UserPlanRepositoryTest {
                 .filter(plan -> plan.getPlanId().equals("plan001"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Plan001 not found"));
-        
+
+        assertEquals("line001", firstPlan.getLineId());
         assertEquals("기본 요금제", firstPlan.getPlanName());
         assertEquals("232-2323-2323", firstPlan.getPhoneNumber());
         assertEquals("기본 데이터 5GB, 통화 100분", firstPlan.getDescription());
@@ -111,7 +112,8 @@ class UserPlanRepositoryTest {
                 .filter(plan -> plan.getPlanId().equals("plan002"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Plan002 not found"));
-        
+
+        assertEquals("line001", firstPlan.getLineId());
         assertEquals("프리미엄 요금제", secondPlan.getPlanName());
         assertEquals("232-9876-5432", secondPlan.getPhoneNumber());
         assertEquals("데이터 무제한, 통화 무제한", secondPlan.getDescription());
@@ -128,6 +130,7 @@ class UserPlanRepositoryTest {
         
         for (UserPlanResponseDto plan : userPlans) {
             assertNotEquals("010-3333-4444", plan.getPhoneNumber());
+            assertNotNull(plan.getLineId());
         }
     }
 
@@ -144,5 +147,6 @@ class UserPlanRepositoryTest {
         assertEquals("기본 요금제", plan.getPlanName());
         assertEquals("232-1111-2222", plan.getPhoneNumber());
         assertEquals(50000, plan.getDiscountedPrice());
+        assertEquals("line003", plan.getLineId());
     }
 }
