@@ -60,7 +60,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
                         var knnQuery = KnnQuery.of(k -> k
                                 .field("embedding")
                                 .k(3)
-                                .numCandidates(10)
+                                .numCandidates(30)
                                 .queryVector(embedding)
                         );
                         var result = esClient.search(s -> s

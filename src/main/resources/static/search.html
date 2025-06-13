@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>요금제 추천 검색</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        #results {
+            margin-top: 30px;
+        }
+        .plan {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        .plan h3 {
+            margin: 0 0 5px;
+        }
+    </style>
+</head>
+<body>
+<h2>요금제 검색</h2>
+<input type="text" id="query" placeholder="예) 데이터 많이 쓰는 요금제 알려줘">
+<button onclick="searchPlans()">검색</button>
+
+<div id="results"></div>
+
+<script>
+    async function searchPlans() {
+        const query = document.getElementById('query').value;
+        const response = await fetch('/api/plans/search', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(query)
+        });
+
+        const planList = await response.json();  // → 실제 객체 리스트
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = "";
+
+        planList.forEach((plan, index) => {
+            const div = document.createElement("div");
+            div.className = "plan";
+            div.innerHTML = `
+            <h3>추천 ${index + 1}: ${plan.name}</h3>
+            <p>${plan.description}</p>
+        `;
+            resultsDiv.appendChild(div);
+        });
+    }
+
+</script>
+</body>
+</html>
