@@ -42,6 +42,19 @@ public final class AIPromptMessages {
             
             예를 들어, 이름에 "무제한", "프리미엄"이라는 단어가 있어도 실제 제공량이 적거나 가격이 비합리적이면 추천하지 마세요.  
             이름은 참고용일 뿐이며, 구조화된 속성 정보가 판단의 기준이 되어야 합니다.
+            
+            🎯 [요금제 이름 매칭 기준]
+            
+            - 사용자가 입력한 요금제 이름은 정확하지 않을 수 있으므로,
+              가능한 한 아래 기준에 따라 유연하게 해석하세요:
+            
+              1. 일부 단어만 맞는 경우라도 후보 요금제를 찾아보세요. (ex. "슬림" → "슬림라이트", "슬림플러스")
+              2. 철자나 띄어쓰기 오류가 있을 수 있습니다. (ex. "바비" → "베이비", "베이비 요금제")
+              3. 음절/발음이 비슷한 요금제를 최대 3개까지 후보로 추론해도 괜찮습니다.
+              4. 단, 완전히 다른 요금제를 연결하거나 과도한 추측은 하지 마세요.
+              5. 최종 판단이 어려운 경우에는 "정확한 이름을 다시 확인해 주세요"라고 안내하세요.
+            
+            - 매칭된 요금제가 실제 요금제 목록에 존재할 때만 planIds에 포함하세요.
             """;
 
 
@@ -50,11 +63,10 @@ public final class AIPromptMessages {
                     전체 요금제는 아래의 버튼을 눌러 확인할 수 있다고 알려주세요. 필요하다면 고객님에게 필요한 요금제를 추천해줄 수 도 있습니. 
                     텍스트 중간에 [전체요금제] 이런 형식은 쓰지말아주세요.
                     """;
-    public static final String COMPARE_PLAN_BASE_PROMPT =
-            """
-                    아래의 요금제 목록에서 사용자가 원하는 플랜들을 찾아 차이점 중심으로 답하세요. 만약 사용자가 입력한 요금제와 일치하는 요금제가 없으면 
-                    다시한번 질문해주세요
-                    """;
+    public static final String COMPARE_PLAN_BASE_PROMPT = """
+        아래는 저희의 요금제 목록입니다. 위에서부터 사용자가 많은 순으로 정렬이 되어있습니다. 
+        사용자의 최근 대화내역을 참조하여 현재의 사용자 메세지에 따라 알맞은 요금제를 비교해주세요
+    """;
 
     public static final String ETC_BASE_PROMPT =
             """
@@ -95,6 +107,12 @@ public final class AIPromptMessages {
     public static final String PLANT_DETAIL_BASE_PROMPT =
             """
                     아래의 요금제 목록에서 사용자가 원하는 플랜을 찾아 답하세요. description부분을 읽고 최대한 친절히 답하세요
+                    """;
+
+    public static final String COMPARE_WITH_MY_PLAN_BASE_PROMPT=
+            """
+                   사용자의 요금제와 다른 요금제와의 비교는 요금제 페이지에서 할 수 있습니다. 요금제 페이지 바로가기 버튼을 추가할테니 사용자에게
+                   나의 요금제 비교는 요금제 페이지에서 가능하다고 재치있게 유도해주세요
                     """;
 
     public static final String SYSTEM_INFO_BASE_PROMPT =
@@ -150,7 +168,6 @@ public final class AIPromptMessages {
             === Topic 목록 ===
             %s
             """;
-
 
     public static String getTopicClassifyPrompt() {
         String topicList = Arrays.stream(Topic.values())

@@ -140,7 +140,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 
             case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN -> invokeSingleArgStrategy(strategy, plansJson);
 
-            case INFO -> invokeNoArgsStrategy(strategy);
+            case INFO,COMPARE_WITH_MY_PLAN -> invokeNoArgsStrategy(strategy);
 
             default -> invokeNoArgsStrategy(strategy); // 기타 토픽도 NoArgs로 처리
         };
