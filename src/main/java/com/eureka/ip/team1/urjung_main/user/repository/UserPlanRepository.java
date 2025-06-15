@@ -15,6 +15,7 @@ public interface UserPlanRepository extends JpaRepository<Line, String> {
     @Query(
             """
             select new com.eureka.ip.team1.urjung_main.user.dto.UserPlanResponseDto(
+                l.id,
                 p.id,
                 p.name,
                 l.phoneNumber,
