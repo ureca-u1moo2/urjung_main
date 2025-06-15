@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,5 +15,4 @@ public class UserChatState {
     @Id
     private String sessionId;
     private ChatState state;
-    private LocalDateTime updatedAt;
 }
