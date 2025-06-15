@@ -2,6 +2,8 @@ package com.eureka.ip.team1.urjung_main.chatbot.service;
 
 import java.util.*;
 
+import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
+import com.eureka.ip.team1.urjung_main.chatbot.repository.ChatAnalysisRedisRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ public class ChatLogServiceImpl implements ChatLogService {
 
     private final RecentChatLogRepository recentChatLogRepository;
     private final PermanentChatLogRepository permanentChatLogRepository;
+    private final ChatAnalysisRedisRepository chatAnalysisRepository;
 
     @Override
     public ChatLogResponseDto saveRecentAndPermanentChatLog(ChatLogRequestDto chatLogRequestDto) {
@@ -44,11 +47,29 @@ public class ChatLogServiceImpl implements ChatLogService {
         );
     }
 
+    @Override
     public List<Content> getRecentChatHistory(String userId, String sessionId) {
         List<Content> contents = new ArrayList<>(recentChatLogRepository.readHistory(userId, sessionId));
         Collections.reverse(contents);
 
         return contents;
+    }
+
+    @Override
+    public void saveAnswer(String sessionId, int step, String answer, String userId) {
+        UserChatAnalysis data = chatAnalysisRepository.findById(sessionId)
+                .orElse(UserChatAnalysis.builder()
+                        .sessionId(sessionId)
+                        .userId(userId)
+                        .build());
+
+        data.addAnswer(step, answer);
+        chatAnalysisRepository.save(data);
+    }
+
+    @Override
+    public UserChatAnalysis getAnalysis(String sessionId) {
+        return chatAnalysisRepository.findById(sessionId).orElse(null);
     }
 
     private PermanentChatLog getOrCreateSession(String userId, String sessionId) {
