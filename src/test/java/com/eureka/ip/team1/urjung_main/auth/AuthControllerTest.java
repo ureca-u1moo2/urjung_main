@@ -2,11 +2,14 @@ package com.eureka.ip.team1.urjung_main.auth;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,7 @@ import com.eureka.ip.team1.urjung_main.auth.service.AuthService;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
 import com.eureka.ip.team1.urjung_main.common.enums.Result;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
+import com.eureka.ip.team1.urjung_main.user.dto.UserResultDto;
 
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
@@ -223,6 +227,130 @@ public class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.result").value("FAIL"))
                 .andExpect(jsonPath("$.message").value("Invalid refresh token"));
+    }
+
+    @Test
+    void findId_Success() throws Exception {
+        UserDto userDto = new UserDto();
+        userDto.setName("홍길동");
+        userDto.setBirth(LocalDate.of(1990, 1, 1));
+
+        UserResultDto resultDto = new UserResultDto();
+        resultDto.setResult("success");
+        UserDto foundUserDto = new UserDto();
+        foundUserDto.setEmail("hong@example.com");
+        resultDto.setUserDto(foundUserDto);
+
+        ApiResponse<UserResultDto> response = ApiResponse.<UserResultDto>builder()
+                .result(Result.SUCCESS)
+                .data(resultDto)
+                .message("Find email: hong@example.com")
+                .build();
+
+        when(authService.findEmailByNameAndBirth(eq("홍길동"), eq(LocalDate.of(1990, 1, 1))))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/users/find-id")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"홍길동\",\"birth\":\"1990-01-01\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.userDto.email").value("hong@example.com"));
+    }
+
+    @Test
+    void findId_Fail() throws Exception {
+        UserResultDto resultDto = new UserResultDto();
+        resultDto.setResult("fail");
+
+        ApiResponse<UserResultDto> response = ApiResponse.<UserResultDto>builder()
+                .result(Result.FAIL)
+                .message("Find-email failed: 해당 유저가 없습니다.")
+                .build();
+
+        when(authService.findEmailByNameAndBirth(eq("없는사람"), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/users/find-id")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"없는사람\",\"birth\":\"2000-01-01\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.result").value("FAIL"))
+                .andExpect(jsonPath("$.message").value("Find-email failed: 해당 유저가 없습니다."));
+    }
+    
+    @Test
+    void requestPasswordReset_Success() throws Exception {
+        UserResultDto resultDto = new UserResultDto();
+        resultDto.setResult("success");
+
+        ApiResponse<UserResultDto> response = ApiResponse.<UserResultDto>builder()
+                .result(Result.SUCCESS)
+                .data(resultDto)
+                .message("Reset Password Success")
+                .build();
+
+        when(authService.requestPasswordReset(eq("hong@example.com"))).thenReturn(response);
+
+        mockMvc.perform(post("/api/users/find-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"hong@example.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("SUCCESS"));
+    }
+
+    @Test
+    void requestPasswordReset_Fail() throws Exception {
+        ApiResponse<UserResultDto> response = ApiResponse.<UserResultDto>builder()
+                .result(Result.FAIL)
+                .message("Reset Password failed: 해당 유저가 없습니다.")
+                .build();
+
+        when(authService.requestPasswordReset(eq("notfound@example.com"))).thenReturn(response);
+
+        mockMvc.perform(post("/api/users/find-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"notfound@example.com\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.result").value("FAIL"))
+                .andExpect(jsonPath("$.message").value("Reset Password failed: 해당 유저가 없습니다."));
+    }
+
+    @Test
+    void resetPassword_Success() throws Exception {
+        UserResultDto resultDto = new UserResultDto();
+        resultDto.setResult("success");
+
+        ApiResponse<UserResultDto> response = ApiResponse.<UserResultDto>builder()
+                .result(Result.SUCCESS)
+                .data(resultDto)
+                .message("Reset Password Success")
+                .build();
+
+        when(authService.resetPassword(eq("valid-token"), eq("newPassword"))).thenReturn(response);
+
+        mockMvc.perform(post("/api/users/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"valid-token\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("SUCCESS"));
+    }
+
+    @Test
+    void resetPassword_Fail() throws Exception {
+        ApiResponse<UserResultDto> response = ApiResponse.<UserResultDto>builder()
+                .result(Result.FAIL)
+                .message("Reset Password failed: 유효하지 않은 토큰")
+                .build();
+
+        when(authService.resetPassword(eq("invalid-token"), eq("newPassword"))).thenReturn(response);
+
+        mockMvc.perform(post("/api/users/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"invalid-token\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.result").value("FAIL"))
+                .andExpect(jsonPath("$.message").value("Reset Password failed: 유효하지 않은 토큰"));
     }
 
 }

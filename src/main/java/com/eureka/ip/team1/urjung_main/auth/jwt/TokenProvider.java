@@ -117,4 +117,17 @@ public class TokenProvider {
 			.getExpiration().before(new Date());
 	}
 	
+	// 비밀번호 재설정용 토큰 - 이메일 전송할 때 함꼐 보내서 처리
+	public String createPasswordResetToken(String email) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + (1000 * 60 * 15)); // 15분
+		
+		return Jwts.builder()
+				.subject(email)
+				.claim("type", "password_reset")
+				.issuedAt(now)
+				.expiration(expiryDate)
+				.signWith(secretKey, Jwts.SIG.HS256)
+				.compact();
+	}
 }

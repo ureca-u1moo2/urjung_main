@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,4 +111,67 @@ public class LineRepositoryTest {
         // then
         assertThat(exists).isFalse();
     }
+
+    @Test
+    @DisplayName("findAllByUserId - 특정 사용자의 회선 전체 조회")
+    void findAllByUserId_shouldReturnLineList() {
+        // given
+        Membership membership = new Membership();
+        membership.setMembershipName("Premium");
+        membership.setGiftDiscount(0.2);
+        membership.setRequireAmount(50000);
+        membershipRepository.save(membership);
+
+        User user = userRepository.save(User.builder()
+                .userId("user999")
+                .name("테스터")
+                .email("user@test.com")
+                .password("1234")
+                .birth(LocalDate.of(1995, 5, 5))
+                .gender("M")
+                .membership(membership)
+                .build());
+
+        Plan plan = planRepository.save(Plan.builder()
+                .name("프리미엄 요금제")
+                .price(30000)
+                .dataAmount(5000L)
+                .callAmount(300L)
+                .smsAmount(100L)
+                .description("무제한 요금제")
+                .build());
+
+        Line line1 = Line.builder()
+                .id(UUID.randomUUID().toString())
+                .userId(user.getUserId())
+                .planId(plan.getId())
+                .status(Line.LineStatus.active)
+                .phoneNumber("010-1000-2000")
+                .discountedPrice(27000)
+                .startDate(LocalDateTime.now())
+                .build();
+
+        Line line2 = Line.builder()
+                .id(UUID.randomUUID().toString())
+                .userId(user.getUserId())
+                .planId(plan.getId())
+                .status(Line.LineStatus.canceled)
+                .phoneNumber("010-3000-4000")
+                .discountedPrice(27000)
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now())
+                .build();
+
+        lineRepository.save(line1);
+        lineRepository.save(line2);
+
+        // when
+        List<Line> result = lineRepository.findAllByUserId(user.getUserId());
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(Line::getPhoneNumber)
+                .containsExactlyInAnyOrder("010-1000-2000", "010-3000-4000");
+    }
+
 }

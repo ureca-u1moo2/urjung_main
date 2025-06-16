@@ -1,15 +1,19 @@
 package com.eureka.ip.team1.urjung_main.user.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserPlanResponseDto {
+
+    // 유저가 가입한 요금제 id
+    private String lineId;
+
     // 요금제 ID
     private String planId;
 
