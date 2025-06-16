@@ -2,8 +2,10 @@ package com.eureka.ip.team1.urjung_main.chatbot.service;
 
 import java.util.*;
 
+import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
 import com.eureka.ip.team1.urjung_main.chatbot.repository.ChatAnalysisRedisRepository;
+import com.eureka.ip.team1.urjung_main.chatbot.repository.ChatContextRedisRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ public class ChatLogServiceImpl implements ChatLogService {
     private final RecentChatLogRepository recentChatLogRepository;
     private final PermanentChatLogRepository permanentChatLogRepository;
     private final ChatAnalysisRedisRepository chatAnalysisRepository;
+    private final ChatContextRedisRepository chatContextRedisRepository;
 
     @Override
     public ChatLogResponseDto saveRecentAndPermanentChatLog(ChatLogRequestDto chatLogRequestDto) {
@@ -70,6 +73,21 @@ public class ChatLogServiceImpl implements ChatLogService {
     @Override
     public UserChatAnalysis getAnalysis(String sessionId) {
         return chatAnalysisRepository.findById(sessionId).orElse(null);
+    }
+
+    @Override
+    public void saveChatContext(String sessionId, ChatContext context) {
+        chatContextRedisRepository.save(context);
+    }
+
+    @Override
+    public ChatContext getChatContext(String sessionId) {
+        return chatContextRedisRepository.findById(sessionId).orElse(null);
+    }
+
+    @Override
+    public void clear(String sessionId) {
+        chatContextRedisRepository.deleteById(sessionId);
     }
 
     private PermanentChatLog getOrCreateSession(String userId, String sessionId) {

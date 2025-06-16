@@ -8,6 +8,6 @@ public enum ChatState {
     PERSONAL_ANALYSIS_1,           // 성향 분석 질문 1
     PERSONAL_ANALYSIS_2,
     PERSONAL_ANALYSIS_3,
-    COMPLETE_ANALYSIS
+    WAITING_INPUT_NEED, COMPLETE_ANALYSIS
     // ....
 }

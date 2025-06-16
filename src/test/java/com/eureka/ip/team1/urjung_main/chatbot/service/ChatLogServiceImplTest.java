@@ -43,7 +43,7 @@ class ChatLogServiceImplTest {
 	private RecentChatLogRepository recentChatLogRepository;
 	
 	@Test
-	void saveRecentAndPermanentChatLog_세션_생성_성공_Test() {
+	void saveChatContextRecentAndPermanentChatLog_세션_생성_성공_Test() {
 		// given
 		String userId = UUID.randomUUID().toString();
 		String role = "user";
@@ -87,7 +87,7 @@ class ChatLogServiceImplTest {
 	}
 	
 	@Test
-	void saveRecentAndPermanentChatLog_기존_세션_존재_성공_Test() {
+	void saveChatContextRecentAndPermanentChatLog_기존_세션_존재_성공_Test() {
 		// given
 		String userId = UUID.randomUUID().toString();
 		String sessionId = UUID.randomUUID().toString();
@@ -158,7 +158,7 @@ class ChatLogServiceImplTest {
 	}
 	
 	@Test
-	void saveRecentAndPermanentChatLog_DuplicateKeyException_3번_InternalServerErrorException_Test() {
+	void saveChatContextRecentAndPermanentChatLog_DuplicateKeyException_3번_InternalServerErrorException_Test() {
 	    // given
 	    String userId = UUID.randomUUID().toString();
 	    String role = "user";

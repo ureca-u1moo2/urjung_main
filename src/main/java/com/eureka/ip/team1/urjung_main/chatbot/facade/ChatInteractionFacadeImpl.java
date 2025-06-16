@@ -1,6 +1,7 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
 import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
+import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
@@ -20,7 +21,9 @@ import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import com.eureka.ip.team1.urjung_main.user.dto.UsageRequestDto;
 import com.eureka.ip.team1.urjung_main.user.dto.UsageResponseDto;
+import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
 import com.eureka.ip.team1.urjung_main.user.service.UsageService;
+import com.eureka.ip.team1.urjung_main.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,8 +31,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeNoArgsStrategy;
 import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeSingleArgStrategy;
@@ -48,7 +54,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatLogService chatLogService;
     private final ChatStateService chatStateService;
     private final UsageService usageService;
-
+    private final UserService userService;
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
         // 금칙어 필터링 우선 수행
@@ -70,8 +76,183 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         String sessionId = requestDto.getSessionId();
 
         if (state == ChatState.WAITING_SELECT_LINE) {
+            if(message.equals("성향 분석 시작")){
+                return routeByState(ChatState.WAITING_PERSONAL_ANALYSIS,userId,requestDto);
+            }
+
+            if(message.equals("취소")){
+                return chatStateService.setState(sessionId, ChatState.DEFAULT)
+                        .thenMany(Flux.just(
+                                ChatResponseDto.builder().message("요금제 추천이 취소되었습니다").build(),
+                                ChatResponseDto.builder().message("제가 필요하시다면 언제든 말 걸어주세요!").build()
+                        ));
+            }
+
+            LineSelectButton lineSelectButton = createLineSelectButton(userId);
+            List<String> phoneNumbers = lineSelectButton.getPhoneNumbers();
+            if(phoneNumbers.contains(message)){
+                String phoneNumber = message;
+                // 해당 핸드폰 번호의 최근 3개월 사용 내역 조회
+                List<UsageResponseDto> usages = usageService.getRecent3MonthsUsagesByUserIdAndPhoneNumber(UsageRequestDto.builder()
+                                .userId(userId)
+                        .phoneNumber(phoneNumber).build());
+                // 만약 3개월 이내라면 성향 분석 모드 안내
+                if(usages==null||usages.size()<3){
+                    return Flux.just(ChatResponseDto.builder()
+                            .message("해당 회선은 최근 3개월 사용내역이 부족하여 추천드리기 어렵습니다. \n 다른 회선을 선택하시거나 성향 분석을 진행해주세요!")
+                            .buttons(List.of(Button.builder()
+                                    .label("성향 분석 진행")
+                                    .value("성향 분석 시작")
+                                    .type(ButtonType.INPUT_DATA)
+                                    .build()))
+                            .lineSelectButton(lineSelectButton)
+                            .build());
+                }
+                // 3개월 이상이라면 부족하거나 과한 부분 입력받기
+                chatLogService.saveChatContext(sessionId, ChatContext.builder()
+                                .planId(usages.get(0).getPlanId())
+                        .phoneNumber(phoneNumber)
+                                .sessionId(sessionId)
+                        .usages(usages)
+                        .build());
+                return chatStateService.setState(sessionId, ChatState.WAITING_INPUT_NEED)
+                        .then()
+                        .thenReturn(ChatResponseDto.builder()
+                                .message("현재 요금제를 사용하시면서 부족하거나 불필요한 점이 있다면 편하게 말씀해주세요!")
+                                .build())
+                        .flux();
+
+
+            }
+
             return Flux.just(ChatResponseDto.builder().message("회선 선택 기능은 아직 구현 중입니다.").build());
         }
+
+        if (state == ChatState.WAITING_INPUT_NEED) {
+            String validatePrompt = """
+        당신은 통신사 요금제 추천 도우미입니다.
+
+        아래 사용자의 메시지가, 통신 요금제 변경이나 추천에 도움이 되는 유의미한 피드백인지 판단해 주세요.
+        - 유의미하다면 `"result": true`, 아니라면 `"result": false`로 응답해 주세요.
+        - `"reply"`에는 무의미한 내용이거나 쓸데없는 내용이라면 필요없는 문구라는 말을 유하게 답해줘.
+
+        🎯 응답 형식:
+        ```json
+        {
+          "reply": "반응 메시지",
+          "result": true 또는 false
+        }
+        ```
+
+        [사용자 입력]
+        %s
+        """.formatted(message);
+
+            return chatBotService.handleAnalysisAnswer(validatePrompt, message)
+                    .flatMapMany(validateResult -> {
+                        String reply = validateResult.getReply().trim();
+                        boolean isValid = validateResult.getResult() != null && validateResult.getResult();
+
+                        if (!isValid) {
+                            return Flux.just(ChatResponseDto.builder().message(reply).build());
+                        }
+
+                        // ✅ 유효하다고 판단되면 추천 프로세스 시작
+                        List<PlanDto> plans = planService.getPlansSorted("popular");
+
+                        List<PlanDto> processedPlans = plans.stream()
+                                .map(plan -> PlanDto.builder()
+                                        .id(plan.getId())
+                                        .name(plan.getName())
+                                        .price(plan.getPrice())
+                                        .description(plan.getDescription())
+                                        .dataAmount(plan.getDataAmount() != null ? plan.getDataAmount() / 1024 : null)
+                                        .callAmount(plan.getCallAmount())
+                                        .smsAmount(plan.getSmsAmount())
+                                        .createdAt(plan.getCreatedAt())
+                                        .build())
+                                .collect(Collectors.toList());
+
+                        String plansJson = JsonUtil.toJson(processedPlans);
+
+                        UserDto user = userService.findById(userId);
+                        int age = Period.between(user.getBirth(), LocalDate.now()).getYears();
+
+                        ChatContext chatContext = chatLogService.getChatContext(sessionId);
+                        List<UsageResponseDto> usages = chatContext.getUsages();
+                        String planId = chatContext.getPlanId();
+
+                        String usageSummary = usages.stream()
+                                .map(u -> String.format("월: %s, 데이터: %dGB, 통화: %d분, 문자: %d건",
+                                        u.getMonth(),
+                                        u.getData() / 1024,
+                                        u.getCallMinute(),
+                                        u.getMessage()))
+                                .collect(Collectors.joining("\n"));
+
+                        String finalPrompt = """
+                당신은 통신사 요금제 추천 전문가입니다.
+                아래 사용자의 정보와 3개월간 사용 패턴, 현재 사용 중인 요금제, 그리고 추가 요구사항을 참고하여 고객에게 가장 적절한 요금제를 추천해주세요.
+
+                요구사항:
+                - 추천 이유를 간단히 설명해주세요.
+                - 적절한 요금제가 있다면 요금제 ID만 리스트로 추출해서 함께 내려주세요.
+                - 안내 메시지에는 요금제 ID가 노출되지 않도록 주의하세요.
+                - 모든 데이터 단위는 GB 단위입니다.
+                - 나이를 고려하여 청소년/시니어 요금제도 추천 대상으로 포함해주세요.
+                - 최대한 가독성 좋고 친절하게 작성해주세요.
+
+                [사용자 정보]
+                성별: %s
+                생년월일: %s
+                나이: %d세
+
+                [최근 3개월 사용 내역]
+                %s
+
+                [현재 사용 중인 요금제 ID]
+                %s
+
+                [사용자 추가 요구사항]
+                %s
+
+                📦 추천 가능한 요금제 목록 (JSON 형식)
+                %s
+
+                응답 형식은 다음과 같아야 합니다 (JSON):
+
+                ```json
+                {
+                  "reply": "추천 메시지",
+                  "planIds": ["요금제ID1", "요금제ID2"]
+                }
+                ```
+                """.formatted(
+                                user.getGender(),
+                                user.getBirth().toString(),
+                                age,
+                                usageSummary,
+                                planId,
+                                message,
+                                plansJson
+                        );
+                        log.info(finalPrompt);
+                        return chatStateService.setState(sessionId, ChatState.DEFAULT)
+                                .thenMany(
+                                        chatBotService.handleAnalysisAnswer(finalPrompt, null)
+                                                .flatMapMany(finalRaw -> Flux.just(
+                                                        ChatResponseDto.builder()
+                                                                .message("모든 질문에 답변해주셔서 감사합니다 😊\n고객님께 어울리는 요금제를 분석해드릴게요! 잠시만 기다려주세요.")
+                                                                .build(),
+                                                        ChatResponseDto.builder()
+                                                                .message(finalRaw.getReply().trim())
+                                                                .cards(createCards(finalRaw.getPlanIds()))
+                                                                .build()
+                                                ))
+                                );
+                    });
+        }
+
 
         if (state == ChatState.WAITING_PERSONAL_ANALYSIS) {
             if ("성향 분석 시작".equals(message)) {
@@ -83,7 +264,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
             } else {
                 return chatStateService.setState(sessionId, ChatState.DEFAULT)
                         .thenMany(Flux.just(
-                                ChatResponseDto.builder().message("성향 분석이 취소되었습니다.").build(),
+                                ChatResponseDto.builder().message("요금제 추천이 취소되었습니다").build(),
                                 ChatResponseDto.builder().message("제가 필요하시다면 언제든 말 걸어주세요!").build()
                         ));
             }
@@ -175,6 +356,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                         ChatResponseDto.builder().message(nextMessage).build()
                                 ));
                     } else {
+
                         // 마지막 질문이므로 → 답변 저장 + 상태 전환 + 분석 요청 → 결과 포함
                         return chatStateService.setState(sessionId, nextState)
                                 .then(Mono.fromCallable(() -> chatLogService.getAnalysis(sessionId)))
@@ -262,8 +444,18 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                         .build()))
                                 .build());
 
+            }else{
+                return chatStateService.setState(requestDto.getSessionId(), ChatState.WAITING_SELECT_LINE)
+                        .thenReturn(ChatResponseDto.builder()
+                                .message("추천받을 회선을 선택해주세요. 만약 성향 분석을 통한 추천을 받고 싶으시면 성향분석 버튼을 눌러주세요")
+                                .buttons(List.of(Button.builder()
+                                        .label("성향 분석 진행")
+                                        .value("성향 분석 시작")
+                                        .type(ButtonType.INPUT_DATA)
+                                        .build()))
+                                .lineSelectButton(createLineSelectButton(userId))
+                                .build());
             }
-            return null;
             //
   /*
                 1. WAITING_SELECT_LINE : 회선 선택
