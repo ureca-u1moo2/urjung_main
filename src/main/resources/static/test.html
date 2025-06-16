@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>유사 질문 추천 시스템</title>
+  <style>
+    .search-container {
+      margin-bottom: 20px;
+    }
+    .suggestions li {
+      list-style: none;
+      padding: 5px;
+      cursor: pointer;
+    }
+    .suggestions li:hover {
+      background-color: #eee;
+    }
+    .chat-btn {
+      display: inline-block;
+      margin: 6px;
+      padding: 8px 12px;
+      background: #0078d7;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .card-list {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 6px;
+      background: #f8f8f8;
+      width: 250px;
+    }
+  </style>
+</head>
+<body>
+<h2>유사 질문 추천 시스템</h2>
+
+<div class="search-container">
+  <input type="text" id="queryInput" placeholder="질문을 입력하세요..." oninput="debouncedSearch()" onkeydown="handleKeyDown(event)">
+  <ul id="results" class="suggestions"></ul>
+</div>
+
+<div id="chatResponse" class="chat-response"></div>
+
+<script>
+  let debounceTimeout;
+
+  function debouncedSearch() {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(search, 450);
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === "Enter") {
+      submitQuestion();
+    }
+  }
+
+  function search() {
+    const query = document.getElementById("queryInput").value.trim();
+    const resultsEl = document.getElementById("results");
+
+    if (!query) {
+      resultsEl.innerHTML = "";
+      return;
+    }
+
+    fetch(`/api/questions/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+              resultsEl.innerHTML = "";
+
+              if (data.length === 0) {
+                const li = document.createElement("li");
+                li.className = "no-results";
+                li.textContent = "유사한 질문이 없습니다.";
+                resultsEl.appendChild(li);
+              } else {
+                data.forEach(q => {
+                  const li = document.createElement("li");
+                  li.textContent = q;
+                  li.onclick = () => {
+                    document.getElementById("queryInput").value = q;
+                    resultsEl.innerHTML = "";
+                    submitQuestion();
+                  };
+                  resultsEl.appendChild(li);
+                });
+              }
+            })
+            .catch(err => {
+              console.error("에러:", err);
+              resultsEl.innerHTML = "<li class='no-results'>검색 중 오류 발생</li>";
+            });
+  }
+
+  function submitQuestion() {
+    const query = document.getElementById("queryInput").value.trim();
+    const responseEl = document.getElementById("chatResponse");
+    responseEl.innerHTML = "";
+
+    if (!query) return;
+
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: query })
+    })
+            .then(response => {
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+
+              function readChunk() {
+                reader.read().then(({ done, value }) => {
+                  if (done) return;
+
+                  const chunkText = decoder.decode(value, { stream: true }).trim();
+                  if (!chunkText) return readChunk();
+
+                  const lines = chunkText.split('\n');
+                  lines.forEach(line => {
+                    try {
+                      const json = JSON.parse(line);
+                      renderChatResponse(json);
+                    } catch (e) {
+                      console.warn("JSON 파싱 실패:", line);
+                    }
+                  });
+
+                  readChunk();
+                });
+              }
+
+              readChunk();
+            });
+
+    fetch(`/api/questions/add?text=${encodeURIComponent(query)}`, {
+      method: 'POST'
+    });
+
+    document.getElementById("results").innerHTML = "";
+  }
+
+  function renderChatResponse(json) {
+    const container = document.getElementById("chatResponse");
+
+    if (json.type === "WAITING") {
+      container.innerHTML += `<p><em>${json.message}</em></p>`;
+    } else if (json.type === "MAIN_REPLY") {
+      let html = `<p><strong>${json.message}</strong></p>`;
+
+      if (json.buttons) {
+        html += json.buttons.map(btn =>
+                `<a href="${btn.value}" target="_blank" class="chat-btn">${btn.label}</a>`
+        ).join('');
+      }
+
+      if (json.cards) {
+        html += '<div class="card-list">';
+        html += json.cards.map(card => {
+          const c = card.value;
+          return `
+              <div class="card">
+                <h4>${c.name}</h4>
+                <p>${c.description}</p>
+                <p><strong>요금: </strong>₩${c.price.toLocaleString()} / ${c.dataAmountText}</p>
+              </div>
+            `;
+        }).join('');
+        html += '</div>';
+      }
+
+      container.innerHTML += html;
+    }
+  }
+</script>
+</body>
+</html>
