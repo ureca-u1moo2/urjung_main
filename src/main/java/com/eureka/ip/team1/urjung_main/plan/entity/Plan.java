@@ -4,6 +4,7 @@ package com.eureka.ip.team1.urjung_main.plan.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -39,6 +40,13 @@ public class Plan {
 
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch=FetchType.EAGER)
+    @JoinTable(name = "plan_tag",
+            joinColumns = @JoinColumn(name = "plan_id", referencedColumnName = "plan_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id", referencedColumnName = "tag_id")
+    )
+    private List<Tag> tags;
 
     // 생성 시 UUID 자동 세팅
     @PrePersist

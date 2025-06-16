@@ -1,8 +1,10 @@
 package com.eureka.ip.team1.urjung_main.plan.dto;
 
+import com.eureka.ip.team1.urjung_main.plan.entity.Tag;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 // 요금제 상세 페이지 Dto
 // 요금제 비교 Dto
@@ -20,6 +22,7 @@ public class PlanDetailDto {
     private Long callAmount;
     private Long smsAmount;
     private LocalDateTime createdAt;
+    private List<Tag> tags;
 
     // 요금제 무제한인 경우
     public String getDataAmountText() {

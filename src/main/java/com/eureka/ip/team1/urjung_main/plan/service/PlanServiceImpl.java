@@ -71,7 +71,8 @@ public List<PlanDto> getPlansSorted(String sortBy) {
             break;
         case "popular":
         default:
-            plans = planRepository.findPopularPlans(); // 커스텀 쿼리 필요
+            List<String> ids = planRepository.findPopularPlans();
+            plans = planRepository.findByIdsWithTags(ids);
             break;
     }
 
@@ -89,6 +90,7 @@ public List<PlanDto> getPlansSorted(String sortBy) {
                 .callAmount(plan.getCallAmount())
                 .smsAmount(plan.getSmsAmount())
                 .createdAt(plan.getCreatedAt())
+                .tags(plan.getTags())
                 .build();
     }
 
@@ -112,6 +114,7 @@ public List<PlanDto> getPlansSorted(String sortBy) {
                 .callAmount(plan.getCallAmount())
                 .smsAmount(plan.getSmsAmount())
                 .createdAt(plan.getCreatedAt())
+                .tags(plan.getTags())
                 .build();
     }
 
@@ -136,6 +139,7 @@ public List<PlanDto> getPlansSorted(String sortBy) {
                         .callAmount(plan.getCallAmount())
                         .smsAmount(plan.getSmsAmount())
                         .createdAt(plan.getCreatedAt())
+                        .tags(plan.getTags())
                         .build())
                 .toList();
     }
