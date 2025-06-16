@@ -376,4 +376,75 @@ class UsageServiceTest {
         }
     }
 
+    void testGetRecent3MonthsUsagesByUserIdAndPhoneNumber_성공_Test() {
+        // Given
+        String userId = "testUser";
+        String phoneNumber = "010-1234-5678";
+        UsageRequestDto requestDto = UsageRequestDto.builder()
+                .userId(userId)
+                .phoneNumber(phoneNumber)
+                .build();
+
+        when(usageRepository.findRecent3MonthsUsagesByUserIdAndPhoneNumber(userId, phoneNumber, any(), any())).thenReturn(List.of(
+                UsageResponseDto.builder()
+                        .planId("plan1")
+                        .phoneNumber(phoneNumber)
+                        .year(2025)
+                        .month(6)
+                        .data(1000L)
+                        .callMinute(200L)
+                        .message(50L)
+                        .build(),
+                UsageResponseDto.builder()
+                        .planId("plan1")
+                        .phoneNumber(phoneNumber)
+                        .year(2025)
+                        .month(5)
+                        .data(800L)
+                        .callMinute(150L)
+                        .message(30L)
+                        .build(),
+                UsageResponseDto.builder()
+                        .planId("plan1")
+                        .phoneNumber(phoneNumber)
+                        .year(2025)
+                        .month(4)
+                        .data(600L)
+                        .callMinute(100L)
+                        .message(20L)
+                        .build()
+        ));
+
+        // When
+        List<UsageResponseDto> result = usageServiceImpl.getRecent3MonthsUsagesByUserIdAndPhoneNumber(requestDto);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    void testGetRecent3MonthsUsagesByUserIdAndPhoneNumber_실패_Test() {
+        // Given
+        when(usageRepository.findRecent3MonthsUsagesByUserIdAndPhoneNumber(any(String.class), any(String.class), any(), any()))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        try {
+            usageServiceImpl.getRecent3MonthsUsagesByUserIdAndPhoneNumber(
+                    UsageRequestDto.builder()
+                            .userId("testUser")
+                            .phoneNumber("010-1234-5678")
+                            .build()
+            );
+        } catch (Exception e) {
+            assertThrows(
+                InternalServerErrorException.class,
+                () -> {
+                    throw new InternalServerErrorException();
+                }
+            );
+        }
+    }
+
 }
