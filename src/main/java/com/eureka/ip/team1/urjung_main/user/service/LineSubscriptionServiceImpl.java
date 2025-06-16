@@ -6,6 +6,7 @@ import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;
 import com.eureka.ip.team1.urjung_main.membership.entity.Membership;
 import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
 import com.eureka.ip.team1.urjung_main.plan.repository.PlanRepository;
+import com.eureka.ip.team1.urjung_main.user.dto.LineDto;
 import com.eureka.ip.team1.urjung_main.user.dto.LineSubscriptionDto;
 import com.eureka.ip.team1.urjung_main.user.entity.Line;
 import com.eureka.ip.team1.urjung_main.user.entity.User;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -114,6 +117,26 @@ public class LineSubscriptionServiceImpl implements LineSubscriptionService {
     private int calculateDiscountedPrice(int originalPrice, Double discountRate) {
         if (discountRate == null) discountRate = 0.0;
         return originalPrice - (int)(originalPrice * discountRate);
+    }
+
+    //사용자 전체 회선 조회
+    @Override
+    public List<LineDto> getAllLinesByUserId(String userId) {
+        List<Line> lines = lineRepository.findAllByUserId(userId);
+
+        return lines.stream()
+                .map(line -> LineDto.builder()
+                        .id(line.getId())
+                        .userId(line.getUserId())
+                        .phoneNumber(line.getPhoneNumber())
+                        .planId(line.getPlanId())
+                        .status(line.getStatus().name())
+                        .startDate(line.getStartDate())
+                        .endDate(line.getEndDate())
+                        .discountedPrice(line.getDiscountedPrice())
+                        .build()
+                )
+                .collect(Collectors.toList());
     }
 
 }

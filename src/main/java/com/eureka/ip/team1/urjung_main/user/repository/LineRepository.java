@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface LineRepository extends JpaRepository<Line, String> {
 
+    // 사용자 전체 회선 조회
+    List<Line> findAllByUserId(String userId);
+
     boolean existsByUserIdAndPlanIdAndStatus(String userId, String planId, Line.LineStatus status);
 }
