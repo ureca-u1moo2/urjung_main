@@ -24,4 +24,6 @@ public interface UsageService {
 
     Optional<UsageResponseDto> getCurrentMonthUsageByUserIdAndPhoneNumber(UsageRequestDto usageRequestDto);
 
+    List<UsageResponseDto>  getRecent3MonthsUsagesByUserIdAndPhoneNumber(UsageRequestDto usageRequestDto);
+
 }
