@@ -40,12 +40,12 @@ class UsageRepositoryTest {
         // 1. User 데이터 삽입
         jdbcTemplate.update(
                 "INSERT INTO user (user_id, name, email, password, gender, birth, membership_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                "user123", "홍길동", "test@test.com", "password", "M", "1990-01-01", "membership001"
+                "user123", "홍길동", "test@test.test", "password", "M", "1990-01-01", "membership001"
         );
 
         jdbcTemplate.update(
                 "INSERT INTO user (user_id, name, email, password, gender, birth, membership_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                "user456", "김철수", "test2@test.com", "password", "M", "1992-02-02", "membership001"
+                "user456", "김철수", "test2@test.test", "password", "M", "1992-02-02", "membership001"
         );
 
 
@@ -77,12 +77,22 @@ class UsageRepositoryTest {
                 60000
         );
 
-        // 3. MonthlyUsage 데이터 삽입 - UUID를 바이트 배열로
+        jdbcTemplate.update(
+                "INSERT INTO line (line_id, user_id, plan_id, phone_number, status, start_date, end_date, discounted_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "line003", "user456", "plan001", "456-1234-5678", "active",
+                java.sql.Timestamp.valueOf(LocalDateTime.of(2024, 11, 10, 12, 0)),
+                java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 10, 10, 12, 0)),
+                50000
+        );
+
+        // 4. MonthlyUsage 데이터 삽입 - UUID를 바이트 배열로
         byte[] uuid1 = generateUUIDBytes();
         byte[] uuid2 = generateUUIDBytes();
         byte[] uuid3 = generateUUIDBytes();
         byte[] uuid4 = generateUUIDBytes();
-
+        byte[] uuid5 = generateUUIDBytes();
+        byte[] uuid6 = generateUUIDBytes();
+        byte[] uuid7 = generateUUIDBytes();
 
         jdbcTemplate.update(
                 "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
@@ -91,12 +101,32 @@ class UsageRepositoryTest {
 
         jdbcTemplate.update(
                 "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
-                uuid2, "line001", java.sql.Date.valueOf(LocalDate.of(2025, 7, 1)), 4500L, 250L, 80L
+                uuid2, "line001", java.sql.Date.valueOf(LocalDate.of(2025, 5, 1)), 4500L, 250L, 80L
         );
 
         jdbcTemplate.update(
                 "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
                 uuid3, "line002", java.sql.Date.valueOf(LocalDate.of(2025, 6, 1)), 6000L, 400L, 150L
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
+                uuid4, "line001", java.sql.Date.valueOf(LocalDate.of(2025, 4, 1)), 600L, 400L, 100L
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
+                uuid5, "line003", java.sql.Date.valueOf(LocalDate.of(2024, 11, 1)), 700L, 500L, 120L
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
+                uuid6, "line003", java.sql.Date.valueOf(LocalDate.of(2024, 12, 1)), 800L, 600L, 130L
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO monthly_usage (monthly_usage_id, line_id, month, data, call_minute, message) VALUES (?, ?, ?, ?, ?, ?)",
+                uuid7, "line003", java.sql.Date.valueOf(LocalDate.of(2025, 1, 1)), 900L, 700L, 140L
         );
 
     }
@@ -169,6 +199,40 @@ class UsageRepositoryTest {
         log.info("currentMonthUsageByUserIdAndPhoneNumber : {}", currentMonthUsageByUserIdAndPhoneNumber);
 
         assertEquals("123-2323-2323", currentMonthUsageByUserIdAndPhoneNumber.get().getPhoneNumber());
+    }
+
+    @Test
+    void findRecent3MonthsUsagesByUserIdAndPhoneNumber() {
+        List<UsageResponseDto> recent3MonthsUsagesByUserIdAndPhoneNumber =
+            usageRepository.findRecent3MonthsUsagesByUserIdAndPhoneNumber(
+                    "user123",
+                    "123-2323-2323",
+                    LocalDate.now().minusMonths(2).withDayOfMonth(1),
+                    LocalDate.now()
+            );
+
+        for(UsageResponseDto usageResponseDto : recent3MonthsUsagesByUserIdAndPhoneNumber) {
+            log.info("usageResponseDto : {}", usageResponseDto);
+        }
+
+        assertEquals(3, recent3MonthsUsagesByUserIdAndPhoneNumber.size());
+    }
+    
+    @Test
+    void findRecent3MonthsUsagesByUserIdAndPhoneNumber_연도_변경() {
+        List<UsageResponseDto> recent3MonthsUsagesByUserIdAndPhoneNumber =
+            usageRepository.findRecent3MonthsUsagesByUserIdAndPhoneNumber(
+                    "user456",
+                    "456-1234-5678",
+                    LocalDate.of(2024, 11, 1),
+                    LocalDate.of(2025, 1, 31)
+            );
+
+        for(UsageResponseDto usageResponseDto : recent3MonthsUsagesByUserIdAndPhoneNumber) {
+            log.info("usageResponseDto : {}", usageResponseDto);
+        }
+
+        assertEquals(3, recent3MonthsUsagesByUserIdAndPhoneNumber.size());
     }
 
 }
