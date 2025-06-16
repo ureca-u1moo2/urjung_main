@@ -8,4 +8,6 @@ public interface ChatBotService {
     Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message, String recentHistory);
 
     Mono<ClassifiedTopicResult> classifyTopic(String message, String recentHistory);
+
+    Mono<ChatbotRawResponseDto> handleAnalysisAnswer(String prompt, String message);
 }

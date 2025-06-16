@@ -1,0 +1,9 @@
+package com.eureka.ip.team1.urjung_main.chatbot.repository;
+
+import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ChatAnalysisRedisRepository extends CrudRepository<UserChatAnalysis, String> {
+}

@@ -29,9 +29,21 @@ public class GeminiResponseParser {
                 root.get(FIELD_PLAN_IDS).forEach(n -> planIds.add(n.asText()));
             }
 
+            Boolean needMyPlan = null;
+            if( root.has("need_my_plan")){
+                needMyPlan = true;
+            }
+
+            Boolean result = null;
+            if (root.has("result")) {
+                result = root.get("result").asBoolean();  // true 또는 false
+            }
+
             return ChatbotRawResponseDto.builder()
                     .reply(reply)
                     .planIds(planIds.isEmpty() ? null : planIds)
+                    .result(result)
+                    .needSelectLine(needMyPlan)
                     .build();
         } catch (Exception e) {
             log.error("챗봇 응답 파싱 실패: {}", e.getMessage());
