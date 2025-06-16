@@ -22,7 +22,7 @@ public class MailService {
         	MimeMessage mimeMessage = mailSender.createMimeMessage();
         	
         	String subject = "비밀번호 재설정 안내";
-            String resetUrl = "https://your-domain.com/reset-password?token=" + token;
+            String resetUrl = "http://localhost:3000/find-password?token=" + token;
             String text = "아래 링크를 클릭해 비밀번호를 재설정하세요.\n" + resetUrl;
 
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
