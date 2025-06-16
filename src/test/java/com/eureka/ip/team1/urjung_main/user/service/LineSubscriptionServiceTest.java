@@ -18,12 +18,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class LineSubscriptionServiceImplTest {
+public class LineSubscriptionServiceTest {
 
     @Mock
     private LineRepository lineRepository;
@@ -147,4 +149,63 @@ public class LineSubscriptionServiceImplTest {
         assertThatThrownBy(() -> service.getDiscountedPrice("user123", "plan123"))
                 .isInstanceOf(NotFoundException.class);
     }
+
+    // 사용자의 회선 전체 조회 테스트
+    @Test
+    void getAllLinesByUserId_shouldReturnDtoList() {
+        Line line1 = Line.builder()
+                .id("line1")
+                .userId("user123")
+                .phoneNumber("010-1000-1000")
+                .planId("plan001")
+                .status(Line.LineStatus.active)
+                .startDate(LocalDateTime.now())
+                .discountedPrice(20000)
+                .build();
+
+        Line line2 = Line.builder()
+                .id("line2")
+                .userId("user123")
+                .phoneNumber("010-2000-2000")
+                .planId("plan002")
+                .status(Line.LineStatus.canceled)
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now())
+                .discountedPrice(25000)
+                .build();
+
+        when(lineRepository.findAllByUserId("user123")).thenReturn(List.of(line1, line2));
+
+        var result = service.getAllLinesByUserId("user123");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo("line1");
+        assertThat(result.get(1).getPhoneNumber()).isEqualTo("010-2000-2000");
+    }
+
+    // membership 의 discount 가 null 인 상황
+    @Test
+    void getDiscountedPrice_shouldReturnOriginalPriceWhenDiscountIsNull() {
+        // given
+        Plan plan = new Plan();
+        plan.setId("plan123");
+        plan.setPrice(10000);
+
+        Membership membership = new Membership(); // discountRate not set (null)
+
+        User user = new User();
+        user.setUserId("user123");
+        user.setMembership(membership);
+
+        when(planRepository.findById("plan123")).thenReturn(Optional.of(plan));
+        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+
+        // when
+        int discountedPrice = service.getDiscountedPrice("user123", "plan123");
+
+        // then
+        assertThat(discountedPrice).isEqualTo(10000); // no discount applied
+    }
+
+
 }

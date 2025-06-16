@@ -4,6 +4,7 @@ import com.eureka.ip.team1.urjung_main.auth.config.CustomUserDetails;
 import com.eureka.ip.team1.urjung_main.auth.config.SecurityConfig;
 import com.eureka.ip.team1.urjung_main.auth.jwt.TokenProvider;
 import com.eureka.ip.team1.urjung_main.membership.entity.Membership;
+import com.eureka.ip.team1.urjung_main.user.dto.LineDto;
 import com.eureka.ip.team1.urjung_main.user.dto.LineSubscriptionDto;
 import com.eureka.ip.team1.urjung_main.user.entity.User;
 import com.eureka.ip.team1.urjung_main.user.service.LineSubscriptionService;
@@ -29,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -130,4 +132,31 @@ public class LineControllerTest {
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
                 .andExpect(jsonPath("$.data").value(9000));
     }
+
+    // 사용자의 전체 회선 조회 API test
+    @Test
+    void getAllLinesByUserId_shouldReturnLinesForAuthenticatedUser() throws Exception {
+        LineDto dto = LineDto.builder()
+                .id("line1")
+                .userId("user123")
+                .phoneNumber("010-1111-2222")
+                .planId("plan001")
+                .status("active")
+                .startDate(LocalDateTime.now())
+                .discountedPrice(25000)
+                .build();
+
+        when(lineSubscriptionService.getAllLinesByUserId("user123"))
+                .thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/lines")
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].userId").value("user123"));
+    }
+
+
 }
