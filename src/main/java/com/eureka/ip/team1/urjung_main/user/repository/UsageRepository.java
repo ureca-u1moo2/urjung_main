@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -153,5 +154,31 @@ public interface UsageRepository extends JpaRepository<MonthlyUsage, UUID> {
     Optional<UsageResponseDto> findCurrentMonthUsageByUserIdAndPhoneNumber(
             @Param("userId") String userId,
             @Param("phoneNumber") String phoneNumber
+    );
+
+    @Query(
+            """
+            select new com.eureka.ip.team1.urjung_main.user.dto.UsageResponseDto(
+                l.planId,
+                l.phoneNumber,
+                extract(year from m.month),
+                extract(month from m.month),
+                m.data,
+                m.callMinute,
+                m.message
+            )
+            from MonthlyUsage m join m.line l
+            where l.userId = :userId
+            and l.phoneNumber = :phoneNumber
+            and m.month >= :startDate
+            and m.month <= :endDate
+            order by m.month desc, l.planId asc
+            """
+    )
+    List<UsageResponseDto> findRecent3MonthsUsagesByUserIdAndPhoneNumber(
+            @Param("userId") String userId,
+            @Param("phoneNumber") String phoneNumber,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 }
