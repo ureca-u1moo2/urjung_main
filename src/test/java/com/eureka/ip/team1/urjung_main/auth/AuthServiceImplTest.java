@@ -1,6 +1,7 @@
 package com.eureka.ip.team1.urjung_main.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -26,12 +27,14 @@ import com.eureka.ip.team1.urjung_main.auth.dto.TokenDto;
 import com.eureka.ip.team1.urjung_main.auth.jwt.TokenProvider;
 import com.eureka.ip.team1.urjung_main.auth.repository.RefreshTokenRepository;
 import com.eureka.ip.team1.urjung_main.auth.service.AuthServiceImpl;
+import com.eureka.ip.team1.urjung_main.auth.service.MailService;
 import com.eureka.ip.team1.urjung_main.auth.service.RefreshTokenService;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
 import com.eureka.ip.team1.urjung_main.common.enums.Result;
 import com.eureka.ip.team1.urjung_main.membership.entity.Membership;
 import com.eureka.ip.team1.urjung_main.membership.repository.MembershipRepository;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
+import com.eureka.ip.team1.urjung_main.user.dto.UserResultDto;
 import com.eureka.ip.team1.urjung_main.user.entity.User;
 import com.eureka.ip.team1.urjung_main.user.repository.UserRepository;
 
@@ -61,6 +64,9 @@ public class AuthServiceImplTest {
 	@Mock
 	private PasswordEncoder passwordEncoder;
 
+	@Mock
+	private MailService mailService;
+	
 	@Test
 	void login_Success() {
 	    String email = "test@example.com";
@@ -210,6 +216,108 @@ public class AuthServiceImplTest {
 
         assertEquals(Result.FAIL, response.getResult());
         assertEquals("An error occurred during reissue", response.getMessage());
+    }
+    
+    @Test
+    void findEmailByNameAndBirth_Success() {
+        String name = "홍길동";
+        LocalDate birth = LocalDate.of(1990, 1, 1);
+        String email = "hong@example.com";
+        User user = new User();
+        user.setEmail(email);
+
+        when(userRepository.findByNameAndBirth(name, birth)).thenReturn(Optional.of(user));
+
+        ApiResponse<UserResultDto> response = authService.findEmailByNameAndBirth(name, birth);
+
+        assertEquals(Result.SUCCESS, response.getResult());
+        assertEquals(email, response.getData().getUserDto().getEmail());
+        assertTrue(response.getMessage().contains(email));
+    }
+
+    @Test
+    void findEmailByNameAndBirth_NotFound() {
+        String name = "없는사람";
+        LocalDate birth = LocalDate.of(2000, 1, 1);
+
+        when(userRepository.findByNameAndBirth(name, birth)).thenReturn(Optional.empty());
+
+        ApiResponse<UserResultDto> response = authService.findEmailByNameAndBirth(name, birth);
+
+        assertEquals(Result.FAIL, response.getResult());
+        assertTrue(response.getMessage().contains("해당 유저가 없습니다."));
+    }
+
+
+    @Test
+    void requestPasswordReset_Success() {
+        String email = "test@example.com";
+        User user = new User();
+        user.setEmail(email);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(tokenProvider.createPasswordResetToken(email)).thenReturn("reset-token");
+
+        ApiResponse<UserResultDto> response = authService.requestPasswordReset(email);
+
+        assertEquals(Result.SUCCESS, response.getResult());
+        verify(mailService, times(1)).sendPasswordResetEmail(email, "reset-token");
+    }
+
+    @Test
+    void requestPasswordReset_Fail_UserNotFound() {
+        String email = "notfound@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        ApiResponse<UserResultDto> response = authService.requestPasswordReset(email);
+
+        assertEquals(Result.FAIL, response.getResult());
+        assertEquals("Reset Password failed: 해당 유저가 없습니다.", response.getMessage());
+    }
+    @Test
+    void resetPassword_Success() {
+        String token = "valid-token";
+        String email = "test@example.com";
+        String newPassword = "newPassword";
+        User user = new User();
+        user.setEmail(email);
+
+        when(tokenProvider.validateToken(token)).thenReturn(true);
+        when(tokenProvider.getUsernameFromToken(token)).thenReturn(email);
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
+
+        ApiResponse<UserResultDto> response = authService.resetPassword(token, newPassword);
+
+        assertEquals(Result.SUCCESS, response.getResult());
+        verify(userRepository, times(1)).save(user);
+        assertEquals("encodedNewPassword", user.getPassword());
+    }
+
+    @Test
+    void resetPassword_Fail_InvalidToken() {
+        String token = "invalid-token";
+        when(tokenProvider.validateToken(token)).thenReturn(false);
+
+        ApiResponse<UserResultDto> response = authService.resetPassword(token, "any");
+
+        assertEquals(Result.FAIL, response.getResult());
+        assertEquals("Reset Password failed: 유효하지 않은 토큰입니다", response.getMessage());
+    }
+
+    @Test
+    void resetPassword_Fail_UserNotFound() {
+        String token = "valid-token";
+        String email = "notfound@example.com";
+
+        when(tokenProvider.validateToken(token)).thenReturn(true);
+        when(tokenProvider.getUsernameFromToken(token)).thenReturn(email);
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        ApiResponse<UserResultDto> response = authService.resetPassword(token, "any");
+
+        assertEquals(Result.FAIL, response.getResult());
+        assertEquals("Reset Password failed: 사용자를 찾을 수 없습니다.", response.getMessage());
     }
 
 }

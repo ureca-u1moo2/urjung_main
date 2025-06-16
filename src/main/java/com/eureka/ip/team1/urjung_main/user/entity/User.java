@@ -54,4 +54,8 @@ public class User {
     public void generateId() {
         this.userId = UUID.randomUUID().toString();
     }
+    
+    public void changePassword(String encodedPassword) {
+    	this.password = encodedPassword;
+    }
 }
