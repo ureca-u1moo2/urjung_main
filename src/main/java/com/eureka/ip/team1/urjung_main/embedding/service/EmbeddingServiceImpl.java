@@ -2,7 +2,9 @@ package com.eureka.ip.team1.urjung_main.embedding.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.KnnQuery;
+import com.eureka.ip.team1.urjung_main.embedding.config.EmbeddingUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -10,12 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmbeddingServiceImpl implements EmbeddingService {
 
 //    private final RestTemplate restTemplate;
@@ -24,27 +28,36 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     private final ElasticsearchClient esClient;
 
     public Mono<Void> indexWithEmbedding(String question) {
+        String docId = EmbeddingUtils.generateIdFromQuestion(question); // 고정 ID 생성
+
         return webClient.post()
                 .uri("http://localhost:8000/embedding")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(Map.of("text", question))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<Float>>() {})
-                .flatMap(embedding -> {
-                    try {
-                        esClient.index(i -> i
-                                .index("questions")
-                                .document(Map.of(
-                                        "content", question,
-                                        "embedding", embedding
-                                ))
-                        );
-                        return Mono.empty(); // 저장 후 완료 반환
-                    } catch (IOException e) {
-                        return Mono.error(new RuntimeException("ES 저장 실패 ㅠㅠ", e));
-                    }
-                });
+                .flatMap(embedding ->
+                        Mono.fromCallable(() -> {
+                                    esClient.index(i -> i
+                                            .index("questions")
+                                            .id(docId) // 고정 ID로 저장 → 중복 방지
+                                            .document(Map.of(
+                                                    "content", question,
+                                                    "embedding", embedding
+                                            ))
+                                    );
+                                    return true;
+                                })
+                                .doOnSuccess(ok -> log.info("임베딩 저장 완료: {}", question))
+                                .onErrorResume(e -> {
+                                    log.error("임베딩 저장 실패", e);
+                                    return Mono.empty();
+                                })
+                                .then()
+                );
     }
+
+
 
 
     public Mono<List<String>> searchSimilarQuestions(String queryText) {
@@ -82,17 +95,20 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     }
 
     public Mono<Boolean> alreadyExists(String question) {
+        String docId = EmbeddingUtils.generateIdFromQuestion(question);
+
         try {
-            var result = esClient.search(s -> s
-                            .index("questions")
-                            .query(q -> q.term(t -> t.field("content.keyword").value(question))),
-                    Map.class
-            );
-            return Mono.just(!result.hits().hits().isEmpty());
+            boolean exists = esClient.exists(e -> e
+                    .index("questions")
+                    .id(docId)
+            ).value();
+
+            return Mono.just(exists);
         } catch (IOException e) {
             return Mono.error(e);
         }
     }
+
 
 
 
