@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.auth.service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,10 +17,12 @@ import com.eureka.ip.team1.urjung_main.auth.repository.RefreshTokenRepository;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
 import com.eureka.ip.team1.urjung_main.common.enums.Result;
 import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;
+import com.eureka.ip.team1.urjung_main.common.exception.TokenInvalidException;
 import com.eureka.ip.team1.urjung_main.common.exception.UnAuthorizedException;
 import com.eureka.ip.team1.urjung_main.membership.entity.Membership;
 import com.eureka.ip.team1.urjung_main.membership.repository.MembershipRepository;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
+import com.eureka.ip.team1.urjung_main.user.dto.UserResultDto;
 import com.eureka.ip.team1.urjung_main.user.entity.User;
 import com.eureka.ip.team1.urjung_main.user.repository.UserRepository;
 
@@ -40,6 +43,7 @@ public class AuthServiceImpl implements AuthService{
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 	
+    private final MailService mailService;
 	@Override
 	public ApiResponse<AuthResultDto> login(String email, String password) {
 		AuthResultDto loginResultDto = new AuthResultDto();
@@ -131,7 +135,7 @@ public class AuthServiceImpl implements AuthService{
 	                .message("Signup successful")
 	                .build();
 	    } catch (Exception e) {
-	        log.error("Signup error: ", e);
+	        log.debug("Signup debug: ", e);
 
 	        return ApiResponse.<AuthResultDto>builder()
 	                .result(Result.FAIL)
@@ -159,7 +163,7 @@ public class AuthServiceImpl implements AuthService{
 	                .message("Logout successful")
 	                .build();
 	    } catch (Exception e) {
-	        log.error("Logout error: ", e);
+	        log.debug("Logout debug: ", e);
 
 	        return ApiResponse.<AuthResultDto>builder()
 	                .result(Result.FAIL)
@@ -207,7 +211,7 @@ public class AuthServiceImpl implements AuthService{
 	                .message("Reissue successful")
 	                .build();
 	    } catch (Exception e) {
-	        log.error("Reissue error: ", e);
+	        log.debug("Reissue debug: ", e);
 
 	        return ApiResponse.<AuthResultDto>builder()
 	                .result(Result.FAIL)
@@ -215,6 +219,115 @@ public class AuthServiceImpl implements AuthService{
 	                .build();
 	    }
 	    
+	}
+
+	@Override
+	public ApiResponse<UserResultDto> findEmailByNameAndBirth(String name, LocalDate birth) {
+		UserResultDto userResultDto = new UserResultDto();
+		log.debug("find-id start");
+		try {
+			String email = userRepository.findByNameAndBirth(name, birth)
+					.orElseThrow(() -> new NotFoundException("해당 유저가 없습니다."))
+					.getEmail();
+			
+			UserDto userDto = new UserDto();
+			userDto.setEmail(email);
+			
+			userResultDto.setResult("success");
+			userResultDto.setUserDto(userDto);
+			
+			return ApiResponse.<UserResultDto>builder()
+					.result(Result.SUCCESS)
+					.data(userResultDto)
+					.message("Find email: " + userDto.getEmail())
+					.build();
+		} catch(Exception e){
+			log.debug("Find-email failed: ", e.getMessage());
+			
+	        return ApiResponse.<UserResultDto>builder()
+	                .result(Result.FAIL)
+	                .message("Find-email failed: " + e.getMessage())
+	                .build();
+		}
+	}
+
+	@Override
+	public ApiResponse<UserResultDto> requestPasswordReset(String email) {
+		UserResultDto userResultDto = new UserResultDto();
+		log.debug("password-reset start" + email);
+		try {
+			
+			String name = userRepository.findByEmail(email)
+					.orElseThrow(() -> new NotFoundException("해당 유저가 없습니다."))
+					.getName();
+			
+			log.debug("name: " + name);
+			
+			String token = tokenProvider.createPasswordResetToken(email);
+			
+			// 이메일 전송 서비스 호출
+			mailService.sendPasswordResetEmail(email, token);
+
+			userResultDto.setResult("success");
+			
+			return ApiResponse.<UserResultDto>builder()
+					.result(Result.SUCCESS)
+					.data(userResultDto)
+					.message("Reset Password Success")
+					.build();
+		}catch(Exception e) {
+			log.debug("Reset Password failed: ", e.getMessage());
+			
+	        return ApiResponse.<UserResultDto>builder()
+	                .result(Result.FAIL)
+	                .message("Reset Password failed: " + e.getMessage())
+	                .build();
+		}
+	}
+
+	@Override
+	public ApiResponse<UserResultDto> resetPassword(String token, String newPassword) {
+		UserResultDto userResultDto = new UserResultDto();
+		log.debug("Password change start");
+		try {
+			if(!tokenProvider.validateToken(token)) {
+				throw new TokenInvalidException();
+			}
+			
+			String email = tokenProvider.getUsernameFromToken(token);
+			
+			User user = userRepository.findByEmail(email)
+					.orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+			
+			log.debug(user.getEmail());
+			
+			user.changePassword(passwordEncoder.encode(newPassword)); // 비밀번호 변경
+			userRepository.save(user);
+
+			UserDto userDto = new UserDto();
+			userDto.setName(user.getName());
+			userDto.setEmail(user.getEmail());
+			userDto.setPassword(user.getPassword());
+			
+			if(userDto.getPassword().equals(user.getPassword())) {
+				userResultDto.setResult("success");
+				userResultDto.setUserDto(userDto);
+			}
+			
+			return ApiResponse.<UserResultDto>builder()
+					.result(Result.SUCCESS)
+					.data(userResultDto)
+					.message("Reset Password Success")
+					.build();
+			
+		}catch(Exception e) {
+			log.debug("Password change failed: ", e.getMessage());
+			
+	        return ApiResponse.<UserResultDto>builder()
+	                .result(Result.FAIL)
+	                .message("Reset Password failed: " + e.getMessage())
+	                .build();
+		}
 	}
 
 }
