@@ -38,7 +38,7 @@ public class DefaultHandler implements ChatStateHandler {
 
     @Override
     public ChatState getState() {
-        return ChatState.DEFAULT;
+        return ChatState.IDLE;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class DefaultHandler implements ChatStateHandler {
                 .toList();
 
         if (lines.isEmpty()) {
-            return chatStateService.setState(requestDto.getSessionId(), ChatState.WAITING_PERSONAL_ANALYSIS)
+            return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
                     .thenMany(Flux.just(ChatResponseDto.builder()
                             .message("현재 가입된 회선이 없어 성향 분석을 진행할게요.")
                             .buttons(List.of(Button.analysisStart()))
@@ -77,7 +77,7 @@ public class DefaultHandler implements ChatStateHandler {
                     ));
         }
 
-        return chatStateService.setState(requestDto.getSessionId(), ChatState.WAITING_SELECT_LINE)
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION)
                 .thenMany(Flux.just(ChatResponseDto.builder()
                         .message("추천받을 회선을 선택해주세요. 또는 성향 분석을 원하시면 버튼을 눌러주세요.")
                         .buttons(List.of(Button.analysisStart()))

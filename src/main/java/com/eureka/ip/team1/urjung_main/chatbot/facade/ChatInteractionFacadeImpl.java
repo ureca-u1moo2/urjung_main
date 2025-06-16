@@ -255,7 +255,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                 plansJson
                         );
                         log.info(finalPrompt);
-                        return chatStateService.setState(sessionId, ChatState.DEFAULT)
+                        return chatStateService.setState(sessionId, ChatState.IDLE)
                                 .thenMany(
                                         chatBotService.handleAnalysisAnswer(finalPrompt, null)
                                                 .flatMapMany(finalRaw -> Flux.just(
@@ -272,7 +272,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         }
 
 
-        if (state == ChatState.WAITING_PERSONAL_ANALYSIS) {
+        if (state == ChatState.AWAITING_PERSONAL_ANALYSIS_START) {
             if ("성향 분석 시작".equals(message)) {
                 return chatStateService.setState(sessionId, ChatState.PERSONAL_ANALYSIS_1)
                         .thenMany(Flux.just(
@@ -280,7 +280,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                 ChatResponseDto.builder().message("1. 평소에 데이터를 얼마나 자주 사용하시나요?\n(예: 하루에 1~2시간 정도 사용해요 / 월 20GB 정도 써요)").build()
                         ));
             } else {
-                return chatStateService.setState(sessionId, ChatState.DEFAULT)
+                return chatStateService.setState(sessionId, ChatState.IDLE)
                         .thenMany(Flux.just(
                                 ChatResponseDto.builder().message("요금제 추천이 취소되었습니다").build(),
                                 ChatResponseDto.builder().message("제가 필요하시다면 언제든 말 걸어주세요!").build()
@@ -318,7 +318,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     sessionId,
                     userId,
                     message,
-                    ChatState.DEFAULT,
+                    ChatState.IDLE,
                     "3. 주로 어떤 용도로 휴대폰을 사용하시나요?\n(예: SNS, 유튜브, 웹서핑, 업무용 메신저 등)",
                     null //
             );
@@ -452,7 +452,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
             List<UsageResponseDto> currentMonthUsagesByUserId = usageService.getCurrentMonthUsagesByUserId(UsageRequestDto.builder().userId(userId).build());
             if (currentMonthUsagesByUserId == null || currentMonthUsagesByUserId.isEmpty()) {
                 //  - 없다면 3번으로 상태 변경
-                return chatStateService.setState(requestDto.getSessionId(), ChatState.WAITING_PERSONAL_ANALYSIS)
+                return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
                         .thenReturn(ChatResponseDto.builder()
                                 .message("현재 가입된 회선이 없어 성향 분석을 진행할게요.")
                                 .buttons(List.of(Button.builder()
@@ -463,7 +463,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                 .build());
 
             }else{
-                return chatStateService.setState(requestDto.getSessionId(), ChatState.WAITING_SELECT_LINE)
+                return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION)
                         .thenReturn(ChatResponseDto.builder()
                                 .message("추천받을 회선을 선택해주세요. 만약 성향 분석을 통한 추천을 받고 싶으시면 성향분석 버튼을 눌러주세요")
                                 .buttons(List.of(Button.builder()
@@ -505,7 +505,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                         List<Mono<Void>> sideEffects = new ArrayList<>();
 
                         if (response.getLineSelectButton() != null) {
-                            Mono<Void> stateMono = chatStateService.setState(requestDto.getSessionId(), ChatState.WAITING_SELECT_LINE).then();
+                            Mono<Void> stateMono = chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION).then();
                             sideEffects.add(stateMono);
                         }
 
