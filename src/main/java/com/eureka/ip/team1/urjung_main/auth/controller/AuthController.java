@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eureka.ip.team1.urjung_main.auth.dto.AuthResultDto;
 import com.eureka.ip.team1.urjung_main.auth.dto.LoginRequestDto;
+import com.eureka.ip.team1.urjung_main.auth.dto.ResetPasswordRequest;
 import com.eureka.ip.team1.urjung_main.auth.service.AuthService;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
 import com.eureka.ip.team1.urjung_main.common.enums.Result;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
+import com.eureka.ip.team1.urjung_main.user.dto.UserResultDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,4 +61,28 @@ public class AuthController {
         HttpStatus status = response.getResult() == Result.SUCCESS ? HttpStatus.OK : HttpStatus.UNAUTHORIZED;
         return new ResponseEntity<>(response, status);
     }
+    
+	@PostMapping("/users/find-id")
+	public ResponseEntity<ApiResponse<UserResultDto>> findId(@RequestBody UserDto userDto){ // 이름과 생년월일만 필요
+		ApiResponse<UserResultDto> response = authService.findEmailByNameAndBirth(userDto.getName(), userDto.getBirth());
+		
+	    HttpStatus status = (response.getResult() == Result.SUCCESS) ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+	    return new ResponseEntity<>(response, status);
+	}
+	
+	@PostMapping("/users/find-password")
+	public ResponseEntity<ApiResponse<UserResultDto>> requestPasswordReset(@RequestBody UserDto userDto) { // email 만 필요
+		ApiResponse<UserResultDto> response = authService.requestPasswordReset(userDto.getEmail());
+		
+	    HttpStatus status = (response.getResult() == Result.SUCCESS) ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+	    return new ResponseEntity<>(response, status);
+	}
+	
+	@PostMapping("/users/reset-password")
+	public ResponseEntity<ApiResponse<UserResultDto>> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest){
+		ApiResponse<UserResultDto> response = authService.resetPassword(resetPasswordRequest.getToken(), resetPasswordRequest.getNewPassword());
+		
+	    HttpStatus status = (response.getResult() == Result.SUCCESS) ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+	    return new ResponseEntity<>(response, status);
+	}
 }
