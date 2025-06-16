@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,6 +88,21 @@ public class UsageServiceImpl implements UsageService {
             return usageRepository.findCurrentMonthUsageByUserIdAndPhoneNumber(
                     usageRequestDto.getUserId(),
                     usageRequestDto.getPhoneNumber()
+            );
+        } catch (Exception e) {
+            log.info("error : {}", e.getMessage());
+            throw new InternalServerErrorException();
+        }
+    }
+
+    @Override
+    public List<UsageResponseDto> getRecent3MonthsUsagesByUserIdAndPhoneNumber(UsageRequestDto usageRequestDto) {
+        try {
+            return usageRepository.findRecent3MonthsUsagesByUserIdAndPhoneNumber(
+                    usageRequestDto.getUserId(),
+                    usageRequestDto.getPhoneNumber(),
+                    LocalDate.now().minusMonths(2).withDayOfMonth(1),
+                    LocalDate.now()
             );
         } catch (Exception e) {
             log.info("error : {}", e.getMessage());
