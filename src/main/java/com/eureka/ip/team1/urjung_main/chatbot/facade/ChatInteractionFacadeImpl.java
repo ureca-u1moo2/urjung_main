@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -174,15 +173,13 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         return embeddingService.alreadyExists(message)
                 .flatMap(exists -> {
                     if (exists) {
-                        log.info("Already embedded.");
                         return Mono.empty();
                     } else {
-                        log.info("New question, embedding...");
-                        embeddingService.indexWithEmbedding(message);
-                        return Mono.empty();
+                        return embeddingService.indexWithEmbedding(message);
                     }
                 });
     }
+
 
 
     private Mono<Void> saveElasticsearchLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
