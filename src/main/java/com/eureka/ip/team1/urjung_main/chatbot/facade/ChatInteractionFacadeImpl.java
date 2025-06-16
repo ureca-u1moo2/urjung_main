@@ -1,11 +1,13 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
+import com.eureka.ip.team1.urjung_main.chatbot.dispatcher.ChatStateDispatcher;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
+import com.eureka.ip.team1.urjung_main.chatbot.processor.ChatLogProcessor;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
@@ -44,8 +46,10 @@ import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoke
 @RequiredArgsConstructor
 @Slf4j
 public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
+    private final ChatStateDispatcher dispatcher;
     private final ChatBotService chatBotService;
     private final PromptStrategyFactory promptStrategyFactory;
+    private final ChatLogProcessor chatLogProcessor;
 
     private final ForbiddenWordService forbiddenWordService;
     private final ElasticsearchLogService elasticsearchLogService;
@@ -55,6 +59,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatStateService chatStateService;
     private final UsageService usageService;
     private final UserService userService;
+
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
         // 금칙어 필터링 우선 수행
@@ -64,12 +69,25 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                     .build();
             return Flux.just(responseDto);
         }
-        // 상태 확인 후 상태에 따른 분기
-        return chatStateService.getState(requestDto.getSessionId())
-                .doOnNext(chatState -> log.info(chatState.name()))
-                .flatMapMany(state -> routeByState(state, userId, requestDto));
+        long start = System.currentTimeMillis();
 
+        return Mono.defer(()->chatLogProcessor.saveMongoLog(userId, requestDto, "user", null))
+                .thenMany(
+                        dispatcher.dispatch(userId, requestDto)
+                        .flatMap(response -> {
+                            if (response.getType()==null) {
+                                return Mono.when(
+                                        chatLogProcessor.saveMongoLog(userId, requestDto, "model", response),
+                                        chatLogProcessor.saveEmbeddingIfNeeded(requestDto.getMessage()),
+                                        chatLogProcessor.saveElasticsearchLog(userId, requestDto, response, null, System.currentTimeMillis() - start)
+                                ).thenReturn(response); // response 그대로 다시 방출
+                            }
+                            return Mono.just(response); // 다른 응답은 그대로 통과
+                        })
+                );
     }
+
+
 
     private Flux<ChatResponseDto> routeByState(ChatState state, String userId, ChatRequestDto requestDto) {
         String message = requestDto.getMessage();
