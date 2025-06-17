@@ -1,6 +1,6 @@
 package com.eureka.ip.team1.urjung_main.chatbot.processor;
 
-import com.eureka.ip.team1.urjung_main.chatbot.dto.Card;
+import com.eureka.ip.team1.urjung_main.chatbot.component.Card;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatLogRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;

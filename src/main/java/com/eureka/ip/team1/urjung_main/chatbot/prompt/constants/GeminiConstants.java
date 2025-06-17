@@ -1,4 +1,4 @@
-package com.eureka.ip.team1.urjung_main.chatbot.constants;
+package com.eureka.ip.team1.urjung_main.chatbot.prompt.constants;
 
 public final class GeminiConstants {
     private GeminiConstants() {

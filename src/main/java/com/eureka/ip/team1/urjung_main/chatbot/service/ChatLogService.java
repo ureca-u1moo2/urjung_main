@@ -13,10 +13,11 @@ public interface ChatLogService {
 	ChatLogResponseDto saveRecentAndPermanentChatLog(ChatLogRequestDto chatLogRequestDto);
 	List<Content> getRecentChatHistory(String userId, String sessionId);
 
-	void saveAnswer(String sessionId, int step, String answer, String userId);
+	void saveAnswer(String sessionId, String answer, String userId);
 
 	UserChatAnalysis getAnalysis(String sessionId);
 	void saveChatContext(String sessionId, ChatContext context);
 	ChatContext getChatContext(String sessionId);
-	void clear(String sessionId);
+	void clearAnalysis(String sessionId);
+	void saveCurrentStep(String sessionId, int step);
 }

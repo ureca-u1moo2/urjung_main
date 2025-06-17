@@ -1,4 +1,4 @@
-package com.eureka.ip.team1.urjung_main.chatbot.dto;
+package com.eureka.ip.team1.urjung_main.chatbot.component;
 
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ButtonType;
 import lombok.Builder;
@@ -13,9 +13,6 @@ public class Button {
 
     // ✅ 자주 쓰는 버튼 정적 생성 메서드들
 
-    /**
-     * "성향 분석 시작" 버튼 생성
-     */
     public static Button analysisStart() {
         return Button.builder()
                 .label("성향 분석 진행")
@@ -24,9 +21,6 @@ public class Button {
                 .build();
     }
 
-    /**
-     * "취소" 버튼 생성
-     */
     public static Button cancel() {
         return Button.builder()
                 .label("취소")
@@ -35,9 +29,14 @@ public class Button {
                 .build();
     }
 
-    /**
-     * 외부 URL 이동 버튼 생성
-     */
+    public static Button planPage(){
+        return Button.builder()
+                .label("요금제 페이지로 이동")
+                .value("http://localhost:3000/plans")
+                .type(ButtonType.URL)
+                .build();
+    }
+
     public static Button url(String label, String link) {
         return Button.builder()
                 .label(label)

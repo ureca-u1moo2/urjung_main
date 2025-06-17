@@ -59,14 +59,14 @@ public class ChatLogServiceImpl implements ChatLogService {
     }
 
     @Override
-    public void saveAnswer(String sessionId, int step, String answer, String userId) {
+    public void saveAnswer(String sessionId,String answer, String userId) {
         UserChatAnalysis data = chatAnalysisRepository.findById(sessionId)
                 .orElse(UserChatAnalysis.builder()
                         .sessionId(sessionId)
                         .userId(userId)
                         .build());
 
-        data.addAnswer(step, answer);
+        data.addAnswer(answer);
         chatAnalysisRepository.save(data);
     }
 
@@ -86,9 +86,23 @@ public class ChatLogServiceImpl implements ChatLogService {
     }
 
     @Override
-    public void clear(String sessionId) {
-        chatContextRedisRepository.deleteById(sessionId);
+    public void clearAnalysis(String sessionId) {
+        chatAnalysisRepository.deleteById(sessionId);
     }
+
+    @Override
+    public void saveCurrentStep(String sessionId, int nextStep) {
+        UserChatAnalysis analysis = getAnalysis(sessionId); // 기존 방식 사용
+        if (analysis != null) {
+            analysis.setCurrentStep(nextStep);
+            saveAnalysis(sessionId, analysis); // Redis나 DB에 다시 저장
+        }
+    }
+
+    public void saveAnalysis(String sessionId, UserChatAnalysis analysis) {
+        chatAnalysisRepository.save(analysis);
+    }
+
 
     private PermanentChatLog getOrCreateSession(String userId, String sessionId) {
         for (int i = 0; i < 3; i++) {

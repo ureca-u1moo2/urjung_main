@@ -21,6 +21,7 @@ public class ChatBotController {
 
     @PostMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ChatResponseDto> chat(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody ChatRequestDto requestDto) {
-        return chatInteractionFacade.chat(userDetails.getUserId(), requestDto);
+//        return chatInteractionFacade.chat(userDetails.getUserId(), requestDto);
+        return chatInteractionFacade.chat("40dc21a3-5663-40bb-b792-795db7ed4fad", requestDto);
     }
 }

@@ -1,5 +1,8 @@
 package com.eureka.ip.team1.urjung_main.chatbot.handler;
 
+import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
+import com.eureka.ip.team1.urjung_main.chatbot.component.Card;
+import com.eureka.ip.team1.urjung_main.chatbot.component.LineSelectButton;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
@@ -22,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -51,6 +55,10 @@ public class DefaultHandler implements ChatStateHandler {
                     Mono<ChatResponseDto> waitMessage = buildWaitMessage(result);
                     if (result.getTopic() == Topic.RECOMMENDATION_PLAN) {
                         return waitMessage.concatWith(handleRecommendationTopic(userId, requestDto));
+                    }
+
+                    if(result.getTopic()==Topic.ALL_PLAN_LIST){
+                        return waitMessage.concatWith(handleAllPlanTopic(requestDto));
                     }
                     return waitMessage.concatWith(handleGeneralTopic(result.getTopic(), requestDto, recentChatHistory));
                 });
@@ -86,10 +94,29 @@ public class DefaultHandler implements ChatStateHandler {
                 ));
     }
 
+    private Flux<ChatResponseDto> handleAllPlanTopic(ChatRequestDto requestDto){
+        return chatBotService.handleUserMessage(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
+                .flatMapMany(raw -> {
+                    // 전체 요금제 목록 직접 생성
+                    List<PlanDto> plans = planService.getPlansSorted("popular");
+                    List<String> planIds = plans.stream()
+                            .map(PlanDto::getId)
+                            .collect(Collectors.toList());
+
+                    return Flux.just(ChatResponseDto.builder()
+                            .message(raw.getReply().trim())
+                            .cards(createCards(planIds))
+                                    .buttons(List.of(Button.planPage()))
+                            .build());
+                });
+    }
+
+
     private Flux<ChatResponseDto> handleGeneralTopic(Topic topic, ChatRequestDto requestDto, String chatHistoryJson) {
+        // 일반 토픽 처리
         return chatBotService.handleUserMessage(generatePromptByTopic(topic), requestDto.getMessage(), chatHistoryJson)
                 .flatMapMany(raw -> Flux.just(ChatResponseDto.builder()
-                        .message(raw.getReply())
+                        .message(raw.getReply().trim())
                         .cards(createCards(raw.getPlanIds()))
                         .build()));
     }
