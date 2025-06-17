@@ -9,6 +9,7 @@ import com.eureka.ip.team1.urjung_main.plan.dto.PlanReviewUpdateDto;
 import com.eureka.ip.team1.urjung_main.plan.entity.PlanReview;
 import com.eureka.ip.team1.urjung_main.plan.repository.PlanReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class PlanReviewServiceImpl implements PlanReviewService {
 
     private final PlanReviewRepository planReviewRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 요금제 리뷰 목록
     @Override
