@@ -14,8 +14,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.utils.gemini.GeminiRequestFactory.buildChatBody;
-import static com.eureka.ip.team1.urjung_main.chatbot.utils.gemini.GeminiRequestFactory.buildTopicClassifyBody;
+import static com.eureka.ip.team1.urjung_main.chatbot.utils.gemini.GeminiRequestFactory.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +44,14 @@ public class GeminiService implements ChatBotService {
                 .map(GeminiResponseUtils::extractTextFromResponse)
                 .map(GeminiResponseParser::toTopicResult)
                 .onErrorResume(e -> Mono.just(new ClassifiedTopicResult(Topic.ETC, "잠시만 기다려주세요")));
+    }
+
+    @Override
+    public Mono<ChatbotRawResponseDto> handleAnalysisAnswer(String prompt, String message) {
+        Map<String, Object> requestBody = buildAnalysis(prompt, message);
+        return sendChatRequest(requestBody)
+                .map(GeminiResponseUtils::extractTextFromResponse)
+                .map(GeminiResponseParser::toChatbotResponse);
     }
 
     private Mono<Map> sendChatRequest(Map<String, Object> requestBody) {

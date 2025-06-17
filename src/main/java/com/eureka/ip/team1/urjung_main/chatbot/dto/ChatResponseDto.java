@@ -13,5 +13,6 @@ public class ChatResponseDto {
     private String message;
     private List<Button> buttons;
     private List<Card> cards;
+    private LineSelectButton lineSelectButton;
 }
 

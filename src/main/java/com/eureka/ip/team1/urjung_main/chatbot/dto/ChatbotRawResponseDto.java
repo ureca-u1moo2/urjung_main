@@ -9,5 +9,7 @@ import java.util.List;
 @Builder
 public class ChatbotRawResponseDto {
     private String reply;                         // 사용자에게 보여줄 텍스트
+    private Boolean result;
     private List<String> planIds;      // 추천 요금제 ID 목록
+    private Boolean needSelectLine;
 }
