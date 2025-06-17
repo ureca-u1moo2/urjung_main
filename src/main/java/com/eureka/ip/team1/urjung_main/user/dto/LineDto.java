@@ -14,6 +14,7 @@ public class LineDto {
     private String userId;
     private String phoneNumber;
     private String planId;
+    private String planName;
     private String status;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
