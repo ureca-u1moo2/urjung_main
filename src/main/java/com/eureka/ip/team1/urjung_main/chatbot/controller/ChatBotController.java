@@ -19,12 +19,12 @@ import reactor.core.publisher.Flux;
 public class ChatBotController {
     private final ChatInteractionFacade chatInteractionFacade;
 
-//    @PostMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
-//    public Flux<ChatResponseDto> chat(@RequestBody ChatRequestDto requestDto) {
-//        return chatInteractionFacade.chat("059eb674-ef0a-4ba4-9117-c8d655a22f8b", requestDto);
+    @PostMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<ChatResponseDto> chat(@RequestBody ChatRequestDto requestDto) {
+        return chatInteractionFacade.chat("059eb674-ef0a-4ba4-9117-c8d655a22f8b", requestDto);
 
-        @PostMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
-        public Flux<ChatResponseDto> chat(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody ChatRequestDto requestDto) {
-            return chatInteractionFacade.chat(userDetails.getUserId(), requestDto);
+//        @PostMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
+//        public Flux<ChatResponseDto> chat(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody ChatRequestDto requestDto) {
+//            return chatInteractionFacade.chat(userDetails.getUserId(), requestDto);
 }
 }

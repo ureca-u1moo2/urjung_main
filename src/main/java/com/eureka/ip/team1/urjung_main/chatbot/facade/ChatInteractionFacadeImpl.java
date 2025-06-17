@@ -34,7 +34,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker.invokeNoArgsStrategy;
@@ -610,6 +612,14 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private Mono<Void> saveElasticsearchLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
         return Mono.fromRunnable(() -> {
             try {
+
+                // 카드 이름 목록 추출
+                List<String> recommendedItems = Optional.ofNullable(response.getCards())
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .map(card -> card.getValue().getName())
+                        .collect(Collectors.toList());
+
                 if (response == null || topic == null) return; // 사용자 메시지 저장 시 무시
                 ChatLogDto chatLogDto = new ChatLogDto(
                         userId,
@@ -618,7 +628,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                         requestDto.getMessage(),
                         topic,
                         response.getMessage(),
-                        null,
+                        recommendedItems.isEmpty() ? null : recommendedItems,
                         null,
                         latency
                 );
