@@ -1,83 +1,275 @@
+//package com.eureka.ip.team1.urjung_main.plan.service;
+//
+//import com.eureka.ip.team1.urjung_main.plan.dto.PlanAiSummaryResponseDto;
+//import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
+//import com.eureka.ip.team1.urjung_main.plan.entity.PlanReview;
+//import com.eureka.ip.team1.urjung_main.plan.entity.PlanSummary;
+//import com.eureka.ip.team1.urjung_main.plan.repository.PlanRepository;
+//import com.eureka.ip.team1.urjung_main.plan.repository.PlanReviewRepository;
+//import com.eureka.ip.team1.urjung_main.plan.repository.PlanSummaryRepository;
+//import org.junit.jupiter.api.BeforeEach;
+//import org.junit.jupiter.api.Test;
+//import org.mockito.InjectMocks;
+//import org.mockito.Mock;
+//import org.mockito.MockitoAnnotations;
+//import org.springframework.data.redis.core.RedisTemplate;
+//import org.springframework.data.redis.core.ValueOperations;
+//
+//import java.time.LocalDateTime;
+//import java.util.*;
+//
+//import static org.junit.jupiter.api.Assertions.*;
+//import static org.mockito.Mockito.*;
+//
+//class PlanAiSummaryServiceImplTest {
+//
+//    @Mock
+//    private PlanReviewRepository planReviewRepository;
+//
+//    @Mock
+//    private PlanRepository planRepository;
+//
+//    @Mock
+//    private PlanSummaryRepository planSummaryRepository;
+//
+//    @Mock
+//    private GeminiApiClient geminiApiClient;
+//
+//    @Mock
+//    private RedisTemplate<String, String> redisTemplate;
+//
+//    @Mock
+//    private ValueOperations<String, String> valueOperations;
+//
+//    @InjectMocks
+//    private PlanAiSummaryServiceImpl planAiSummaryService;
+//
+//    @BeforeEach
+//    void setUp() {
+//        MockitoAnnotations.openMocks(this);
+//    }
+//
+//    @Test
+//    void testSummarizePlanReview_ReturnsExistingSummaryWithin24Hours() {
+//        Plan plan = Plan.builder().id("plan-1").build();
+//        PlanSummary summary = PlanSummary.builder()
+//                .id("summary-1")
+//                .plan(plan)
+//                .summaryText("요약 내용")
+//                .updatedAt(LocalDateTime.now())
+//                .build();
+//
+//        when(planRepository.findById("plan-1")).thenReturn(Optional.of(plan));
+//        when(planSummaryRepository.findByPlan(plan)).thenReturn(Optional.of(summary));
+//
+//        PlanAiSummaryResponseDto result = planAiSummaryService.summarizePlanReview("plan-1");
+//
+//        assertEquals("요약 내용", result.getSummary());
+//    }
+//
+//    @Test
+//    void testSummarizePlanReview_CreatesNewSummaryWhenExpired() {
+//        Plan plan = Plan.builder().id("plan-2").build();
+//        List<PlanReview> reviews = List.of(
+//                PlanReview.builder().content("좋아요").build(),
+//                PlanReview.builder().content("별로예요").build()
+//        );
+//
+//        PlanSummary oldSummary = PlanSummary.builder()
+//                .id("old-id")
+//                .plan(plan)
+//                .summaryText("오래된 요약")
+//                .updatedAt(LocalDateTime.now().minusDays(2))
+//                .build();
+//
+//        when(planRepository.findById("plan-2")).thenReturn(Optional.of(plan));
+//        when(planSummaryRepository.findByPlan(plan)).thenReturn(Optional.of(oldSummary));
+//        when(planReviewRepository.findByPlanId("plan-2")).thenReturn(reviews);
+//        when(geminiApiClient.getGeminiSummary(any(), any())).thenReturn("새로운 요약");
+//
+//        PlanAiSummaryResponseDto result = planAiSummaryService.summarizePlanReview("plan-2");
+//
+//        assertEquals("새로운 요약", result.getSummary());
+//        verify(planSummaryRepository).save(any());
+//    }
+//
+//    @Test
+//    void testSummarizePlanReview_CreatesNewSummaryWhenNoPreviousExists() {
+//        Plan plan = Plan.builder().id("plan-3").build();
+//        List<PlanReview> reviews = List.of(
+//                PlanReview.builder().content("아주 좋아요").build()
+//        );
+//
+//        when(planRepository.findById("plan-3")).thenReturn(Optional.of(plan));
+//        when(planSummaryRepository.findByPlan(plan)).thenReturn(Optional.empty());
+//        when(planReviewRepository.findByPlanId("plan-3")).thenReturn(reviews);
+//        when(geminiApiClient.getGeminiSummary(any(), any())).thenReturn("요약 생성 완료");
+//
+//        PlanAiSummaryResponseDto result = planAiSummaryService.summarizePlanReview("plan-3");
+//
+//        assertEquals("요약 생성 완료", result.getSummary());
+//        verify(planSummaryRepository).save(any());
+//    }
+//
+//    @Test
+//    void testSummarizePlanReview_ReturnsFallbackMessageWhenNoReviews() {
+//        Plan plan = Plan.builder().id("plan-4").build();
+//
+//        when(planRepository.findById("plan-4")).thenReturn(Optional.of(plan));
+//        when(planSummaryRepository.findByPlan(plan)).thenReturn(Optional.empty());
+//        when(planReviewRepository.findByPlanId("plan-4")).thenReturn(Collections.emptyList());
+//
+//        PlanAiSummaryResponseDto result = planAiSummaryService.summarizePlanReview("plan-4");
+//
+//        assertEquals("리뷰가 없어 요약할 수 없습니다.", result.getSummary());
+//        verify(planSummaryRepository, never()).save(any());
+//        verify(geminiApiClient, never()).getGeminiSummary(any(), any());
+//    }
+//
+//    @Test
+//    void testSummarizePlanReview_ThrowsWhenPlanNotFound() {
+//        when(planRepository.findById("plan-404")).thenReturn(Optional.empty());
+//
+//        assertThrows(IllegalArgumentException.class, () -> {
+//            planAiSummaryService.summarizePlanReview("plan-404");
+//        });
+//    }
+//
+//    @Test
+//    void testSummarizePlanReview_ReturnsFromRedisCache() {
+//        String planId = "plan-redis";
+//        String cached = "캐시된 요약";
+//
+//        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+//        when(valueOperations.get("plan:summary:" + planId)).thenReturn(cached);
+//
+//        PlanAiSummaryServiceImpl service = new PlanAiSummaryServiceImpl(
+//                planReviewRepository,
+//                planRepository,
+//                planSummaryRepository,
+//                geminiApiClient,
+//                redisTemplate
+//        );
+//
+//        PlanAiSummaryResponseDto result = service.summarizePlanReview(planId);
+//        assertEquals(cached, result.getSummary());
+//
+//        verify(redisTemplate.opsForValue(), times(1)).get("plan:summary:" + planId);
+//        verify(planRepository, never()).findById(any());
+//    }
+//}
 package com.eureka.ip.team1.urjung_main.plan.service;
 
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanAiSummaryResponseDto;
+import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
 import com.eureka.ip.team1.urjung_main.plan.entity.PlanReview;
+import com.eureka.ip.team1.urjung_main.plan.entity.PlanSummary;
+import com.eureka.ip.team1.urjung_main.plan.repository.PlanRepository;
 import com.eureka.ip.team1.urjung_main.plan.repository.PlanReviewRepository;
+import com.eureka.ip.team1.urjung_main.plan.repository.PlanSummaryRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
-import java.util.Collections;
-import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class PlanAiSummaryServiceTest {
+class PlanAiSummaryServiceImplTest {
 
-    private PlanReviewRepository planReviewRepository;
-    private GeminiApiClient geminiApiClient;
-    private PlanAiSummaryServiceImpl service;
+    @Mock private PlanReviewRepository planReviewRepository;
+    @Mock private PlanRepository planRepository;
+    @Mock private PlanSummaryRepository planSummaryRepository;
+    @Mock private GeminiApiClient geminiApiClient;
+    @Mock private RedisTemplate<String, String> redisTemplate;
+    @Mock private ValueOperations<String, String> valueOps;
+
+    @InjectMocks private PlanAiSummaryServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        planReviewRepository = mock(PlanReviewRepository.class);
-        geminiApiClient = mock(GeminiApiClient.class);
-        service = new PlanAiSummaryServiceImpl(planReviewRepository, geminiApiClient);
+        MockitoAnnotations.openMocks(this);
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
     }
 
     @Test
-    @DisplayName("리뷰가 없는 경우 기본 메시지를 반환한다")
-    void whenNoReviews_thenReturnDefaultMessage() {
-        // given
-        String planId = "plan-empty";
+    void testRedisHit() {
+        String planId = "abc";
+        when(valueOps.get("plan:summary:" + planId)).thenReturn("캐시된 요약");
+
+        PlanAiSummaryResponseDto result = service.summarizePlanReview(planId);
+
+        assertEquals("캐시된 요약", result.getSummary());
+        verify(planRepository, never()).findById(any());
+    }
+
+    @Test
+    void testNoReviews() {
+        String planId = "def";
+        Plan plan = Plan.builder().id(planId).build();
+
+        when(valueOps.get("plan:summary:" + planId)).thenReturn(null);
+        when(planRepository.findById(planId)).thenReturn(Optional.of(plan));
         when(planReviewRepository.findByPlanId(planId)).thenReturn(Collections.emptyList());
 
-        // when
         PlanAiSummaryResponseDto result = service.summarizePlanReview(planId);
 
-        // then
-        assertThat(result.getSummary()).isEqualTo("리뷰가 존재하지 않아 요약할 수 없습니다.");
-        verify(geminiApiClient, never()).getGeminiSummary(anyString(), anyString());
+        assertEquals("리뷰가 없어 요약할 수 없습니다.", result.getSummary());
+        verify(planSummaryRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("리뷰가 있는 경우 Gemini API를 호출하여 결과를 반환한다")
-    void whenReviewsExist_thenReturnSummary() {
-        // given
-        String planId = "plan-123";
-        List<PlanReview> reviews = List.of(
-                PlanReview.builder().content("데이터 많고 싸요").build(),
-                PlanReview.builder().content("통화 품질이 별로").build()
-        );
-        when(planReviewRepository.findByPlanId(planId)).thenReturn(reviews);
-        when(geminiApiClient.getGeminiSummary(anyString(), anyString()))
-                .thenReturn("1. 장점: 가격이 저렴함\n2. 단점: 통화 품질 불만");
+    void testNewSummaryWithExistingSummaryObject() {
+        String planId = "ghi";
+        Plan plan = Plan.builder().id(planId).build();
+        List<PlanReview> reviews = List.of(PlanReview.builder().content("좋아요").build());
+        PlanSummary summary = PlanSummary.builder().plan(plan).updatedAt(LocalDateTime.now().minusDays(1)).build();
 
-        // when
+        when(valueOps.get("plan:summary:" + planId)).thenReturn(null);
+        when(planRepository.findById(planId)).thenReturn(Optional.of(plan));
+        when(planReviewRepository.findByPlanId(planId)).thenReturn(reviews);
+        when(geminiApiClient.getGeminiSummary(any(), any())).thenReturn("요약 결과");
+        when(planSummaryRepository.findByPlan(plan)).thenReturn(Optional.of(summary));
+
         PlanAiSummaryResponseDto result = service.summarizePlanReview(planId);
 
-        // then
-        assertThat(result.getSummary()).contains("장점").contains("단점");
-        verify(geminiApiClient, times(1)).getGeminiSummary(anyString(), anyString());
+        assertEquals("요약 결과", result.getSummary());
+        verify(planSummaryRepository).save(any());
+        verify(valueOps).set("plan:summary:" + planId, "요약 결과", Duration.ofHours(24));
     }
 
     @Test
-    @DisplayName("Gemini API가 null을 반환할 경우 fallback 메시지를 처리해야 한다")
-    void whenGeminiReturnsNull_thenHandleGracefully() {
-        // given
-        String planId = "plan-null";
-        List<PlanReview> reviews = List.of(
-                PlanReview.builder().content("좋아요").build()
-        );
-        when(planReviewRepository.findByPlanId(planId)).thenReturn(reviews);
-        when(geminiApiClient.getGeminiSummary(anyString(), anyString()))
-                .thenReturn(null);  // edge case
+    void testNewSummaryWithNoSummaryObject() {
+        String planId = "jkl";
+        Plan plan = Plan.builder().id(planId).build();
+        List<PlanReview> reviews = List.of(PlanReview.builder().content("굳").build());
 
-        // when
+        when(valueOps.get("plan:summary:" + planId)).thenReturn(null);
+        when(planRepository.findById(planId)).thenReturn(Optional.of(plan));
+        when(planReviewRepository.findByPlanId(planId)).thenReturn(reviews);
+        when(geminiApiClient.getGeminiSummary(any(), any())).thenReturn("새로운 요약");
+        when(planSummaryRepository.findByPlan(plan)).thenReturn(Optional.empty());
+
         PlanAiSummaryResponseDto result = service.summarizePlanReview(planId);
 
-        // then
-        assertThat(result.getSummary()).isNull(); // 현재는 그대로 반환. 필요 시 fallback 처리 가능
+        assertEquals("새로운 요약", result.getSummary());
+        verify(planSummaryRepository).save(any());
+        verify(valueOps).set("plan:summary:" + planId, "새로운 요약", Duration.ofHours(24));
+    }
+
+    @Test
+    void testPlanNotFound() {
+        String planId = "404";
+        when(valueOps.get("plan:summary:" + planId)).thenReturn(null);
+        when(planRepository.findById(planId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            service.summarizePlanReview(planId);
+        });
     }
 }
