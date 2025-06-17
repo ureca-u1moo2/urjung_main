@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.COMPARE_WITH_MY_PLAN_BASE_PROMPT;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicBasedPrompts.COMPARE_WITH_MY_PLAN_BASE_PROMPT;
 
 @Component
 public class CompareWithMyPlanPromptStrategy implements NoArgsPromptStrategy {

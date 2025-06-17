@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.GeminiConstants.FIELD_PLAN_IDS;
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.GeminiConstants.FIELD_REPLY;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.GeminiConstants.FIELD_PLAN_IDS;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.GeminiConstants.FIELD_REPLY;
 
 @Slf4j
 public class GeminiResponseParser {

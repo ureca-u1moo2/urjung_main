@@ -23,7 +23,7 @@ public class ChatStateServiceImpl implements ChatStateService {
         return redisTemplate.opsForValue()
                 .get(redisKey(sessionId))
                 .map(UserChatState::getState)
-                .defaultIfEmpty(ChatState.DEFAULT);
+                .defaultIfEmpty(ChatState.IDLE);
     }
 
     @Override

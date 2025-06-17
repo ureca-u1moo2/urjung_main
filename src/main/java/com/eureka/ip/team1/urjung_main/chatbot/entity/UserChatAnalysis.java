@@ -20,12 +20,16 @@ public class UserChatAnalysis {
 
     private String userId;
 
+    private int currentStep;
+
+
     private Map<Integer, String> answers = new HashMap<>();
 
-    public void addAnswer(int step, String answer) {
+    public void addAnswer(String answer) {
         if (answers == null) {
             answers = new HashMap<>();
         }
-        answers.put(step, answer);
+        answers.put(currentStep, answer);
+        currentStep++; // 다음 단계로 전진
     }
 }

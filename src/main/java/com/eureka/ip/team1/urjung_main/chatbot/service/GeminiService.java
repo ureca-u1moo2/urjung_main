@@ -29,6 +29,7 @@ public class GeminiService implements ChatBotService {
 
     @Override
     public Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message, String recentChatHistory) {
+        log.info(prompt);
         Map<String, Object> requestBody = buildChatBody(prompt, message, recentChatHistory);
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)

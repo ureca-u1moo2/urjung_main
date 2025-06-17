@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.SYSTEM_INFO_BASE_PROMPT;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.SystemPrompts.SYSTEM_INFO_BASE_PROMPT;
 
 @Component
 public class ServiceInfoPromptStrategy implements NoArgsPromptStrategy {
