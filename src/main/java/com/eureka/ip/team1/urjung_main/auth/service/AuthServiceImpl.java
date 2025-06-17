@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -74,9 +75,7 @@ public class AuthServiceImpl implements AuthService{
 			userDto.setBirth(user.getBirth());
 			
 	        loginResultDto.setResult("success");
-	        loginResultDto.setAccessToken(tokenDto.getAccessToken());
-	        loginResultDto.setAccessTokenExpiresIn(tokenDto.getAccessTokenExpiresIn());
-	        loginResultDto.setRefreshToken(tokenDto.getRefreshToken());
+	        loginResultDto.setToken(tokenDto);
 	        loginResultDto.setUserDto(userDto);
 	        
 	        return ApiResponse.<AuthResultDto>builder()
@@ -84,6 +83,14 @@ public class AuthServiceImpl implements AuthService{
 	                .data(loginResultDto)
 	                .message("Login successful")
 	                .build();
+		} catch(BadCredentialsException e) {
+		    log.debug("login failed - bad credentials: {}", e.getMessage());
+		    
+		    return ApiResponse.<AuthResultDto>builder()
+		            .result(Result.FAIL)
+		            .message("Login failed: 이메일 또는 비밀번호가 일치하지 않습니다")
+		            .build();
+		            
 		} catch(Exception e) {
 			log.debug("login failed: ", e.getMessage());
 			
@@ -202,6 +209,7 @@ public class AuthServiceImpl implements AuthService{
 	        
 	        AuthResultDto authResultDto = new AuthResultDto();
 	        authResultDto.setResult("success");
+	        authResultDto.setToken(token);
 
 	        log.debug("Reissue successful");
 
