@@ -75,9 +75,7 @@ public class AuthServiceImpl implements AuthService{
 			userDto.setBirth(user.getBirth());
 			
 	        loginResultDto.setResult("success");
-	        loginResultDto.setAccessToken(tokenDto.getAccessToken());
-	        loginResultDto.setAccessTokenExpiresIn(tokenDto.getAccessTokenExpiresIn());
-	        loginResultDto.setRefreshToken(tokenDto.getRefreshToken());
+	        loginResultDto.setToken(tokenDto);
 	        loginResultDto.setUserDto(userDto);
 	        
 	        return ApiResponse.<AuthResultDto>builder()
@@ -211,6 +209,7 @@ public class AuthServiceImpl implements AuthService{
 	        
 	        AuthResultDto authResultDto = new AuthResultDto();
 	        authResultDto.setResult("success");
+	        authResultDto.setToken(token);
 
 	        log.debug("Reissue successful");
 
