@@ -1,10 +1,12 @@
 package com.eureka.ip.team1.urjung_main.plan.service;
 
-import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;
-import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
-import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
-import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
-import com.eureka.ip.team1.urjung_main.plan.repository.PlanRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,12 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
+import com.eureka.ip.team1.urjung_main.plan.entity.Plan;
+import com.eureka.ip.team1.urjung_main.plan.repository.PlanRepository;
 
 public class PlanServiceTest {
     @Mock

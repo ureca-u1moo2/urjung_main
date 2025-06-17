@@ -31,16 +31,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if (accessToken != null && tokenProvider.validateToken(accessToken)) {
             Authentication auth = tokenProvider.getAuthentication(accessToken);
             SecurityContextHolder.getContext().setAuthentication(auth);
-        } else if (refreshToken != null && tokenProvider.validateToken(refreshToken)) {
-            // Refresh Token이 유효한 경우 새로운 Access Token 발급
-            String username = tokenProvider.getUsernameFromToken(refreshToken);
-            String newAccessToken = tokenProvider.createAccessToken(username);
-
-            // 응답 헤더에 새로운 Access Token 설정
-            response.setHeader("X-AUTH-TOKEN", newAccessToken);
-
-            Authentication auth = tokenProvider.getAuthentication(newAccessToken);
-            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
         filterChain.doFilter(request, response);

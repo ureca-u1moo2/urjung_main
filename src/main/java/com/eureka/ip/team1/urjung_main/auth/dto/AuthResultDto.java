@@ -11,8 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthResultDto {
 	private String result;
-    private String accessToken;
-    private Long accessTokenExpiresIn;
-    private String refreshToken;
+    private TokenDto token;
 	private UserDto userDto;
 }
