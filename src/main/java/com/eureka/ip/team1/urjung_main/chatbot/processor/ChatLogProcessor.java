@@ -18,7 +18,10 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -57,6 +60,14 @@ public class ChatLogProcessor {
 
     public Mono<Void> saveElasticsearchLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
         return Mono.fromRunnable(() -> {
+
+            // 카드 이름 목록 추출
+            List<String> recommendedItems = Optional.ofNullable(response.getCards())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(card -> card.getValue().getName())
+                    .collect(Collectors.toList());
+
             if (response == null || topic == null) return;
 
             ChatLogDto log = new ChatLogDto(
@@ -66,7 +77,7 @@ public class ChatLogProcessor {
                     requestDto.getMessage(),
                     topic,
                     response.getMessage(),
-                    null,
+                    recommendedItems.isEmpty() ? null : recommendedItems,
                     null,
                     latency
             );
