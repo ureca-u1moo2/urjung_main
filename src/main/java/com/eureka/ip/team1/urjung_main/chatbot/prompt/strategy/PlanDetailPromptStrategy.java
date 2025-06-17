@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.PLANT_DETAIL_BASE_PROMPT;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicBasedPrompts.PLANT_DETAIL_BASE_PROMPT;
 
 @Component
 public class PlanDetailPromptStrategy implements SingleArgsPromptStrategy {

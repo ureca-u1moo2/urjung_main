@@ -3,9 +3,9 @@ package com.eureka.ip.team1.urjung_main.chatbot.utils.gemini;
 import java.util.List;
 import java.util.Map;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.SYSTEM_PROMPT;
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.AIPromptMessages.getTopicClassifyPrompt;
-import static com.eureka.ip.team1.urjung_main.chatbot.constants.GeminiConstants.*;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.GeminiConstants.*;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.SystemPrompts.SYSTEM_PROMPT;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicClassificationPrompts.getTopicClassifyPrompt;
 
 public class GeminiRequestFactory {
     public static Map<String, Object> buildChatBody(String topicPrompt, String message, String recentChatHistory) {

@@ -1,6 +1,6 @@
 package com.eureka.ip.team1.urjung_main.chatbot.utils.gemini;
 
-import com.eureka.ip.team1.urjung_main.chatbot.constants.GeminiConstants;
+import com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.GeminiConstants;
 import com.eureka.ip.team1.urjung_main.common.exception.ChatBotException;
 import lombok.extern.slf4j.Slf4j;
 

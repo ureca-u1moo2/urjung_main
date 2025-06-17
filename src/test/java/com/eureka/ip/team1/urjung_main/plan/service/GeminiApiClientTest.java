@@ -1,76 +1,95 @@
-// GeminiApiClientTest.java
 package com.eureka.ip.team1.urjung_main.plan.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.springframework.http.*;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 public class GeminiApiClientTest {
 
     @Mock
-    private RestTemplate restTemplate;
+    private RestTemplate mockRestTemplate;
 
     @InjectMocks
-    private GeminiApiClient geminiApiClient = new GeminiApiClient();
+    private GeminiApiClient geminiApiClient;
 
-    public GeminiApiClientTest() {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        geminiApiClient = new GeminiApiClient();
+
+        // 필드 주입 (Reflection)
+        ReflectionTestUtils.setField(geminiApiClient, "geminiApiKey", "dummyKey");
+        ReflectionTestUtils.setField(geminiApiClient, "baseUrl", "https://dummy.api");
+        ReflectionTestUtils.setField(geminiApiClient, "modelName", "dummy-model");
+        ReflectionTestUtils.setField(geminiApiClient, "method", "dummyMethod");
+
+        // RestTemplate 교체 (기존 final → @InjectMocks로 덮음)
+        ReflectionTestUtils.setField(geminiApiClient, "restTemplate", mockRestTemplate);
     }
 
     @Test
-    @DisplayName("Gemini 요약 성공")
-    void testGeminiSummarySuccess() {
-        // Given
-        String title = "Test Plan";
-        String content = "이 요금제는 정말 좋습니다.";
+    @DisplayName("Gemini 요약 요청 성공 시 텍스트 반환")
+    void getGeminiSummary_success() {
+        // given
+        String title = "요금제 제목";
+        String content = "요금제 내용";
 
-        String mockSummary = "요약된 리뷰 내용입니다.";
-        Map<String, Object> mockResponse = Map.of(
+        Map<String, Object> responseBody = Map.of(
                 "candidates", List.of(
-                        Map.of("content", Map.of("parts", List.of(Map.of("text", mockSummary))))
+                        Map.of("content", Map.of(
+                                "parts", List.of(Map.of("text", "요약된 텍스트"))
+                        ))
                 )
         );
 
-        ResponseEntity<Map> responseEntity = new ResponseEntity<>(mockResponse, HttpStatus.OK);
+        ResponseEntity<Map> mockResponse = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
-        // Mock RestTemplate
-        GeminiApiClient client = new GeminiApiClient() {
-            @Override
-            public String getGeminiSummary(String title, String content) {
-                return mockSummary;
-            }
-        };
+        when(mockRestTemplate.postForEntity(anyString(), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
 
-        // Then
-        String result = client.getGeminiSummary(title, content);
-        assertThat(result).isEqualTo(mockSummary);
+        // when
+        String result = geminiApiClient.getGeminiSummary(title, content);
+
+        // then
+        assertThat(result).isEqualTo("요약된 텍스트");
     }
 
     @Test
-    @DisplayName("Gemini 요약 실패")
-    void testGeminiSummaryFailure() {
-        GeminiApiClient client = new GeminiApiClient() {
-            @Override
-            public String getGeminiSummary(String title, String content) {
-                return "AI 요약 실패. Gemini API 오류.";
-            }
-        };
+    @DisplayName("Gemini 응답 실패 시 기본 오류 메시지 반환")
+    void getGeminiSummary_failure_dueToHttpError() {
+        // given
+        ResponseEntity<Map> mockErrorResponse = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        String result = client.getGeminiSummary("title", "content");
+        when(mockRestTemplate.postForEntity(anyString(), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockErrorResponse);
+
+        // when
+        String result = geminiApiClient.getGeminiSummary("제목", "내용");
+
+        // then
+        assertThat(result).isEqualTo("AI 요약 실패. Gemini API 오류.");
+    }
+
+    @Test
+    @DisplayName("Gemini 응답이 200이어도 body가 null인 경우 실패 메시지 반환")
+    void getGeminiSummary_failure_dueToNullBody() {
+        // given
+        when(mockRestTemplate.postForEntity(anyString(), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
+
+        // when
+        String result = geminiApiClient.getGeminiSummary("제목", "내용");
+
+        // then
         assertThat(result).isEqualTo("AI 요약 실패. Gemini API 오류.");
     }
 }
