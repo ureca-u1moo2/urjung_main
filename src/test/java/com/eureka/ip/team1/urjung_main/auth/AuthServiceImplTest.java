@@ -91,9 +91,9 @@ public class AuthServiceImplTest {
 	    ApiResponse<AuthResultDto> response = authService.login(email, password);
 
 	    assertEquals(Result.SUCCESS, response.getResult());
-	    assertEquals("jwt-token", response.getData().getAccessToken());
-	    assertEquals("refresh-token", response.getData().getRefreshToken());
-	    assertEquals(3600L, response.getData().getAccessTokenExpiresIn());
+	    assertEquals("jwt-token", response.getData().getToken().getAccessToken());
+	    assertEquals("refresh-token", response.getData().getToken().getRefreshToken());
+	    assertEquals(3600L, response.getData().getToken().getAccessTokenExpiresIn());
 	}
 
 

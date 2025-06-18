@@ -25,6 +25,7 @@ import com.eureka.ip.team1.urjung_main.auth.config.CustomAuthenticationEntryPoin
 import com.eureka.ip.team1.urjung_main.auth.config.SecurityConfig;
 import com.eureka.ip.team1.urjung_main.auth.controller.AuthController;
 import com.eureka.ip.team1.urjung_main.auth.dto.AuthResultDto;
+import com.eureka.ip.team1.urjung_main.auth.dto.TokenDto;
 import com.eureka.ip.team1.urjung_main.auth.jwt.TokenProvider;
 import com.eureka.ip.team1.urjung_main.auth.service.AuthService;
 import com.eureka.ip.team1.urjung_main.common.ApiResponse;
@@ -56,8 +57,10 @@ public class AuthControllerTest {
     @Test
     void login_Success() throws Exception {
         AuthResultDto authResultDto = new AuthResultDto();
+        TokenDto tokenDto = new TokenDto();
+        tokenDto.setAccessToken("jwt-token");
         authResultDto.setResult("success");
-        authResultDto.setAccessToken("jwt-token");
+        authResultDto.setToken(tokenDto);
 
         ApiResponse<AuthResultDto> apiResponse = ApiResponse.<AuthResultDto>builder()
                 .result(Result.SUCCESS)
@@ -73,7 +76,7 @@ public class AuthControllerTest {
                 .content("{\"email\": \"test@example.com\", \"password\": \"password\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"));
+                .andExpect(jsonPath("$.data.token.accessToken").value("jwt-token"));
     }
     
     @Test
@@ -192,7 +195,10 @@ public class AuthControllerTest {
     void refreshAccessToken_Success() throws Exception {
         AuthResultDto authResultDto = new AuthResultDto();
         authResultDto.setResult("success");
-        authResultDto.setAccessToken("new-jwt-token");
+        TokenDto tokenDto = new TokenDto();
+        tokenDto.setAccessToken("new-jwt-token");
+        authResultDto.setResult("success");
+        authResultDto.setToken(tokenDto);
 
         ApiResponse<AuthResultDto> apiResponse = ApiResponse.<AuthResultDto>builder()
                 .result(Result.SUCCESS)
@@ -208,7 +214,7 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.accessToken").value("new-jwt-token"));
+                .andExpect(jsonPath("$.data.token.accessToken").value("new-jwt-token"));
     }
 
     @Test
