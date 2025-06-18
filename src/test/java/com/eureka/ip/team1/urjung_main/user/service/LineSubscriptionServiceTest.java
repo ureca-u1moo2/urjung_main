@@ -153,11 +153,21 @@ public class LineSubscriptionServiceTest {
     // 사용자의 회선 전체 조회 테스트
     @Test
     void getAllLinesByUserId_shouldReturnDtoList() {
+
+        Plan plan1 = new Plan();
+        plan1.setId("plan001");
+        plan1.setName("요금제 A");
+
+        Plan plan2 = new Plan();
+        plan2.setId("plan002");
+        plan2.setName("요금제 B");
+
         Line line1 = Line.builder()
                 .id("line1")
                 .userId("user123")
                 .phoneNumber("010-1000-1000")
                 .planId("plan001")
+                .plan(plan1)
                 .status(Line.LineStatus.active)
                 .startDate(LocalDateTime.now())
                 .discountedPrice(20000)
@@ -168,6 +178,7 @@ public class LineSubscriptionServiceTest {
                 .userId("user123")
                 .phoneNumber("010-2000-2000")
                 .planId("plan002")
+                .plan(plan2)
                 .status(Line.LineStatus.canceled)
                 .startDate(LocalDateTime.now())
                 .endDate(LocalDateTime.now())

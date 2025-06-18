@@ -9,6 +9,7 @@ import com.eureka.ip.team1.urjung_main.plan.dto.PlanReviewUpdateDto;
 import com.eureka.ip.team1.urjung_main.plan.entity.PlanReview;
 import com.eureka.ip.team1.urjung_main.plan.repository.PlanReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class PlanReviewServiceImpl implements PlanReviewService {
 
     private final PlanReviewRepository planReviewRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 요금제 리뷰 목록
     @Override
@@ -52,6 +54,9 @@ public class PlanReviewServiceImpl implements PlanReviewService {
 
         PlanReview savedReview = planReviewRepository.save(review);
 
+        // 캐시 삭제
+        redisTemplate.delete("plan:summary:" + planId);
+
         // 저장 후 → PlanReviewResponseDto 로 변환해서 리턴
         return PlanReviewResponseDto.builder()
                 .id(savedReview.getId())
@@ -80,6 +85,9 @@ public class PlanReviewServiceImpl implements PlanReviewService {
         // 수정 적용
         review.setRating(updateDto.getRating());
         review.setContent(updateDto.getContent());
+
+        // 캐시 삭제
+        redisTemplate.delete("plan:summary:" + planId);
     }
 
     // 요금제 리뷰 삭제
@@ -98,6 +106,9 @@ public class PlanReviewServiceImpl implements PlanReviewService {
         }
 
         planReviewRepository.delete(review);
+
+        // 캐시 삭제
+        redisTemplate.delete("plan:summary:" + planId);
     }
 
 

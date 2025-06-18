@@ -168,7 +168,9 @@ public class PlanServiceTest {
         Plan plan1 = Plan.builder().id("uuid-1").name("Plan 1").price(30000).description("Desc 1").dataAmount(10000L).callAmount(500L).smsAmount(200L).createdAt(LocalDateTime.now()).build();
         Plan plan2 = Plan.builder().id("uuid-2").name("Plan 2").price(50000).description("Desc 2").dataAmount(20000L).callAmount(1000L).smsAmount(500L).createdAt(LocalDateTime.now()).build();
 
-        when(planRepository.findPopularPlans()).thenReturn(Arrays.asList(plan1, plan2));
+        when(planRepository.findPopularPlans()).thenReturn(Arrays.asList("uuid-1", "uuid-2"));
+        when(planRepository.findByIdsWithTags(Arrays.asList("uuid-1", "uuid-2")))
+                .thenReturn(Arrays.asList(plan1, plan2));
 
         // when
         List<PlanDto> result = planService.getPlansSorted("popular");
@@ -186,7 +188,9 @@ public class PlanServiceTest {
         Plan plan1 = Plan.builder().id("uuid-1").name("Plan 1").price(30000).description("Desc 1").dataAmount(10000L).callAmount(500L).smsAmount(200L).createdAt(LocalDateTime.now()).build();
         Plan plan2 = Plan.builder().id("uuid-2").name("Plan 2").price(50000).description("Desc 2").dataAmount(20000L).callAmount(1000L).smsAmount(500L).createdAt(LocalDateTime.now()).build();
 
-        when(planRepository.findPopularPlans()).thenReturn(Arrays.asList(plan1, plan2));
+        when(planRepository.findPopularPlans()).thenReturn(Arrays.asList("uuid-1", "uuid-2"));
+        when(planRepository.findByIdsWithTags(Arrays.asList("uuid-1", "uuid-2")))
+                .thenReturn(Arrays.asList(plan1, plan2));
 
         // when
         List<PlanDto> result = planService.getPlansSorted("unknownSort");
