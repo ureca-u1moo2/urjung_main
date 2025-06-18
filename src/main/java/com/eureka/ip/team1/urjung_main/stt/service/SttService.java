@@ -1,4 +1,4 @@
-package com.eureka.ip.team1.urjung_main.stt;
+package com.eureka.ip.team1.urjung_main.stt.service;
 
 import org.springframework.web.multipart.MultipartFile;
 

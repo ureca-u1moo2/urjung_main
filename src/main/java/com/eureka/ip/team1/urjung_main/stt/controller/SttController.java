@@ -1,5 +1,6 @@
-package com.eureka.ip.team1.urjung_main.stt;
+package com.eureka.ip.team1.urjung_main.stt.controller;
 
+import com.eureka.ip.team1.urjung_main.stt.service.SttService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-public class STTController {
+public class SttController {
 
     private final SttService sttService;
 
