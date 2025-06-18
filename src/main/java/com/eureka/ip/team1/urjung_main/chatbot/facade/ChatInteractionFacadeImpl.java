@@ -3,8 +3,8 @@ package com.eureka.ip.team1.urjung_main.chatbot.facade;
 import com.eureka.ip.team1.urjung_main.chatbot.dispatcher.ChatStateDispatcher;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
-import com.eureka.ip.team1.urjung_main.chatbot.handler.RecommendationStartHandler;
 import com.eureka.ip.team1.urjung_main.chatbot.processor.ChatLogProcessor;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
@@ -40,7 +40,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 .thenMany(
                         dispatcher.dispatch(userId, requestDto)
                                 .flatMap(response -> {
-                                    if (response.getType() == null) {
+                                    if (response.getType() != ChatResponseType.WAITING) {
                                         return Mono.when(
                                                 chatLogProcessor.saveMongoLog(userId, requestDto, "model", response),
                                                 chatLogProcessor.saveEmbeddingIfNeeded(requestDto.getMessage()),
@@ -54,14 +54,14 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 
     @Override
     public Flux<ChatResponseDto> startRecommendationFlow(String userId, ChatRequestDto requestDto) {
-        return chatStateService.setState(requestDto.getSessionId(),ChatState.RECOMMENDATION_START)
-                .thenMany(dispatcher.dispatch(userId,requestDto));
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.RECOMMENDATION_START)
+                .thenMany(dispatcher.dispatch(userId, requestDto));
     }
 
     @Override
     public Flux<ChatResponseDto> changeStateToDefault(String userId, ChatRequestDto requestDto) {
         chatLogService.clearAnalysis(requestDto.getSessionId());
-        return chatStateService.setState(requestDto.getSessionId(),ChatState.IDLE)
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.IDLE)
                 .thenReturn(ChatResponseDto.builder()
                         .type(ChatResponseType.MAIN_REPLY)
                         .message("요금제 추천 모드가 종료되었습니다").build()).flux();
@@ -69,7 +69,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
 
     @Override
     public Flux<ChatResponseDto> changeStateToPersonalAnalysis(String userId, ChatRequestDto requestDto) {
-        return chatStateService.setState(requestDto.getSessionId(),ChatState.AWAITING_PERSONAL_ANALYSIS_START)
-                .thenMany(dispatcher.dispatch(userId,requestDto));
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
+                .thenMany(dispatcher.dispatch(userId, requestDto));
     }
 }
