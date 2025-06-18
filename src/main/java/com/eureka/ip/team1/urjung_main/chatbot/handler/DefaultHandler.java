@@ -53,11 +53,11 @@ public class DefaultHandler implements ChatStateHandler {
         return chatBotService.classifyTopic(requestDto.getMessage(), recentChatHistory)
                 .flatMapMany(result -> {
                     Mono<ChatResponseDto> waitMessage = buildWaitMessage(result);
-                    if (result.getTopic() == Topic.RECOMMENDATION_PLAN) {
-                        return waitMessage.concatWith(handleRecommendationTopic(userId, requestDto));
-                    }
+//                    if (result.getTopic() == Topic.RECOMMENDATION_PLAN) {
+//                        return waitMessage.concatWith(handleRecommendationTopic(userId, requestDto));
+//                    }
 
-                    if(result.getTopic()==Topic.ALL_PLAN_LIST){
+                    if (result.getTopic() == Topic.ALL_PLAN_LIST) {
                         return waitMessage.concatWith(handleAllPlanTopic(requestDto));
                     }
                     return waitMessage.concatWith(handleGeneralTopic(result.getTopic(), requestDto, recentChatHistory));
@@ -80,7 +80,7 @@ public class DefaultHandler implements ChatStateHandler {
             return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
                     .thenMany(Flux.just(ChatResponseDto.builder()
                             .message("현재 가입된 회선이 없어 성향 분석을 진행할게요.")
-                            .buttons(List.of(Button.analysisStart()))
+                            .buttons(List.of(Button.recommendStart()))
                             .build()
                     ));
         }
@@ -88,13 +88,13 @@ public class DefaultHandler implements ChatStateHandler {
         return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION)
                 .thenMany(Flux.just(ChatResponseDto.builder()
                         .message("추천받을 회선을 선택해주세요. 또는 성향 분석을 원하시면 버튼을 눌러주세요.")
-                        .buttons(List.of(Button.analysisStart()))
+                        .buttons(List.of(Button.recommendStart()))
                         .lineSelectButton(LineSelectButton.of(lines))
                         .build()
                 ));
     }
 
-    private Flux<ChatResponseDto> handleAllPlanTopic(ChatRequestDto requestDto){
+    private Flux<ChatResponseDto> handleAllPlanTopic(ChatRequestDto requestDto) {
         return chatBotService.handleUserMessage(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
                 .flatMapMany(raw -> {
                     // 전체 요금제 목록 직접 생성
@@ -104,9 +104,9 @@ public class DefaultHandler implements ChatStateHandler {
                             .collect(Collectors.toList());
 
                     return Flux.just(ChatResponseDto.builder()
+                            .type(ChatResponseType.MAIN_REPLY)
                             .message(raw.getReply().trim())
                             .cards(createCards(planIds))
-                                    .buttons(List.of(Button.planPage()))
                             .build());
                 });
     }
@@ -117,6 +117,7 @@ public class DefaultHandler implements ChatStateHandler {
         return chatBotService.handleUserMessage(generatePromptByTopic(topic), requestDto.getMessage(), chatHistoryJson)
                 .flatMapMany(raw -> Flux.just(ChatResponseDto.builder()
                         .message(raw.getReply().trim())
+                        .type(ChatResponseType.MAIN_REPLY)
                         .cards(createCards(raw.getPlanIds()))
                         .build()));
     }
@@ -124,7 +125,7 @@ public class DefaultHandler implements ChatStateHandler {
     private String generatePromptByTopic(Topic topic) {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         return switch (topic) {
-            case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN -> {
+            case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN, RECOMMENDATION_PLAN -> {
                 List<PlanDto> plans = planService.getPlansSorted("popular");
                 String plansJson = JsonUtil.toJson(plans);
                 yield PromptStrategyInvoker.invokeSingleArgStrategy(strategy, plansJson);

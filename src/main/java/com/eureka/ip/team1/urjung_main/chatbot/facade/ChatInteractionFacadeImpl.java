@@ -3,7 +3,11 @@ package com.eureka.ip.team1.urjung_main.chatbot.facade;
 import com.eureka.ip.team1.urjung_main.chatbot.dispatcher.ChatStateDispatcher;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
+import com.eureka.ip.team1.urjung_main.chatbot.handler.RecommendationStartHandler;
 import com.eureka.ip.team1.urjung_main.chatbot.processor.ChatLogProcessor;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +22,8 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
     private final ChatStateDispatcher dispatcher;
     private final ChatLogProcessor chatLogProcessor;
     private final ForbiddenWordService forbiddenWordService;
+    private final ChatStateService chatStateService;
+    private final ChatLogService chatLogService;
 
     @Override
     public Flux<ChatResponseDto> chat(String userId, ChatRequestDto requestDto) {
@@ -44,5 +50,25 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                     return Mono.just(response); // 다른 응답은 그대로 통과
                                 })
                 );
+    }
+
+    @Override
+    public Flux<ChatResponseDto> startRecommendationFlow(String userId, ChatRequestDto requestDto) {
+        return chatStateService.setState(requestDto.getSessionId(),ChatState.RECOMMENDATION_START)
+                .thenMany(dispatcher.dispatch(userId,requestDto));
+    }
+
+    @Override
+    public Flux<ChatResponseDto> changeStateToDefault(String userId, ChatRequestDto requestDto) {
+        chatLogService.clearAnalysis(requestDto.getSessionId());
+        return chatStateService.setState(requestDto.getSessionId(),ChatState.IDLE)
+                .thenReturn(ChatResponseDto.builder()
+                        .message("요금제 추천 모드가 종료되었습니다").build()).flux();
+    }
+
+    @Override
+    public Flux<ChatResponseDto> changeStateToPersonalAnalysis(String userId, ChatRequestDto requestDto) {
+        return chatStateService.setState(requestDto.getSessionId(),ChatState.AWAITING_PERSONAL_ANALYSIS_START)
+                .thenMany(dispatcher.dispatch(userId,requestDto));
     }
 }

@@ -88,6 +88,7 @@ public class ChatLogServiceImpl implements ChatLogService {
     @Override
     public void clearAnalysis(String sessionId) {
         chatAnalysisRepository.deleteById(sessionId);
+        chatContextRedisRepository.deleteById(sessionId);
     }
 
     @Override

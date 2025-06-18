@@ -101,12 +101,12 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         String questionText = questionProvider.getQuestion(currentStep);
 
         ChatResponseDto feedback = ChatResponseDto.builder()
-                .type(ChatResponseType.MAIN_REPLY) // 선택사항: "입력이 애매해요" 식의 타입
                 .message(validationResult.getReply())
                 .build();
 
         ChatResponseDto retryQuestion = ChatResponseDto.builder()
                 .message(questionText)
+                .type(ChatResponseType.ANALYSIS_REPLY)
                 .build();
 
         return Flux.concat(
@@ -139,12 +139,12 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         String nextQuestion = questionProvider.getQuestion(nextStep);
 
         ChatResponseDto feedback = ChatResponseDto.builder()
-                .type(ChatResponseType.MAIN_REPLY) // 선택사항
                 .message(validationResult.getReply())
                 .build();
 
         ChatResponseDto question = ChatResponseDto.builder()
                 .message(nextQuestion)
+                .type(ChatResponseType.ANALYSIS_REPLY)
                 .build();
 
         return Flux.concat(

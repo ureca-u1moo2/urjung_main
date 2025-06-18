@@ -27,6 +27,7 @@ public class GeminiService implements ChatBotService {
     private final String geminiFullPath;
 
 
+    // 토픽별 응답 처리
     @Override
     public Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message, String recentChatHistory) {
         log.info(prompt);
@@ -36,6 +37,7 @@ public class GeminiService implements ChatBotService {
                 .map(GeminiResponseParser::toChatbotResponse);
     }
 
+    // 토픽 분류
     @Override
     public Mono<ClassifiedTopicResult> classifyTopic(String message, String recentChatHistory) {
         Map<String, Object> requestBody = buildTopicClassifyBody(message, recentChatHistory);
@@ -47,6 +49,7 @@ public class GeminiService implements ChatBotService {
                 .onErrorResume(e -> Mono.just(new ClassifiedTopicResult(Topic.ETC, "잠시만 기다려주세요")));
     }
 
+    // 성향 분석 질문에 대한 응답 확인
     @Override
     public Mono<ChatbotRawResponseDto> handleAnalysisAnswer(String prompt, String message) {
         Map<String, Object> requestBody = buildAnalysis(prompt, message);

@@ -4,6 +4,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.component.LineSelectButton;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.*;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
@@ -90,7 +91,7 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
     private ChatResponseDto buildInsufficientUsageResponse(List<String> allPhoneNumbers) {
         return ChatResponseDto.builder()
                 .message("해당 회선은 최근 3개월 사용내역이 부족하여 추천드리기 어렵습니다.\n다른 회선을 선택하시거나 성향 분석을 진행해주세요!")
-                .buttons(List.of(Button.analysisStart()))
+                .buttons(List.of(Button.recommendStart()))
                 .lineSelectButton(LineSelectButton.of(allPhoneNumbers))
                 .build();
     }
@@ -108,6 +109,7 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
         return chatStateService.setState(sessionId, ChatState.AWAITING_ADDITIONAL_FEEDBACK)
                 .thenMany(Flux.just(ChatResponseDto.builder()
                         .message("현재 요금제를 사용하시면서 부족하거나 불필요한 점이 있다면 편하게 말씀해주세요!")
+                                .type(ChatResponseType.ANALYSIS_REPLY)
                         .build()));
     }
 }
