@@ -107,6 +107,7 @@ public class DefaultHandler implements ChatStateHandler {
                             .type(ChatResponseType.MAIN_REPLY)
                             .message(raw.getReply().trim())
                             .cards(createCards(planIds))
+                            .topic(Topic.ALL_PLAN_LIST)
                             .build());
                 });
     }
@@ -119,6 +120,7 @@ public class DefaultHandler implements ChatStateHandler {
                         .message(raw.getReply().trim())
                         .type(ChatResponseType.MAIN_REPLY)
                         .cards(createCards(raw.getPlanIds()))
+                        .topic(topic)
                         .build()));
     }
 
