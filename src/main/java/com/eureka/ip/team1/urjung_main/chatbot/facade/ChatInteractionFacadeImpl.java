@@ -63,6 +63,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         chatLogService.clearAnalysis(requestDto.getSessionId());
         return chatStateService.setState(requestDto.getSessionId(),ChatState.IDLE)
                 .thenReturn(ChatResponseDto.builder()
+                        .type(ChatResponseType.MAIN_REPLY)
                         .message("요금제 추천 모드가 종료되었습니다").build()).flux();
     }
 

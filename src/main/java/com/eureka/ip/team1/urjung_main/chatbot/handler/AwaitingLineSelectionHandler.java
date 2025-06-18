@@ -49,7 +49,7 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
         return chatStateService.setState(sessionId, ChatState.PERSONAL_ANALYSIS)
                 .thenMany(Flux.just(
                         ChatResponseDto.builder().message("그럼 성향 분석을 시작할게요! 첫 번째 질문입니다.").build(),
-                        ChatResponseDto.builder().message("1. 평소에 데이터를 얼마나 자주 사용하시나요?\n(예: 하루에 1~2시간 정도 사용해요 / 월 20GB 정도 써요)").build()
+                        ChatResponseDto.builder().type(ChatResponseType.ANALYSIS_REPLY).message("1. 평소에 데이터를 얼마나 자주 사용하시나요?\n(예: 하루에 1~2시간 정도 사용해요 / 월 20GB 정도 써요)").build()
                 ));
     }
 
@@ -91,7 +91,7 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
     private ChatResponseDto buildInsufficientUsageResponse(List<String> allPhoneNumbers) {
         return ChatResponseDto.builder()
                 .message("해당 회선은 최근 3개월 사용내역이 부족하여 추천드리기 어렵습니다.\n다른 회선을 선택하시거나 성향 분석을 진행해주세요!")
-                .buttons(List.of(Button.recommendStart()))
+                .buttons(List.of(Button.recommendStart(),Button.cancel()))
                 .lineSelectButton(LineSelectButton.of(allPhoneNumbers))
                 .build();
     }

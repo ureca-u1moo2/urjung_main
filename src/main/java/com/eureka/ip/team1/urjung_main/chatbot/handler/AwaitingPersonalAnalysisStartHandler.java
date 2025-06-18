@@ -2,6 +2,7 @@ package com.eureka.ip.team1.urjung_main.chatbot.handler;
 
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PersonalAnalysisQuestionProvider;
@@ -41,6 +42,7 @@ public class AwaitingPersonalAnalysisStartHandler implements ChatStateHandler {
                                 .build(),
                         ChatResponseDto.builder()
                                 .message(questionProvider.getQuestion(0))
+                                .type(ChatResponseType.ANALYSIS_REPLY)
                                 .build()
                 ));
     }
