@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice to Text</title>
+    <style>
+        #volumeBar {
+            width: 300px;
+            height: 20px;
+            background-color: #eee;
+            margin-top: 10px;
+            position: relative;
+        }
+        #volumeLevel {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+<h2>🎙️ 음성 입력 테스트</h2>
+<button id="recordBtn">녹음 시작</button>
+<button id="stopBtn" disabled>녹음 중지</button>
+<div id="volumeBar"><div id="volumeLevel"></div></div>
+<p><strong>결과:</strong> <span id="resultText"></span></p>
+
+<script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resultText = document.getElementById('resultText');
+    const volumeLevel = document.getElementById('volumeLevel');
+
+    recordBtn.onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext({ sampleRate: 16000 });
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        const recordedChunks = [];
+
+        processor.onaudioprocess = (event) => {
+            const input = event.inputBuffer.getChannelData(0);
+            const buffer = new Int16Array(input.length);
+            let sum = 0;
+            for (let i = 0; i < input.length; i++) {
+                buffer[i] = Math.max(-1, Math.min(1, input[i])) * 0x7FFF;
+                sum += input[i] * input[i];
+            }
+            recordedChunks.push(...buffer);
+
+            const rms = Math.sqrt(sum / input.length);
+            const volume = Math.min(1.0, rms) * 100;
+            volumeLevel.style.width = volume + '%';
+        };
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        stopBtn.onclick = async () => {
+            processor.disconnect();
+            source.disconnect();
+            audioContext.close();
+
+            const wavBlob = encodeWAV(recordedChunks, 16000);
+
+            const formData = new FormData();
+            formData.append('file', wavBlob, 'recorded.wav');
+
+            try {
+                const res = await fetch('http://localhost:8080/api/stt', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                resultText.textContent = data.transcript || '[결과 없음]';
+            } catch (err) {
+                resultText.textContent = '[에러 발생]';
+                console.error(err);
+            }
+
+            volumeLevel.style.width = '0%';
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+        };
+    };
+
+    function encodeWAV(samples, sampleRate) {
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + samples.length * 2, true);
+        writeString(view, 8, 'WAVE');
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(view, 36, 'data');
+        view.setUint32(40, samples.length * 2, true);
+
+        for (let i = 0; i < samples.length; i++) {
+            view.setInt16(44 + i * 2, samples[i], true);
+        }
+
+        return new Blob([view], { type: 'audio/wav' });
+    }
+</script>
+</body>
+</html>
