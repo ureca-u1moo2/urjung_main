@@ -18,7 +18,7 @@ public class GeminiRequestFactory {
 
     public static Map<String, Object> buildAnalysis(String prompt, String message) {
         return Map.of(
-                SYSTEM_INSTRUCTION, createSystem( prompt),
+                SYSTEM_INSTRUCTION, createSystem(prompt),
                 CONTENTS, List.of(createUserContent("\n이것은 현재 사용자의 메세지입니다" + message))
         );
     }

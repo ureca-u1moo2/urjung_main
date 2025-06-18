@@ -3,6 +3,7 @@ package com.eureka.ip.team1.urjung_main.chatbot.handler;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
@@ -51,10 +52,12 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
                     if (!Boolean.TRUE.equals(result.getResult())) {
                         return Flux.just(ChatResponseDto.builder()
                                 .message(result.getReply().trim())
+                                        .type(ChatResponseType.ANALYSIS_REPLY)
                                 .build());
                     }
                     return Flux.just(ChatResponseDto.builder()
                             .message(result.getReply().trim())
+                                    .type(ChatResponseType.ANALYSIS_REPLY)
                             .build()).concatWith(generateRecommendationResponse(userId, sessionId, message));
                 });
     }

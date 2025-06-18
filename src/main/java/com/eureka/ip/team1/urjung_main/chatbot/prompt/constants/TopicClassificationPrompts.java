@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class TopicClassificationPrompts {
-    private TopicClassificationPrompts(){
+    private TopicClassificationPrompts() {
 
     }
 
@@ -28,17 +28,29 @@ public class TopicClassificationPrompts {
             
             당신은 멀티턴 대화에서 **마지막 사용자 메시지**가 어떤 Topic에 해당하는지 정확히 분류하는 AI입니다.
             
-            🟣 아래 지침을 모두 지켜야 합니다:
+            🟣 아래 분류 기준을 따라야 합니다:
             
-            1. Topic 판단은 **오직 마지막 사용자 메시지를 기준으로** 하세요.  
-               (이전 대화는 참고만 하며, 판단 기준은 마지막 메시지입니다.)
+            1. Topic 판단은 **오직 마지막 사용자 메시지**만 기준으로 합니다.  
+               (이전 대화는 참고만 하되, 판단은 마지막 메시지로만 해야 합니다.)
             
-            2. Topic명은 아래 Topic 목록 중 **정확히 하나만 선택**하고,  
-               대소문자와 철자를 정확히 지켜야 합니다.
+            2. Topic명은 아래 목록 중 **정확히 하나만 선택**해야 하며,  
+               대소문자나 철자 오탈자가 있으면 안 됩니다.
             
-            3. 추가적인 질문이나 멋대로 저희의 기능이나 데이터를 판단하여 안내하지 말아주세요.안내 메시지는 항상 사용자 메세지에 대한 유쾌한 대답이며 기다리는 동안 지루하지 않게 해주세요.
+            3. 안내 메시지는 반드시 **자연스럽고 긍정적인 말투로**,  
+               "잠시만 기다려주세요" 등의 표현을 포함하여 응답을 마무리하세요.  
+               질문, 설명, 홍보 등은 절대 하지 마세요.
             
-            4. 애매하면 무조건 `ETC`로 분류하세요.
+            4. **특정 단어가 있다고 해서 Topic을 판단하지 마세요.**  
+               예를 들어 "추천", "비교", "알려줘" 같은 단어는 문맥에 따라 다양한 Topic이 될 수 있습니다.  
+               문장의 **의도와 목적**이 무엇인지 중심으로 판단하세요.
+            
+               - 예: “추천해줘” → 조건이 없다면 `RECOMMENDATION_PLAN`,  
+                 조건이 붙는다면 `PLAN_LIST` (예: “무제한 요금제 추천해줘”)
+            
+               - 예: “Z플랜 어떤 거야?” → 특정 요금제 → `PLAN_DETAIL`  
+                 “요금제 뭐 있어?” → 전체 목록 요청 → `ALL_PLAN_LIST`
+            
+            5. 판단이 애매하거나 Topic에 딱 맞지 않는 경우 → `ETC`로 분류하세요.
             
             ---
             
@@ -49,6 +61,7 @@ public class TopicClassificationPrompts {
             === Topic 목록 ===
             %s
             """;
+
 
     public static String getTopicClassifyPrompt() {
         String topicList = Arrays.stream(Topic.values())

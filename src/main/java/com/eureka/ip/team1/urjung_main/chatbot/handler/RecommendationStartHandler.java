@@ -1,0 +1,55 @@
+package com.eureka.ip.team1.urjung_main.chatbot.handler;
+
+import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
+import com.eureka.ip.team1.urjung_main.chatbot.component.LineSelectButton;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
+import com.eureka.ip.team1.urjung_main.user.dto.LineDto;
+import com.eureka.ip.team1.urjung_main.user.service.LineSubscriptionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class RecommendationStartHandler implements ChatStateHandler {
+
+    private final LineSubscriptionService lineSubscriptionService;
+    private final ChatStateService chatStateService;
+
+    @Override
+    public ChatState getState() {
+        return ChatState.RECOMMENDATION_START;
+    }
+
+    @Override
+    public Flux<ChatResponseDto> handle(String userId, ChatRequestDto requestDto) {
+
+        List<String> lines = lineSubscriptionService.getAllLinesByUserId(userId)
+                .stream()
+                .map(LineDto::getPhoneNumber)
+                .toList();
+
+        if (lines.isEmpty()) {
+            return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
+                    .thenMany(Flux.just(ChatResponseDto.builder()
+                            .message("현재 가입된 회선이 없어 성향 분석을 진행할게요.")
+                                    .type(ChatResponseType.MAIN_REPLY)
+                            .buttons(List.of(Button.personalAnalysisStart(),Button.cancel()))
+                            .build()));
+        }
+
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION)
+                .thenMany(Flux.just(ChatResponseDto.builder()
+                        .message("추천받을 회선을 선택해주세요. 또는 성향 분석을 원하시면 버튼을 눌러주세요.")
+                        .type(ChatResponseType.MAIN_REPLY)
+                        .buttons(List.of(Button.personalAnalysisStart(),Button.cancel()))
+                        .lineSelectButton(LineSelectButton.of(lines))
+                        .build()));
+    }
+}

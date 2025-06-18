@@ -121,6 +121,7 @@ public class LineSubscriptionServiceImpl implements LineSubscriptionService {
 
     //사용자 전체 회선 조회
     @Override
+    @Transactional
     public List<LineDto> getAllLinesByUserId(String userId) {
         List<Line> lines = lineRepository.findAllByUserId(userId);
 
