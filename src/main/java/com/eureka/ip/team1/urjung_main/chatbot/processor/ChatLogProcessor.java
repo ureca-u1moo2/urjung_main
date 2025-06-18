@@ -67,7 +67,7 @@ public class ChatLogProcessor {
                     .stream()
                     .map(card -> card.getValue().getName())
                     .collect(Collectors.toList());
-//            if (response == null || topic == null) return;
+
             ChatLogDto log = new ChatLogDto(
                     userId,
                     requestDto.getSessionId(),
