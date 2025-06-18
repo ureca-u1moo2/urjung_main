@@ -3,8 +3,8 @@ package com.eureka.ip.team1.urjung_main.chatbot.facade;
 import com.eureka.ip.team1.urjung_main.chatbot.dispatcher.ChatStateDispatcher;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
-import com.eureka.ip.team1.urjung_main.chatbot.handler.RecommendationStartHandler;
 import com.eureka.ip.team1.urjung_main.chatbot.processor.ChatLogProcessor;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
@@ -40,7 +40,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                 .thenMany(
                         dispatcher.dispatch(userId, requestDto)
                                 .flatMap(response -> {
-                                    if (response.getType() == null) {
+                                    if (response.getType() != ChatResponseType.WAITING) {
                                         return Mono.when(
                                                 chatLogProcessor.saveMongoLog(userId, requestDto, "model", response),
                                                 chatLogProcessor.saveEmbeddingIfNeeded(requestDto.getMessage()),
