@@ -130,6 +130,7 @@ public class LineSubscriptionServiceImpl implements LineSubscriptionService {
                         .userId(line.getUserId())
                         .phoneNumber(line.getPhoneNumber())
                         .planId(line.getPlanId())
+                        .planName(line.getPlan().getName())
                         .status(line.getStatus().name())
                         .startDate(line.getStartDate())
                         .endDate(line.getEndDate())

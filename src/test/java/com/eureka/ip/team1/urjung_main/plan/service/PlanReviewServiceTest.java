@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,9 @@ class PlanReviewServiceTest {
 
     @Mock
     private PlanReviewRepository planReviewRepository;
+
+    @Mock
+    private RedisTemplate<String, String> redisTemplate;
 
     @InjectMocks
     private PlanReviewServiceImpl planReviewService;
@@ -77,6 +81,7 @@ class PlanReviewServiceTest {
         // then
         assertThat(response.getRating()).isEqualTo(4);
         assertThat(response.getContent()).isEqualTo("괜찮아요");
+        verify(redisTemplate, times(1)).delete("plan:summary:plan-1");
     }
 
     @Test
@@ -105,6 +110,7 @@ class PlanReviewServiceTest {
         // then
         assertThat(review.getRating()).isEqualTo(5);
         assertThat(review.getContent()).isEqualTo("수정된 내용");
+        verify(redisTemplate, times(1)).delete("plan:summary:plan-1");
     }
 
     @Test
@@ -180,6 +186,7 @@ class PlanReviewServiceTest {
 
         // then
         verify(planReviewRepository, times(1)).delete(review);
+        verify(redisTemplate, times(1)).delete("plan:summary:plan-1");
     }
 
     @Test
