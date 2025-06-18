@@ -11,6 +11,7 @@ import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
+import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ public class ChatLogProcessor {
             String message = role.equals("user") ? requestDto.getMessage() : response.getMessage();
 
             if (response!=null&&response.getCards() != null && !response.getCards().isEmpty()) {
-                List<PlanDetailDto> plans = response.getCards().stream()
+                List<PlanDto> plans = response.getCards().stream()
                         .map(Card::getValue)
                         .toList();
 

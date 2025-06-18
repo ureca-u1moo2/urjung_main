@@ -13,6 +13,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
@@ -36,7 +37,7 @@ public class DefaultHandler implements ChatStateHandler {
     private final ChatBotService chatBotService;
     private final ChatLogService chatLogService;
     private final ChatStateService chatStateService;
-    private final PlanService planService;
+    private final PlanProvider planProvider;
     private final LineSubscriptionService lineSubscriptionService;
     private final PromptStrategyFactory promptStrategyFactory;
 
@@ -98,7 +99,7 @@ public class DefaultHandler implements ChatStateHandler {
         return chatBotService.handleUserMessage(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
                 .flatMapMany(raw -> {
                     // 전체 요금제 목록 직접 생성
-                    List<PlanDto> plans = planService.getPlansSorted("popular");
+                    List<PlanDto> plans = planProvider.getPlans();
                     List<String> planIds = plans.stream()
                             .map(PlanDto::getId)
                             .collect(Collectors.toList());
@@ -126,7 +127,7 @@ public class DefaultHandler implements ChatStateHandler {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         return switch (topic) {
             case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN, RECOMMENDATION_PLAN -> {
-                List<PlanDto> plans = planService.getPlansSorted("popular");
+                List<PlanDto> plans = planProvider.getPlans();
                 String plansJson = JsonUtil.toJson(plans);
                 yield PromptStrategyInvoker.invokeSingleArgStrategy(strategy, plansJson);
             }
@@ -138,7 +139,7 @@ public class DefaultHandler implements ChatStateHandler {
     private List<Card> createCards(List<String> planIds) {
         if (planIds == null || planIds.isEmpty()) return List.of();
         return planIds.stream()
-                .map(planService::getPlanDetail)
+                .map(planProvider::getPlanById)
                 .map(plan -> Card.builder().value(plan).build())
                 .toList();
     }

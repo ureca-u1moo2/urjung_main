@@ -7,10 +7,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.service.*;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.CardFactory;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.PersonalAnalysisQuestionProvider;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptTemplateProvider;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.*;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +29,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private final ChatBotService chatBotService;
     private final CardFactory cardFactory;
     private final PersonalAnalysisQuestionProvider questionProvider;
-    private final PlanService planService;
+    private final PlanProvider planProvider;
 
     @Override
     public ChatState getState() {
@@ -183,7 +180,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         String a2 = analysisResult.getAnswers().getOrDefault(1, "");
         String a3 = analysisResult.getAnswers().getOrDefault(2, "");
 
-        List<PlanDto> plans = planService.getPlansSorted("popular");
+        List<PlanDto> plans = planProvider.getPlans();
         String plansJson = JsonUtil.toJson(plans);
 
         return PromptTemplateProvider.buildFinalAnalysisPrompt(a1, a2, a3, plansJson);

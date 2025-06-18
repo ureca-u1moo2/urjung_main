@@ -10,6 +10,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.CardFactory;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptTemplateProvider;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
@@ -32,7 +33,7 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
     private final ChatBotService chatBotService;
     private final UserService userService;
     private final ChatStateService chatStateService;
-    private final PlanService planService;
+    private final PlanProvider planProvider;
     private final CardFactory cardFactory;
 
     @Override
@@ -84,7 +85,7 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
     }
 
     private List<PlanDto> getProcessedPlans() {
-        return planService.getPlansSorted("popular").stream()
+        return planProvider.getPlans().stream()
                 .map(plan -> PlanDto.builder()
                         .id(plan.getId())
                         .name(plan.getName())
