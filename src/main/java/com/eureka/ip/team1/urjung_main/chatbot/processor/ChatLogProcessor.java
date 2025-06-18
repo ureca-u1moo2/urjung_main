@@ -67,9 +67,7 @@ public class ChatLogProcessor {
                     .stream()
                     .map(card -> card.getValue().getName())
                     .collect(Collectors.toList());
-
-            if (response == null || topic == null) return;
-
+//            if (response == null || topic == null) return;
             ChatLogDto log = new ChatLogDto(
                     userId,
                     requestDto.getSessionId(),
@@ -84,6 +82,7 @@ public class ChatLogProcessor {
             try {
                 elasticsearchLogService.saveChatLog(log);
             } catch (IOException e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         });

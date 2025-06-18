@@ -72,7 +72,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
                         // 벡터 유사도 검색
                         var knnQuery = KnnQuery.of(k -> k
                                 .field("embedding")
-                                .k(2)
+                                .k(1)
                                 .numCandidates(30)
                                 .queryVector(embedding)
                         );
