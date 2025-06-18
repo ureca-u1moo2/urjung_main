@@ -1,13 +1,27 @@
 package com.eureka.ip.team1.urjung_main.chatbot.prompt.constants;
 
 public class TopicBasedPrompts {
-    private TopicBasedPrompts(){
+    private TopicBasedPrompts() {
 
     }
+
+    public static final String SYSTEM_INFO_BASE_PROMPT =
+            "우리 서비스의 사용 방법에 대해 사용자에게 설명해주세요.\n" +
+                    "\n" +
+                    "서비스는 LG U+의 다양한 요금제를 추천, 비교, 조회할 수 있는 챗봇 기반 플랫폼입니다.  \n" +
+                    "사용자는 다음과 같은 방식으로 서비스를 이용할 수 있습니다:\n" +
+                    "\n" +
+                    "1. 챗봇에게 질문을 입력하여 요금제를 추천받거나, 요금제 정보를 확인하거나, 요금제 간 비교를 요청할 수 있습니다.\n" +
+                    "2. 로그인한 사용자는 자신의 통신 사용 내역을 기반으로 개인화된 요금제 추천을 받을 수 있습니다.\n" +
+                    "3. 마이페이지 또는 요금제 페이지에서도 요금제 상세 정보를 확인할 수 있습니다.\n" +
+                    "\n" +
+                    "이 정보를 사용자에게 이해하기 쉽고 친절하게 안내해 주세요.  \n" +
+                    "문장은 부드럽고 자연스럽게 구성하고, 필요한 경우 번호 목록을 활용하세요.\n";
+
     public static final String COMPARE_PLAN_BASE_PROMPT = """
-        아래는 저희의 요금제 목록입니다. 위에서부터 사용자가 많은 순으로 정렬이 되어있습니다. 
-        사용자의 최근 대화내역을 참조하여 현재의 사용자 메세지에 따라 알맞은 요금제를 비교해주세요
-    """;
+                아래는 저희의 요금제 목록입니다. 위에서부터 사용자가 많은 순으로 정렬이 되어있습니다. 
+                사용자의 최근 대화내역을 참조하여 현재의 사용자 메세지에 따라 알맞은 요금제를 비교해주세요
+            """;
 
     public static final String ETC_BASE_PROMPT =
             """
@@ -47,15 +61,27 @@ public class TopicBasedPrompts {
               가장 인기 있는 요금제 하나만 "planIds"에 포함해 주세요.  
             """;
 
+    public static final String RECOMMENDATION_BASE_PROMPT = """
+            사용자의 최근 대화 내용을 참고하여, 적절한 요금제를 간단히 추천해주세요.
+            
+            단, 추천은 일반적인 추천으로 제한하고, 사용자의 통신 사용 패턴 기반의 맞춤형 추천은 직접 진행하지 마세요.
+            
+            대신, 맞춤형 요금제를 원한다면 아래의 '나에게 맞는 요금제 찾기' 버튼을 눌러 성향 분석을 진행하도록 자연스럽게 유도해주세요.
+            
+            👉 안내 문장은 부드럽고 명확하게 작성하세요.  
+            👉 요금제 설명은 너무 길지 않게 요약하여 제시하세요.  
+            👉 추천 요금제의 ID는 "planIds" 배열에 포함시키세요. (1~3개)
+            """;
+
 
     public static final String PLANT_DETAIL_BASE_PROMPT =
             """
                     아래의 요금제 목록에서 사용자가 원하는 플랜을 찾아 답하세요. description부분을 읽고 최대한 친절히 답하세요
                     """;
 
-    public static final String COMPARE_WITH_MY_PLAN_BASE_PROMPT=
+    public static final String COMPARE_WITH_MY_PLAN_BASE_PROMPT =
             """
-                   사용자의 요금제와 다른 요금제와의 비교는 요금제 페이지에서 할 수 있습니다. 요금제 페이지 바로가기 버튼을 추가할테니 사용자에게
-                   나의 요금제 비교는 요금제 페이지에서 가능하다고 재치있게 유도해주세요
+                    사용자의 요금제와 다른 요금제와의 비교는 요금제 페이지에서 할 수 있습니다. 요금제 페이지 바로가기 버튼을 추가할테니 사용자에게
+                    나의 요금제 비교는 요금제 페이지에서 가능하다고 재치있게 유도해주세요
                     """;
 }
