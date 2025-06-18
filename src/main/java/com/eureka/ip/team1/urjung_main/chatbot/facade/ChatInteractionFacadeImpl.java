@@ -44,7 +44,7 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
                                         return Mono.when(
                                                 chatLogProcessor.saveMongoLog(userId, requestDto, "model", response),
                                                 chatLogProcessor.saveEmbeddingIfNeeded(requestDto.getMessage()),
-                                                chatLogProcessor.saveElasticsearchLog(userId, requestDto, response, null, System.currentTimeMillis() - start)
+                                                chatLogProcessor.saveElasticsearchLog(userId, requestDto, response, response.getTopic(), System.currentTimeMillis() - start)
                                         ).thenReturn(response); // response 그대로 다시 방출
                                     }
                                     return Mono.just(response); // 다른 응답은 그대로 통과
