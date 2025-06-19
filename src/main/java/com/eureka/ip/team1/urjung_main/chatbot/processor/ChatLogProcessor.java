@@ -4,6 +4,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.component.Card;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatLogRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
@@ -33,25 +34,69 @@ public class ChatLogProcessor {
     private final EmbeddingService embeddingService;
     private final ElasticsearchLogService elasticsearchLogService;
 
-    public Mono<Void> saveMongoLog(String userId, ChatRequestDto requestDto, String role, ChatResponseDto response) {
+    public Mono<Void> saveRecentLog(String userId, ChatRequestDto requestDto, ChatResponseDto response) {
         return Mono.fromRunnable(() -> {
-            if(role.equals("model"))
-                log.info("모델들어옴");
-            String message = role.equals("user") ? requestDto.getMessage() : response.getMessage();
-
-            if (response!=null&&response.getCards() != null && !response.getCards().isEmpty()) {
-                List<PlanDto> plans = response.getCards().stream()
-                        .map(Card::getValue)
-                        .toList();
-
-                message += "\n반환한 요금제: " + JsonUtil.toJson(plans);
+            // response 타입이 main 일때는 다 저장
+            String userMessage = null;
+            String modelMessage = null;
+            if(response.getType().equals(ChatResponseType.MAIN_REPLY)){
+                userMessage = createUserLogMessage(requestDto);
+                modelMessage = createModelLogMessage(response);
+            }
+            // response 타입이 Analysis이고 Card가 있다면 reponse 만 저장
+            if (response.getType().equals(ChatResponseType.ANALYSIS_REPLY)
+                    && response.getCards() != null && !response.getCards().isEmpty()) {
+                modelMessage = "[요금제 추천 모드 사용 결과] : " + createModelLogMessage(response);
             }
 
-            ChatLogRequestDto logDto = ChatLogRequestDto.createChatLogRequestDto(
-                    requestDto.getSessionId(), userId, role, message
-            );
-            chatLogService.saveRecentAndPermanentChatLog(logDto);
+            if(userMessage!=null){
+                ChatLogRequestDto userLog = ChatLogRequestDto.createChatUserLogRequestDto(requestDto.getSessionId(), userId, userMessage);
+                chatLogService.saveRecentChatLog(userLog);
+            }
+
+            if(modelMessage!=null){
+                ChatLogRequestDto modelLog = ChatLogRequestDto.createChatModelLogRequestDto(requestDto.getSessionId(), userId, modelMessage);
+                chatLogService.saveRecentChatLog(modelLog);
+            }
         });
+    }
+
+    public Mono<Void> savePermanentMongoLog(String userId, ChatRequestDto requestDto, ChatResponseDto response) {
+        return Mono.fromRunnable(() -> {
+            String userMessage = createUserLogMessage(requestDto);
+            String modelMessage = createModelLogMessage(response);
+            if(userMessage!=null){
+                ChatLogRequestDto userLog = ChatLogRequestDto.createChatUserLogRequestDto(requestDto.getSessionId(), userId, userMessage);
+                chatLogService.savePermanentChatLog(userLog);
+            }
+
+            if(modelMessage!=null){
+                ChatLogRequestDto modelLog = ChatLogRequestDto.createChatModelLogRequestDto(requestDto.getSessionId(), userId, modelMessage);
+                chatLogService.savePermanentChatLog(modelLog);
+            }
+        });
+    }
+
+    private String createUserLogMessage(ChatRequestDto requestDto) {
+        return requestDto.getMessage();
+    }
+
+    private String createModelLogMessage(ChatResponseDto response) {
+        if (response == null) return "";
+
+        String message = response.getMessage();
+
+        if (response.getType() == ChatResponseType.ANALYSIS_REPLY &&
+                response.getCards() != null && !response.getCards().isEmpty()) {
+
+            List<PlanDto> plans = response.getCards().stream()
+                    .map(Card::getValue)
+                    .toList();
+
+            message += "\n반환한 요금제: " + JsonUtil.toJson(plans);
+        }
+
+        return message;
     }
 
     public Mono<Void> saveEmbeddingIfNeeded(String message) {

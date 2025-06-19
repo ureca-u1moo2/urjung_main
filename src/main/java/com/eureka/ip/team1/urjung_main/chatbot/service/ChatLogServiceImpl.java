@@ -30,7 +30,7 @@ public class ChatLogServiceImpl implements ChatLogService {
     private final ChatContextRedisRepository chatContextRedisRepository;
 
     @Override
-    public ChatLogResponseDto saveRecentAndPermanentChatLog(ChatLogRequestDto chatLogRequestDto) {
+    public void saveRecentChatLog(ChatLogRequestDto chatLogRequestDto) {
         Content content = Content.createContent(
                 chatLogRequestDto.getRole(),
                 List.of(Part.createPart(chatLogRequestDto.getMessage()))
@@ -40,9 +40,19 @@ public class ChatLogServiceImpl implements ChatLogService {
         String userId = chatLogRequestDto.getUserId();
 
         recentChatLogRepository.saveHistory(userId, sessionId, content);
+    }
+
+    @Override
+    public ChatLogResponseDto savePermanentChatLog(ChatLogRequestDto chatLogRequestDto) {
+        Content content = Content.createContent(
+                chatLogRequestDto.getRole(),
+                List.of(Part.createPart(chatLogRequestDto.getMessage()))
+        );
+
+        String sessionId = getOrCreateDefaultUUID(chatLogRequestDto.getSessionId());
+        String userId = chatLogRequestDto.getUserId();
 
         PermanentChatLog chatLog = getOrCreateSession(userId, sessionId);
-
         chatLog.getMessages().add(content);
 
         return ChatLogResponseDto.fromChatLog(
