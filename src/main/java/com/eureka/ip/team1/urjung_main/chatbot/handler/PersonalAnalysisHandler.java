@@ -4,6 +4,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatbotRawResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.PlanForLLMDto;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
@@ -178,7 +179,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         String a3 = analysisResult.getAnswers().getOrDefault(2, "");
 
         List<PlanDto> plans = planProvider.getPlans();
-        String plansJson = JsonUtil.toJson(plans);
+        List<PlanForLLMDto> planForLLM = PlanLLMConverter.convertToLLMDto(plans);
+        String plansJson = JsonUtil.toJson(planForLLM);
 
         return PromptTemplateProvider.buildFinalAnalysisPrompt(userName,age,a1, a2, a3, plansJson);
     }

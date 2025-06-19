@@ -3,16 +3,14 @@ package com.eureka.ip.team1.urjung_main.chatbot.handler;
 import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.PlanForLLMDto;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.CardFactory;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptTemplateProvider;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.*;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.user.dto.UsageResponseDto;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
@@ -68,7 +66,8 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
         UserDto user = userService.findById(userId);
         ChatContext context = chatLogService.getChatContext(sessionId);
         List<PlanDto> plans = getProcessedPlans();
-        String plansJson = JsonUtil.toJson(plans);
+        List<PlanForLLMDto> planForLLM = PlanLLMConverter.convertToLLMDto(plans);
+        String plansJson = JsonUtil.toJson(planForLLM);
         String usageSummary = buildUsageSummary(context.getUsages());
 
         int age = Period.between(user.getBirth(), LocalDate.now()).getYears();

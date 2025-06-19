@@ -86,8 +86,7 @@ public class ChatLogProcessor {
 
         String message = response.getMessage();
 
-        if (response.getType() == ChatResponseType.ANALYSIS_REPLY &&
-                response.getCards() != null && !response.getCards().isEmpty()) {
+        if (response.getCards() != null && !response.getCards().isEmpty()) {
 
             List<PlanDto> plans = response.getCards().stream()
                     .map(Card::getValue)

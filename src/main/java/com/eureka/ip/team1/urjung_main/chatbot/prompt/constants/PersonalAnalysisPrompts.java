@@ -1,7 +1,8 @@
 package com.eureka.ip.team1.urjung_main.chatbot.prompt.constants;
 
 public final class PersonalAnalysisPrompts {
-    private PersonalAnalysisPrompts() {}
+    private PersonalAnalysisPrompts() {
+    }
 
     public static final String VALIDATION_PROMPT = """
             당신은 통신사 요금제 추천을 위한 성향 분석 도우미입니다.
@@ -18,7 +19,7 @@ public final class PersonalAnalysisPrompts {
             - 귀엽지만 정확하게 존댓말로 응답하세요.
             
             ❗안내, 설명, 추가 질문은 포함하지 마시고, 리액션만 간단하게 작성해 주세요.
-
+            
             🎯 응답 형식:
             ```json
             {
@@ -26,7 +27,7 @@ public final class PersonalAnalysisPrompts {
               "result": true 또는 false
             }
             ```
-
+            
             질문: %s
             답변:
             """;
@@ -34,7 +35,7 @@ public final class PersonalAnalysisPrompts {
     public static final String FINAL_ANALYSIS_PROMPT = """
             당신은 통신사 요금제 추천 전문가입니다.
             
-              아래는 사용자와의 성향 분석 대화 내용입니다. 이 데이터를 바탕으로, 사용자의 통신 성향에 가장 적합한 요금제를 최대 3개까지 엄선하여 추천하세요.
+              아래는 사용자 정보와 사용자와의 성향 분석 대화 내용입니다. 이 데이터를 바탕으로, 사용자의 통신 성향에 가장 적합한 요금제를 최대 3개까지 엄선하여 추천하세요.
             
               📌 요금제는 반드시 아래 [요금제 목록]에 있는 것 중에서만 선택할 수 있습니다. \s
               ❌ 목록에 없는 요금제를 생성하거나 추천하지 마세요.
@@ -49,24 +50,35 @@ public final class PersonalAnalysisPrompts {
             
               ✅ 마지막으로, 추천한 ID가 요금제 목록에 실제로 존재하는지 다시 한 번 확인하세요.
             
-              🎯 반드시 아래 형식으로 JSON으로만 응답하세요:
+            요구사항:
+             - 추천 이유를 간결하게 설명하세요.
+             - 적절한 요금제가 있다면, ID만 planIds 리스트로 추출하세요.
+            - 안내 메시지(reply)에는 ID가 포함되지 않도록 주의하세요.
+            - 나이에 따라 청소년/시니어 요금제도 고려 대상입니다.
+            - 메시지는 최대한 가독성 좋고 친절하게 작성하세요.
               ```json
               {
                 "reply": "간결하고 친절한 메시지 (ID 포함 금지)",
                 "planIds": ["요금제 ID1", "요금제 ID2", ...]  // 아래 목록의 id 필드에서만 추출
               }
-
+            [사용자 정보]
+            성별: %s
+            나이: %d세
+            
             [사용자 응답]
             1. 평소에 데이터를 얼마나 자주 사용하시나요?
             → %s
-
+            
             2. 해외 로밍 서비스를 얼마나 자주 사용하시나요?
             → %s
-
+            
             3. 주로 어떤 용도로 휴대폰을 사용하시나요?
             → %s
-
+            
             📦 추천 가능한 요금제 목록 (JSON 형식)
+            - 99999나 -1로 표기되어있는건 무제한이라는 뜻입니다
+            - 각 요금제의 dataAmount는 MB 단위이며, 1024MB 이상일 경우 반드시 GB로 환산하여 사용자에게 안내하세요.
+            - 요금제 이름으로부터 데이터량을 절대 판단하지마시고 dataAmount로 판단해주세요
             %s
             """;
 }

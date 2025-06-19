@@ -13,6 +13,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanLLMConverter;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
@@ -96,7 +97,8 @@ public class DefaultHandler implements ChatStateHandler {
         return switch (topic) {
             case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN, RECOMMENDATION_PLAN -> {
                 List<PlanDto> plans = planProvider.getPlans();
-                String plansJson = JsonUtil.toJson(plans);
+                List<PlanForLLMDto> planForLLM = PlanLLMConverter.convertToLLMDto(plans);
+                String plansJson = JsonUtil.toJson(planForLLM);
                 yield PromptStrategyInvoker.invokeSingleArgStrategy(strategy, plansJson);
             }
 

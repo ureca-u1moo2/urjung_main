@@ -20,6 +20,9 @@ public class TopicBasedPrompts {
 
     public static final String COMPARE_PLAN_BASE_PROMPT = """
                 아래는 저희의 요금제 목록입니다. 위에서부터 사용자가 많은 순으로 정렬이 되어있습니다. 
+            - 99999나 -1로 표기되어있는건 무제한이라는 뜻입니다
+            - 각 요금제의 dataAmount는 MB 단위로 저장되있으니, 사용자에게는 GB로 변환하여 안내하세요.
+            - 요금제 이름으로부터 데이터량을 절대 판단하지마시고 dataAmount로 판단해주세요
                 사용자의 최근 대화내역을 참조하여 현재의 사용자 메세지에 따라 알맞은 요금제를 비교해주세요
             """;
 
@@ -44,7 +47,6 @@ public class TopicBasedPrompts {
               👉 실제 요금제 이름이나 설명은 나열하지 말고, 대신 관련된 요금제의 ID만 "planIds" 배열에 모두 포함해 주세요.
             
             - 전체 요금제를 요청하지 않았더라면 절대 전체 요금제를 다 내보내지 마세요.
-            
             - 사용자가 특정 조건을 언급한 경우에는 아래 원칙을 따르세요:
             
               ① 정렬 기준 조건이 있는 경우:  
@@ -64,6 +66,9 @@ public class TopicBasedPrompts {
             
             - 조건에 부합하는 요금제가 없다면 그런 요금제는 없다고 말해주시고 
               가장 인기 있는 요금제 하나만 "planIds"에 포함해 주세요.  
+            - 99999나 -1로 표기되어있는건 무제한이라는 뜻입니다
+            - 각 요금제의 dataAmount는 MB 단위이며, 반드시 GB로 환산하여 사용자에게 안내하세요.
+            - 요금제 이름으로부터 데이터량을 절대 판단하지마시고 dataAmount로 판단해주세요
             """;
 
     public static final String RECOMMENDATION_BASE_PROMPT = """
@@ -76,12 +81,19 @@ public class TopicBasedPrompts {
             👉 안내 문장은 부드럽고 명확하게 작성하세요.  
             👉 요금제 설명은 너무 길지 않게 요약하여 제시하세요.  
             👉 추천 요금제의 ID는 "planIds" 배열에 포함시키세요. (1~3개)
+            
+            - 99999나 -1로 표기되어있는건 무제한이라는 뜻입니다
+            - 각 요금제의 dataAmount는 MB 단위이며, 반드시 GB로 환산하여 사용자에게 안내하세요.
+            - 요금제 이름으로부터 데이터량을 절대 판단하지마시고 dataAmount로 판단해주세요
             """;
 
 
     public static final String PLANT_DETAIL_BASE_PROMPT =
             """
                     아래의 요금제 목록에서 사용자가 원하는 플랜을 찾아 답하세요. description부분을 읽고 최대한 친절히 답하세요
+                    - 99999나 -1로 표기되어있는건 무제한이라는 뜻입니다
+                    - 각 요금제의 dataAmount는 MB 단위이며, 반드시 GB로 환산하여 사용자에게 안내하세요.
+                     - 요금제 이름으로부터 데이터량을 절대 판단하지마시고 dataAmount로 판단해주세요
                     """;
 
     public static final String COMPARE_WITH_MY_PLAN_BASE_PROMPT =
