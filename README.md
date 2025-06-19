@@ -127,70 +127,15 @@
 
 </div>
 
----
+<details>
+<summary><b>📦 ERD (Entity Relationship Diagram)</b></summary>
 
-## 📈 프로젝트 진행 기록
+<img src="https://github.com/user-attachments/assets/56d6c3c3-5a66-46c4-9104-5f0bdec21bf3" width="100%" alt="ERD"/>
 
-### 🔥 6월 2주차
-
-<div align="center">
-
-
-</div>
-
-#### ✅ 금주 수행 내용
-- [x] 요금제·유저 관리 및 멤버십 연동(관리자)
-- [x] 요금제 목록 조회·상세·비교 구현 + 요금제 가입·해지 + 요금제 리뷰 CRUD(사용자)
-- [x] WebFlux 기반 챗봇 API 연동 및 멀티턴 대응 토픽 분류·프롬프트 전략 구현
-- [x] Redis·MongoDB 기반 대화 저장 및 Gemini API 활용 유저 요약 분석, 월별 데이터 사용량 조회 기능 구현
-- [x] 금칙어 필터링 알고리즘 구현 및 금칙어 테이블 생성
-- [x] JWT 기반 로그인·회원가입·아이디 및 비밀번호 찾기
-- [x] FastAPI를 이용한 벡터 임베딩 기능 구현, Elasticsearch 대화 로그 저장 및 Kibana를 통한 분석
-
-#### 🚧 차주 수행 계획
-- [ ] 요금제·유저 AI 분석
-- [ ] 상태 머신 적용, 성향 분석 로직 구현
-- [ ] 요금제 목록·상세·비교·리뷰 프론트 구현
-- [ ] AI 유저 요약 분석 기능 프롬프트 고도화, 프로젝트 배포 세팅
-- [ ] 관리자 프로젝트에서 금칙어 관리 CRUD 구현
-- [ ] OAuth 도입
-- [ ] ResTemplate -> WebClient 비동기 처리, 로그 밑 분석 내용에 사용자 상품 클릭률 반영
+</details>
 
 ---
 
-### 🎯 6월 3주차
-
-<div align="center">
-
-
-</div>
-
-#### ✅ 금주 수행 내용
-- [x] 토픽 분류 정확도 개선을 위한 프롬프트 리팩토링
-
-
-#### 🚧 차주 수행 계획
-- [ ] 사용자 테스트 및 피드백 수집
-
-
----
-
-### 🎯 6월 4주차
-
-<div align="center">
-
-
-</div>
-
-#### ✅ 금주 수행 내용
-- [x] 사용자 테스트 및 피드백 수집
-
-
-#### 🎯 최종 목표
-- [ ] 프로젝트 완료 및 배포
-
-
----
 
 ## ❓ 핵심 기술적 도전과제
 
@@ -239,6 +184,18 @@
 
 </details>
 
+
+
+---
+
+## 🖥️프로젝트 실행 방법
+<details>
+<summary><b>프로젝트 실행 방법 및 순서 (Entity Relationship Diagram)</b></summary>
+
+<img src="" width="100%" alt="1."/>
+
+</details>
+
 ---
 
 <div align="center">
@@ -254,6 +211,8 @@
 </div>
 
 ---
+
+
 
 <div align="center">
 
