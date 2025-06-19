@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -174,15 +175,16 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private String createFinalAnalysisPrompt(UserDto userDto, UserChatAnalysis analysisResult) {
         String userName = userDto.getName();
         int age = Period.between(userDto.getBirth(), LocalDate.now()).getYears();
-        String a1 = analysisResult.getAnswers().getOrDefault(0, "");
-        String a2 = analysisResult.getAnswers().getOrDefault(1, "");
-        String a3 = analysisResult.getAnswers().getOrDefault(2, "");
+        List<String> answers = new ArrayList<>();
+        for (int i = 0; i < questionProvider.total(); i++) {
+            answers.add(analysisResult.getAnswers().getOrDefault(i, ""));
+        }
 
         List<PlanDto> plans = planProvider.getPlans();
         List<PlanForLLMDto> planForLLM = PlanLLMConverter.convertToLLMDto(plans);
         String plansJson = JsonUtil.toJson(planForLLM);
 
-        return PromptTemplateProvider.buildFinalAnalysisPrompt(userName,age,a1, a2, a3, plansJson);
+        return PromptTemplateProvider.buildFinalAnalysisPrompt(userDto,answers,questionProvider.getQuestions(), plansJson);
     }
 
     private Flux<ChatResponseDto> createFinalResponse(ChatbotRawResponseDto validationResult, ChatbotRawResponseDto finalRaw) {
