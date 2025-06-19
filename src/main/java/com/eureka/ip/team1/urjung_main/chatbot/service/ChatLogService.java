@@ -9,8 +9,10 @@ import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
 import java.util.List;
 
 public interface ChatLogService {
-	
-	ChatLogResponseDto saveRecentAndPermanentChatLog(ChatLogRequestDto chatLogRequestDto);
+
+	void saveRecentChatLog(ChatLogRequestDto chatLogRequestDto);
+
+	ChatLogResponseDto savePermanentChatLog(ChatLogRequestDto chatLogRequestDto);
 	List<Content> getRecentChatHistory(String userId, String sessionId);
 
 	void saveAnswer(String sessionId, String answer, String userId);

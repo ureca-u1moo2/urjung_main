@@ -13,6 +13,8 @@ import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanLLMConverter;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptStrategyInvoker;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
@@ -36,7 +38,7 @@ public class DefaultHandler implements ChatStateHandler {
     private final ChatBotService chatBotService;
     private final ChatLogService chatLogService;
     private final ChatStateService chatStateService;
-    private final PlanService planService;
+    private final PlanProvider planProvider;
     private final LineSubscriptionService lineSubscriptionService;
     private final PromptStrategyFactory promptStrategyFactory;
 
@@ -53,10 +55,6 @@ public class DefaultHandler implements ChatStateHandler {
         return chatBotService.classifyTopic(requestDto.getMessage(), recentChatHistory)
                 .flatMapMany(result -> {
                     Mono<ChatResponseDto> waitMessage = buildWaitMessage(result);
-//                    if (result.getTopic() == Topic.RECOMMENDATION_PLAN) {
-//                        return waitMessage.concatWith(handleRecommendationTopic(userId, requestDto));
-//                    }
-
                     if (result.getTopic() == Topic.ALL_PLAN_LIST) {
                         return waitMessage.concatWith(handleAllPlanTopic(requestDto));
                     }
@@ -71,44 +69,16 @@ public class DefaultHandler implements ChatStateHandler {
                 .build());
     }
 
-    private Flux<ChatResponseDto> handleRecommendationTopic(String userId, ChatRequestDto requestDto) {
-        List<String> lines = lineSubscriptionService.getAllLinesByUserId(userId).stream()
-                .map(LineDto::getPhoneNumber)
-                .toList();
-
-        if (lines.isEmpty()) {
-            return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
-                    .thenMany(Flux.just(ChatResponseDto.builder()
-                            .message("현재 가입된 회선이 없어 성향 분석을 진행할게요.")
-                            .buttons(List.of(Button.recommendStart()))
-                            .build()
-                    ));
-        }
-
-        return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION)
-                .thenMany(Flux.just(ChatResponseDto.builder()
-                        .message("추천받을 회선을 선택해주세요. 또는 성향 분석을 원하시면 버튼을 눌러주세요.")
-                        .buttons(List.of(Button.recommendStart()))
-                        .lineSelectButton(LineSelectButton.of(lines))
-                        .build()
-                ));
-    }
-
     private Flux<ChatResponseDto> handleAllPlanTopic(ChatRequestDto requestDto) {
         return chatBotService.handleUserMessage(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
                 .flatMapMany(raw -> {
                     // 전체 요금제 목록 직접 생성
-                    List<PlanDto> plans = planService.getPlansSorted("popular");
+                    List<PlanDto> plans = planProvider.getTop5();
                     List<String> planIds = plans.stream()
                             .map(PlanDto::getId)
                             .collect(Collectors.toList());
 
-                    return Flux.just(ChatResponseDto.builder()
-                            .type(ChatResponseType.MAIN_REPLY)
-                            .message(raw.getReply().trim())
-                            .cards(createCards(planIds))
-                            .topic(Topic.ALL_PLAN_LIST)
-                            .build());
+                    return Flux.just(ChatResponseDto.ofMainReply(raw.getReply().trim(),createCards(planIds),Topic.ALL_PLAN_LIST));
                 });
     }
 
@@ -116,20 +86,19 @@ public class DefaultHandler implements ChatStateHandler {
     private Flux<ChatResponseDto> handleGeneralTopic(Topic topic, ChatRequestDto requestDto, String chatHistoryJson) {
         // 일반 토픽 처리
         return chatBotService.handleUserMessage(generatePromptByTopic(topic), requestDto.getMessage(), chatHistoryJson)
-                .flatMapMany(raw -> Flux.just(ChatResponseDto.builder()
-                        .message(raw.getReply().trim())
-                        .type(ChatResponseType.MAIN_REPLY)
-                        .cards(createCards(raw.getPlanIds()))
-                        .topic(topic)
-                        .build()));
+                .flatMapMany(raw -> Flux.just(
+                    ChatResponseDto.ofMainReply(raw.getReply().trim(),createCards(raw.getPlanIds()),Topic.ALL_PLAN_LIST)
+                        )
+                );
     }
 
     private String generatePromptByTopic(Topic topic) {
         PromptStrategy strategy = promptStrategyFactory.getStrategy(topic);
         return switch (topic) {
             case PLAN_DETAIL, PLAN_LIST, COMPARE_PLAN, RECOMMENDATION_PLAN -> {
-                List<PlanDto> plans = planService.getPlansSorted("popular");
-                String plansJson = JsonUtil.toJson(plans);
+                List<PlanDto> plans = planProvider.getPlans();
+                List<PlanForLLMDto> planForLLM = PlanLLMConverter.convertToLLMDto(plans);
+                String plansJson = JsonUtil.toJson(planForLLM);
                 yield PromptStrategyInvoker.invokeSingleArgStrategy(strategy, plansJson);
             }
 
@@ -140,7 +109,7 @@ public class DefaultHandler implements ChatStateHandler {
     private List<Card> createCards(List<String> planIds) {
         if (planIds == null || planIds.isEmpty()) return List.of();
         return planIds.stream()
-                .map(planService::getPlanDetail)
+                .map(planProvider::getPlanById)
                 .map(plan -> Card.builder().value(plan).build())
                 .toList();
     }
