@@ -130,7 +130,7 @@
 <details>
 <summary><b>📦 ERD (Entity Relationship Diagram)</b></summary>
 
-![ERD]!(https://github.com/user-attachments/assets/acedcf23-8985-45fa-99b4-abd0ae6ad244)
+<img src="https://github.com/user-attachments/assets/56d6c3c3-5a66-46c4-9104-5f0bdec21bf3" width="100%" alt="ERD"/>
 
 </details>
 
