@@ -38,27 +38,7 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
         String sessionId = requestDto.getSessionId();
         String message = requestDto.getMessage();
 
-        return switch (message) {
-            case "성향 분석 시작" -> handleAnalysisStart(sessionId);
-            case "취소" -> handleCancel(sessionId);
-            default -> handleLineSelection(userId, sessionId, message);
-        };
-    }
-
-    private Flux<ChatResponseDto> handleAnalysisStart(String sessionId) {
-        return chatStateService.setState(sessionId, ChatState.PERSONAL_ANALYSIS)
-                .thenMany(Flux.just(
-                        ChatResponseDto.builder().message("그럼 성향 분석을 시작할게요! 첫 번째 질문입니다.").build(),
-                        ChatResponseDto.builder().message("1. 평소에 데이터를 얼마나 자주 사용하시나요?\n(예: 하루에 1~2시간 정도 사용해요 / 월 20GB 정도 써요)").build()
-                ));
-    }
-
-    private Flux<ChatResponseDto> handleCancel(String sessionId) {
-        return chatStateService.setState(sessionId, ChatState.IDLE)
-                .thenMany(Flux.just(
-                        ChatResponseDto.builder().message("요금제 추천이 취소되었습니다.").build(),
-                        ChatResponseDto.builder().message("제가 필요하시다면 언제든지 말 걸어주세요!").build()
-                ));
+        return handleLineSelection(userId, sessionId, message);
     }
 
     private Flux<ChatResponseDto> handleLineSelection(String userId, String sessionId, String phoneNumber) {
@@ -90,8 +70,9 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
 
     private ChatResponseDto buildInsufficientUsageResponse(List<String> allPhoneNumbers) {
         return ChatResponseDto.builder()
+                .type(ChatResponseType.INFO)
                 .message("해당 회선은 최근 3개월 사용내역이 부족하여 추천드리기 어렵습니다.\n다른 회선을 선택하시거나 성향 분석을 진행해주세요!")
-                .buttons(List.of(Button.recommendStart()))
+                .buttons(List.of(Button.recommendStart(), Button.cancel()))
                 .lineSelectButton(LineSelectButton.of(allPhoneNumbers))
                 .build();
     }
@@ -107,9 +88,6 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
 
     private Flux<ChatResponseDto> buildValidUsageResponse(String sessionId) {
         return chatStateService.setState(sessionId, ChatState.AWAITING_ADDITIONAL_FEEDBACK)
-                .thenMany(Flux.just(ChatResponseDto.builder()
-                        .message("현재 요금제를 사용하시면서 부족하거나 불필요한 점이 있다면 편하게 말씀해주세요!")
-                                .type(ChatResponseType.ANALYSIS_REPLY)
-                        .build()));
+                .thenMany(Flux.just(ChatResponseDto.ofAnalysisReply("현재 요금제를 사용하시면서 부족하거나 불필요한 점이 있다면 편하게 말씀해주세요!")));
     }
 }

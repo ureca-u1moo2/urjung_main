@@ -21,39 +21,45 @@ public class ChatResponseDto {
     private LineSelectButton lineSelectButton;
     private Topic topic;
 
-    public static class CustomBuilder {
-        private ChatResponseType type;
-        private String message;
-        private List<Button> buttons;
-        private List<Card> cards;
-        private LineSelectButton lineSelectButton;
-        private Topic topic;
 
-        public ChatResponseDto build() {
-            if (buttons == null) {
-                buttons = new ArrayList<>();
-                if (this.type == ChatResponseType.MAIN_REPLY) {
-                    buttons.add(Button.planPage());
-                    buttons.add(Button.recommendStart());
-                }
-
-                if (this.type == ChatResponseType.ANALYSIS_REPLY) {
-                    buttons.add(Button.cancel());
-                }
-            }
-            return new ChatResponseDto(type, message, buttons, cards, lineSelectButton,topic);
-        }
+    public static ChatResponseDto ofMainReply(String message, List<Card> cards, Topic topic) {
+        return ChatResponseDto.builder()
+                .type(ChatResponseType.MAIN_REPLY)
+                .topic(topic)
+                .message(message)
+                .buttons(List.of(Button.planPage(), Button.recommendStart()))
+                .cards(cards)
+                .build();
     }
 
-    // 생성자 추가
-    private ChatResponseDto(ChatResponseType type, String message, List<Button> buttons,
-                            List<Card> cards, LineSelectButton lineSelectButton, Topic topic) {
-        this.type = type;
-        this.message = message;
-        this.buttons = buttons;
-        this.cards = cards;
-        this.lineSelectButton = lineSelectButton;
-        this.topic = topic;
+    public static ChatResponseDto ofAnalysisReply(String message) {
+        return ChatResponseDto.builder()
+                .type(ChatResponseType.ANALYSIS_REPLY)
+                .buttons(List.of(Button.cancel()))
+                .message(message)
+                .build();
+    }
+
+    public static ChatResponseDto ofWaitingReply(String message) {
+        return ChatResponseDto.builder()
+                .type(ChatResponseType.WAITING)
+                .message(message)
+                .build();
+    }
+
+    public static ChatResponseDto ofInfoReply(String message, List<Button> buttons) {
+        return ChatResponseDto.builder()
+                .type(ChatResponseType.INFO)
+                .buttons(buttons)
+                .message(message)
+                .build();
+    }
+
+    public static ChatResponseDto ofFeedBack(String message) {
+        return ChatResponseDto.builder()
+                .type(ChatResponseType.FEED_BACK)
+                .message(message)
+                .build();
     }
 }
 

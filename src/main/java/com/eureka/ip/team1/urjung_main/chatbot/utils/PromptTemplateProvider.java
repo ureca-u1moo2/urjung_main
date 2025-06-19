@@ -25,5 +25,13 @@ public class PromptTemplateProvider {
         );
     }
 
+    public static String buildFinalAnalysisPrompt(String gender, int age,
+                                                        String usageSummary, String planId,
+                                                        String userMessage, String plansJson) {
+        return PersonalAnalysisPrompts.FINAL_ANALYSIS_PROMPT.formatted(
+                gender, age, usageSummary, planId, userMessage, plansJson
+        );
+    }
+
     // 추후 RecommendationPrompts 등 확장 가능
 }

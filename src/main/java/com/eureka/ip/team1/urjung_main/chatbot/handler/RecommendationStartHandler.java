@@ -37,17 +37,18 @@ public class RecommendationStartHandler implements ChatStateHandler {
 
         if (lines.isEmpty()) {
             return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
-                    .thenMany(Flux.just(ChatResponseDto.builder()
-                            .message("현재 가입된 회선이 없어 성향 분석을 진행할게요.")
-                                    .type(ChatResponseType.MAIN_REPLY)
-                            .buttons(List.of(Button.personalAnalysisStart(),Button.cancel()))
-                            .build()));
+                    .thenMany(Flux.just(
+                            ChatResponseDto.ofInfoReply("현재 가입된 회선이 없어 성향 분석을 진행할게요.",
+                                    List.of(Button.personalAnalysisStart(),Button.cancel())
+                            )
+                    )
+                    );
         }
 
         return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_LINE_SELECTION)
                 .thenMany(Flux.just(ChatResponseDto.builder()
                         .message("추천받을 회선을 선택해주세요. 또는 성향 분석을 원하시면 버튼을 눌러주세요.")
-                        .type(ChatResponseType.MAIN_REPLY)
+                        .type(ChatResponseType.INFO)
                         .buttons(List.of(Button.personalAnalysisStart(),Button.cancel()))
                         .lineSelectButton(LineSelectButton.of(lines))
                         .build()));

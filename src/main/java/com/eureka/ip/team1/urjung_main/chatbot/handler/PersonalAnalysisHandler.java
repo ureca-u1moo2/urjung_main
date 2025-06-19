@@ -1,18 +1,20 @@
 package com.eureka.ip.team1.urjung_main.chatbot.handler;
 
+import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatbotRawResponseDto;
+import com.eureka.ip.team1.urjung_main.chatbot.dto.PlanForLLMDto;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
-import com.eureka.ip.team1.urjung_main.chatbot.service.*;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.CardFactory;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.PersonalAnalysisQuestionProvider;
-import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptTemplateProvider;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
+import com.eureka.ip.team1.urjung_main.chatbot.utils.*;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
-import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
+import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
+import com.eureka.ip.team1.urjung_main.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 @Component
@@ -32,7 +36,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private final ChatBotService chatBotService;
     private final CardFactory cardFactory;
     private final PersonalAnalysisQuestionProvider questionProvider;
-    private final PlanService planService;
+    private final PlanProvider planProvider;
+    private final UserService userService;
 
     @Override
     public ChatState getState() {
@@ -48,7 +53,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
 
         if (isAnalysisCompleted(analysis)) {
             chatLogService.clearAnalysis(sessionId);
-            analysis = getOrCreateAnalysis(sessionId,userId);
+            analysis = getOrCreateAnalysis(sessionId, userId);
         }
 
         return processAnalysisStep(sessionId, userId, message, analysis);
@@ -100,14 +105,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         log.info("Invalid answer - sessionId: {}, staying at step: {}", sessionId, currentStep);
         String questionText = questionProvider.getQuestion(currentStep);
 
-        ChatResponseDto feedback = ChatResponseDto.builder()
-                .message(validationResult.getReply())
-                .build();
-
-        ChatResponseDto retryQuestion = ChatResponseDto.builder()
-                .message(questionText)
-                .type(ChatResponseType.ANALYSIS_REPLY)
-                .build();
+        ChatResponseDto feedback = ChatResponseDto.ofFeedBack(validationResult.getReply());
+        ChatResponseDto retryQuestion = ChatResponseDto.ofAnalysisReply(questionText);
 
         return Flux.concat(
                 Mono.just(feedback),
@@ -125,7 +124,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
             return handleNextQuestion(nextStep, validationResult);
         }
 
-        return handleAnalysisCompletion(sessionId, validationResult);
+        return handleAnalysisCompletion(sessionId, userId, validationResult);
     }
 
     private void saveAnswerAndUpdateStep(String sessionId, String message, String userId, int currentStep) {
@@ -138,14 +137,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private Flux<ChatResponseDto> handleNextQuestion(int nextStep, ChatbotRawResponseDto validationResult) {
         String nextQuestion = questionProvider.getQuestion(nextStep);
 
-        ChatResponseDto feedback = ChatResponseDto.builder()
-                .message(validationResult.getReply())
-                .build();
-
-        ChatResponseDto question = ChatResponseDto.builder()
-                .message(nextQuestion)
-                .type(ChatResponseType.ANALYSIS_REPLY)
-                .build();
+        ChatResponseDto feedback = ChatResponseDto.ofFeedBack(validationResult.getReply());
+        ChatResponseDto question = ChatResponseDto.ofAnalysisReply(nextQuestion);
 
         return Flux.concat(
                 Mono.just(feedback),
@@ -154,45 +147,49 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         );
     }
 
-    private Flux<ChatResponseDto> handleAnalysisCompletion(String sessionId, ChatbotRawResponseDto validationResult) {
+    private Flux<ChatResponseDto> handleAnalysisCompletion(String sessionId, String userId, ChatbotRawResponseDto validationResult) {
+        UserDto userDto = userService.findById(userId);
         return chatStateService.setState(sessionId, ChatState.IDLE)
                 .thenMany(
                         Flux.concat(
                                 // 먼저 대기 메시지 전송
-                                Flux.just(ChatResponseDto.builder()
-                                        .message("모든 질문에 답변해주셔서 감사합니다 😊\n고객님께 어울리는 요금제를 분석해드릴게요! 잠시만 기다려주세요")
-                                        .build()),
+                                Flux.just(ChatResponseDto.ofWaitingReply("모든 질문에 답변해주셔서 감사합니다 😊\n고객님께 어울리는 요금제를 분석해드릴게요! 잠시만 기다려주세요"))
+                                ,
 
                                 // 이후 AI 분석 → 최종 응답 반환
                                 Mono.fromCallable(() -> chatLogService.getAnalysis(sessionId))
-                                        .flatMapMany(analysisResult -> processAnalysisResult(sessionId, validationResult, analysisResult))
+                                        .flatMapMany(analysisResult -> processAnalysisResult(userDto, validationResult, analysisResult))
                         )
                 );
     }
 
-    private Flux<ChatResponseDto> processAnalysisResult(String sessionId, ChatbotRawResponseDto validationResult,
+    private Flux<ChatResponseDto> processAnalysisResult(UserDto userDto, ChatbotRawResponseDto validationResult,
                                                         UserChatAnalysis analysisResult) {
-        String finalPrompt = createFinalAnalysisPrompt(analysisResult);
+        String finalPrompt = createFinalAnalysisPrompt(userDto, analysisResult);
         log.info(finalPrompt);
         return chatBotService.handleAnalysisAnswer(finalPrompt, "")
                 .flatMapMany(finalRaw -> createFinalResponse(validationResult, finalRaw));
     }
 
-    private String createFinalAnalysisPrompt(UserChatAnalysis analysisResult) {
+    private String createFinalAnalysisPrompt(UserDto userDto, UserChatAnalysis analysisResult) {
+        String userName = userDto.getName();
+        int age = Period.between(userDto.getBirth(), LocalDate.now()).getYears();
         String a1 = analysisResult.getAnswers().getOrDefault(0, "");
         String a2 = analysisResult.getAnswers().getOrDefault(1, "");
         String a3 = analysisResult.getAnswers().getOrDefault(2, "");
 
-        List<PlanDto> plans = planService.getPlansSorted("popular");
-        String plansJson = JsonUtil.toJson(plans);
+        List<PlanDto> plans = planProvider.getPlans();
+        List<PlanForLLMDto> planForLLM = PlanLLMConverter.convertToLLMDto(plans);
+        String plansJson = JsonUtil.toJson(planForLLM);
 
-        return PromptTemplateProvider.buildFinalAnalysisPrompt(a1, a2, a3, plansJson);
+        return PromptTemplateProvider.buildFinalAnalysisPrompt(userName,age,a1, a2, a3, plansJson);
     }
 
     private Flux<ChatResponseDto> createFinalResponse(ChatbotRawResponseDto validationResult, ChatbotRawResponseDto finalRaw) {
         return Flux.just(ChatResponseDto.builder()
-                .type(ChatResponseType.MAIN_REPLY)
+                .type(ChatResponseType.ANALYSIS_REPLY)
                 .message(finalRaw.getReply().trim())
+                .buttons(List.of(Button.planPage(), Button.recommendStart()))
                 .cards(cardFactory.createFromPlanIds(finalRaw.getPlanIds()))
                 .build());
     }

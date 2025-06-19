@@ -18,16 +18,30 @@ public class ChatLogRequestDto {
 	private String message;
 	
 	// 팩토리 메소드
-	public static ChatLogRequestDto createChatLogRequestDto(
-			String sessionId, String userId, String role, String message
+	public static ChatLogRequestDto createChatModelLogRequestDto(
+			String sessionId, String userId, String message
 	) {
 		ChatLogRequestDto chatLogRequestDto = new ChatLogRequestDto();
 		
 		chatLogRequestDto.sessionId = sessionId;
 		chatLogRequestDto.userId = userId;
-		chatLogRequestDto.role = role;
+		chatLogRequestDto.role = "model";
 		chatLogRequestDto.message = message;
 		
+		return chatLogRequestDto;
+	}
+
+	// 팩토리 메소드
+	public static ChatLogRequestDto createChatUserLogRequestDto(
+			String sessionId, String userId, String message
+	) {
+		ChatLogRequestDto chatLogRequestDto = new ChatLogRequestDto();
+
+		chatLogRequestDto.sessionId = sessionId;
+		chatLogRequestDto.userId = userId;
+		chatLogRequestDto.role = "user";
+		chatLogRequestDto.message = message;
+
 		return chatLogRequestDto;
 	}
 	

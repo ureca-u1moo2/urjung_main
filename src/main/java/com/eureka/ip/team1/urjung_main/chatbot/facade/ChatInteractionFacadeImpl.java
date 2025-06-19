@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.chatbot.facade;
 
+import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dispatcher.ChatStateDispatcher;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
@@ -14,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,39 +39,37 @@ public class ChatInteractionFacadeImpl implements ChatInteractionFacade {
         }
         long start = System.currentTimeMillis();
 
-        return Mono.defer(() -> chatLogProcessor.saveMongoLog(userId, requestDto, "user", null))
-                .thenMany(
-                        dispatcher.dispatch(userId, requestDto)
-                                .flatMap(response -> {
-                                    if (response.getType() != ChatResponseType.WAITING) {
-                                        return Mono.when(
-                                                chatLogProcessor.saveMongoLog(userId, requestDto, "model", response),
-                                                chatLogProcessor.saveEmbeddingIfNeeded(requestDto.getMessage()),
-                                                chatLogProcessor.saveElasticsearchLog(userId, requestDto, response, response.getTopic(), System.currentTimeMillis() - start)
-                                        ).thenReturn(response); // response 그대로 다시 방출
-                                    }
-                                    return Mono.just(response); // 다른 응답은 그대로 통과
-                                })
+        return dispatcher.dispatch(userId, requestDto)
+                .flatMap(response -> {
+                            if (response.getType() != ChatResponseType.WAITING) {
+                                return Mono.when(
+                                        chatLogProcessor.saveRecentLog(userId, requestDto, response),
+                                        chatLogProcessor.savePermanentMongoLog(userId,requestDto,response),
+                                        chatLogProcessor.saveEmbeddingIfNeeded(requestDto.getMessage()),
+                                        chatLogProcessor.saveElasticsearchLog(userId, requestDto, response, response.getTopic(), System.currentTimeMillis() - start)
+                                ).thenReturn(response); // response 그대로 다시 방출
+                            }
+                            return Mono.just(response); // 다른 응답은 그대로 통과
+                        }
                 );
     }
 
     @Override
     public Flux<ChatResponseDto> startRecommendationFlow(String userId, ChatRequestDto requestDto) {
-        return chatStateService.setState(requestDto.getSessionId(),ChatState.RECOMMENDATION_START)
-                .thenMany(dispatcher.dispatch(userId,requestDto));
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.RECOMMENDATION_START)
+                .thenMany(dispatcher.dispatch(userId, requestDto));
     }
 
     @Override
     public Flux<ChatResponseDto> changeStateToDefault(String userId, ChatRequestDto requestDto) {
         chatLogService.clearAnalysis(requestDto.getSessionId());
-        return chatStateService.setState(requestDto.getSessionId(),ChatState.IDLE)
-                .thenReturn(ChatResponseDto.builder()
-                        .message("요금제 추천 모드가 종료되었습니다").build()).flux();
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.IDLE)
+                .thenReturn(ChatResponseDto.ofInfoReply("요금제 추천 모드가 종료되었습니다", List.of(Button.planPage(), Button.recommendStart()))).flux();
     }
 
     @Override
     public Flux<ChatResponseDto> changeStateToPersonalAnalysis(String userId, ChatRequestDto requestDto) {
-        return chatStateService.setState(requestDto.getSessionId(),ChatState.AWAITING_PERSONAL_ANALYSIS_START)
-                .thenMany(dispatcher.dispatch(userId,requestDto));
+        return chatStateService.setState(requestDto.getSessionId(), ChatState.AWAITING_PERSONAL_ANALYSIS_START)
+                .thenMany(dispatcher.dispatch(userId, requestDto));
     }
 }

@@ -14,7 +14,7 @@ public final class LineAnalysisPrompts {
             🎯 응답 형식:
             ```json
             {
-              "reply": "반응 메시지",
+              "reply": "반응 메시지. 반드시 \\n 으로 줄바꿈을 표현하세요.",
               "result": true 또는 false
             }
             ```
@@ -35,7 +35,6 @@ public final class LineAnalysisPrompts {
             - 모든 데이터 단위는 GB 단위입니다.
             - 나이를 고려하여 청소년/시니어 요금제도 추천 대상으로 포함해주세요.
             - 최대한 가독성 좋고 친절하게 작성해주세요.
-            
             [사용자 정보]
             성별: %s
             나이: %d세
@@ -50,6 +49,9 @@ public final class LineAnalysisPrompts {
             %s
             
             📦 추천 가능한 요금제 목록 (JSON 형식)
+            - 99999나 -1로 표기되어있는건 무제한이라는 뜻입니다
+            - 각 요금제의 dataAmount는 MB 단위이며, 반드시 GB로 환산하여 사용자에게 안내하세요.
+            - 요금제 이름으로부터 데이터량을 절대 판단하지마시고 dataAmount로 판단해주세요
             %s
             
             응답 형식은 다음과 같아야 합니다 (JSON):

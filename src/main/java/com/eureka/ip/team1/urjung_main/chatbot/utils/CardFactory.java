@@ -10,11 +10,11 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class CardFactory {
-    private final PlanService planService;
+    private final PlanProvider planProvider;
 
     public List<Card> createFromPlanIds(List<String> planIds) {
         return planIds.stream()
-                .map(planService::getPlanDetail)
+                .map(planProvider::getPlanById)
                 .map(plan -> Card.builder()
                         .value(plan)
                         .build())
