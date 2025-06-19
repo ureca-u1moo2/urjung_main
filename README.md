@@ -254,7 +254,7 @@
 <details>
 <summary><b>프로젝트 실행 방법 및 순서 (Entity Relationship Diagram)</b></summary>
 
-<img src="" width="100%" alt="ERD"/>
+<img src="" width="100%" alt="1."/>
 
 </details>
 
