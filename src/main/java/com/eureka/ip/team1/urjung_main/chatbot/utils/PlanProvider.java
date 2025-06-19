@@ -30,4 +30,8 @@ public class PlanProvider {
 
         throw new NotFoundException("요금제가 없습니다");
     }
+
+    public List<PlanDto> getTop5() {
+        return plans.subList(0, Math.min(plans.size(), 5));
+    }
 }

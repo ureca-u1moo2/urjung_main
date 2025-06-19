@@ -72,7 +72,7 @@ public class DefaultHandler implements ChatStateHandler {
         return chatBotService.handleUserMessage(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
                 .flatMapMany(raw -> {
                     // 전체 요금제 목록 직접 생성
-                    List<PlanDto> plans = planProvider.getPlans();
+                    List<PlanDto> plans = planProvider.getTop5();
                     List<String> planIds = plans.stream()
                             .map(PlanDto::getId)
                             .collect(Collectors.toList());
