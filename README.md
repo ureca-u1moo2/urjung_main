@@ -90,25 +90,13 @@
 
 <div align="center">
 
-### Backend
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
-![JPA](https://img.shields.io/badge/JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
-![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)
 
-### Frontend
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-
-### AI/ML
-![Gemini](https://img.shields.io/badge/Gemini%20API-4285F4?style=for-the-badge&logo=google&logoColor=white)
-
-### DevOps & Monitoring
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Kibana](https://img.shields.io/badge/Kibana-005571?style=for-the-badge&logo=kibana&logoColor=white)
-
-</div>
-
+| 분야 | 스택 |
+| - | - |
+| Backend | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750320970954?alt=media&token=930c4d9b-06ba-43f8-a395-c956d01ebb9b)](https://github.com/msdio/stackticon) |
+| Frontend | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750321043857?alt=media&token=afc93f42-9d5e-4e6d-bf1a-a67ffd8e5cbd)](https://github.com/msdio/stackticon) |
+| AI/ML | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750321207033?alt=media&token=83196575-12ff-49fc-ab10-e98bb19c3bc9)](https://github.com/msdio/stackticon) |
+| DevOps & Monitoring | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750321248550?alt=media&token=b447ee61-68af-4528-9439-aeeeff93ccfb)](https://github.com/msdio/stackticon) |
 ---
 
 ## 🔗 프로젝트 자료
