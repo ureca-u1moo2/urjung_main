@@ -154,7 +154,7 @@
 - [ ] AI 유저 요약 분석 기능 프롬프트 고도화, 프로젝트 배포 세팅
 - [ ] 관리자 프로젝트에서 금칙어 관리 CRUD 구현
 - [ ] OAuth 도입
-- [ ] ResTemplate -> WebClient 비동기 처리, 로그 밑 분석 내용에 사용자 상품 클릭률 반영
+- [ ] ResTemplate -> WebClient 비동기 처리
 
 ---
 
