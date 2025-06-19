@@ -69,16 +69,31 @@ public class LineSubscriptionServiceImpl implements LineSubscriptionService {
         Double discountRate = user.getMembership().getGiftDiscount();
         int discountedPrice = calculateDiscountedPrice(plan.getPrice(), discountRate);
 
-        Line line = Line.builder()
-                .userId(userId)
-                .planId(planId)
-                .phoneNumber(phoneNumber)
-                .discountedPrice(discountedPrice)
-                .status(Line.LineStatus.active)
-                .startDate(LocalDateTime.now())
-                .build();
+        // 기존 canceled 회선 있는지 확인
+        Line existingLine = lineRepository.findByPhoneNumber(phoneNumber)
+                .filter(line -> line.getStatus() == Line.LineStatus.canceled)
+                .orElse(null);
 
-        lineRepository.save(line);
+        if (existingLine != null) {
+            // 기존 회선 revive (재활성화)
+            existingLine.setStatus(Line.LineStatus.active);
+            existingLine.setStartDate(LocalDateTime.now());
+            existingLine.setEndDate(null);
+            existingLine.setPlanId(planId);
+            existingLine.setDiscountedPrice(discountedPrice);
+            lineRepository.save(existingLine);
+        } else {
+            Line line = Line.builder()
+                    .userId(userId)
+                    .planId(planId)
+                    .phoneNumber(phoneNumber)
+                    .discountedPrice(discountedPrice)
+                    .status(Line.LineStatus.active)
+                    .startDate(LocalDateTime.now())
+                    .build();
+
+            lineRepository.save(line);
+        }
     }
 
 
