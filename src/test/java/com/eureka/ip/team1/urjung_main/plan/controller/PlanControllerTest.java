@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.plan.controller;
 
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -18,6 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
@@ -77,30 +82,36 @@ public class PlanControllerTest {
 
     // 요금제 목록 조회 조건
 
-    @Test
-    @DisplayName("요금제 목록 조회 성공 (정렬 파라미터 popular)")
-    void getPlansSorted_success() throws Exception {
-        // given
-        PlanDto planDto = PlanDto.builder()
-                .id("id1")
-                .name("Plan A")
-                .price(30000)
-                .description("Description 1")
-                .dataAmount(10000L)
-                .callAmount(500L)
-                .smsAmount(200L)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        when(planService.getPlansSorted("popular")).thenReturn(List.of(planDto));
-
-        // when & then
-        mockMvc.perform(get("/api/plans").param("sortBy", "popular"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result").value("SUCCESS"))
-                .andExpect(jsonPath("$.data[0].id").value("id1"))
-                .andExpect(jsonPath("$.data[0].name").value("Plan A"));
-    }
+//    @Test
+//    @DisplayName("요금제 목록 조회 성공 (정렬 파라미터 popular)")
+//    void getPlansSorted_success() throws Exception {
+//        // given
+//        PlanDto planDto = PlanDto.builder()
+//                .id("id1")
+//                .name("Plan A")
+//                .price(30000)
+//                .description("Description 1")
+//                .dataAmount(10000L)
+//                .callAmount(500L)
+//                .smsAmount(200L)
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//
+//        List<PlanDto> content = List.of(planDto);
+//        Page<PlanDto> pageResult = new PageImpl<>(content, PageRequest.of(0, 10), 1);
+//
+//        when(planService.getPlansSorted("popular", 0, 10)).thenReturn(pageResult);
+//
+//        // when & then
+//        mockMvc.perform(get("/api/plans")
+//                        .param("sortBy", "popular")
+//                        .param("page", "0")
+//                        .param("size", "10"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.result").value("SUCCESS"))
+//                .andExpect(jsonPath("$.data.content[0].id").value("id1"))
+//                .andExpect(jsonPath("$.data.content[0].name").value("Plan A"));
+//    }
 
 //    @Test
 //    @DisplayName("요금제 목록 조회 - 빈 리스트 반환 (정렬 파라미터 price)")
@@ -114,6 +125,59 @@ public class PlanControllerTest {
 //                .andExpect(jsonPath("$.result").value("SUCCESS"))
 //                .andExpect(jsonPath("$.data").isEmpty());
 //    }
+@Test
+@DisplayName("요금제 목록 조회 - /filter 경로, 페이징 적용")
+void getPlansSorted_withPaging_filterEndpoint_success() throws Exception {
+    // given
+    PlanDto plan = PlanDto.builder()
+            .id("plan-001")
+            .name("기본 요금제")
+            .price(10000)
+            .dataAmount(10L)
+            .callAmount(100L)
+            .smsAmount(100L)
+            .build();
+
+    Page<PlanDto> page = new PageImpl<>(List.of(plan), PageRequest.of(0, 10), 1);
+
+    Mockito.when(planService.getPlansSorted("popular", 0, 10)).thenReturn(page);
+
+    // when & then
+    mockMvc.perform(get("/api/plans/filter")
+                    .param("sortBy", "popular")
+                    .param("page", "0")
+                    .param("size", "10")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.result").value("SUCCESS"))
+            .andExpect(jsonPath("$.data.content[0].id").value("plan-001"))
+            .andExpect(jsonPath("$.data.content[0].name").value("기본 요금제"))
+            .andExpect(jsonPath("$.data.content[0].price").value(10000));
+}
+
+    @Test
+    @DisplayName("요금제 목록 조회 - 페이징 없이")
+    void getPlansSorted_withoutPaging_success() throws Exception {
+        PlanDto plan = PlanDto.builder()
+                .id("plan-001")
+                .name("기본 요금제")
+                .price(10000)
+                .dataAmount(10L)
+                .callAmount(100L)
+                .smsAmount(100L)
+                .build();
+
+        Mockito.when(planService.getPlansSorted("popular")).thenReturn(List.of(plan));
+
+        mockMvc.perform(get("/api/plans")
+                        .param("sortBy", "popular")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("plan-001"))
+                .andExpect(jsonPath("$.data[0].name").value("기본 요금제"))
+                .andExpect(jsonPath("$.data[0].price").value(10000));
+    }
 
     @Test
     @DisplayName("요금제 상세 조회 성공")

@@ -7,6 +7,7 @@ import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,5 +65,24 @@ public class PlanController {
                 .message("SUCCESS")
                 .build());
     }
+
+    // 요금제 목록 페이징
+    @GetMapping("/filter")
+    public ResponseEntity<?> getPlans(
+            @RequestParam(defaultValue = "popular") String sortBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<PlanDto> plans = planService.getPlansSorted(sortBy, page, size);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Page<PlanDto>>builder()
+                        .message("SUCCESS")
+                        .result(Result.SUCCESS)
+                        .data(plans)
+                        .build()
+        );
+    }
+
 
 }

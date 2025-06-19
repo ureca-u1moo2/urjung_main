@@ -218,5 +218,67 @@ public class LineSubscriptionServiceTest {
         assertThat(discountedPrice).isEqualTo(10000); // no discount applied
     }
 
+    // 해지했던 번호 다시 그 번호로 가입하려고 할 때
+    @Test
+    void subscribe_shouldReviveCanceledLineIfExists() {
+        // given
+        Line canceledLine = Line.builder()
+                .id("line123")
+                .userId("user123")
+                .planId("old-plan")
+                .phoneNumber("010-1234-5678")
+                .status(Line.LineStatus.canceled)
+                .discountedPrice(8000)
+                .startDate(LocalDateTime.now().minusMonths(3))
+                .endDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        when(planRepository.findById("plan123")).thenReturn(Optional.of(plan));
+        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+        when(lineRepository.findByPhoneNumber("010-1234-5678")).thenReturn(Optional.of(canceledLine));
+
+        // when
+        service.subscribe(dto, "user123");
+
+        // then
+        assertThat(canceledLine.getStatus()).isEqualTo(Line.LineStatus.active);
+        assertThat(canceledLine.getPlanId()).isEqualTo("plan123");
+        assertThat(canceledLine.getEndDate()).isNull();
+        assertThat(canceledLine.getDiscountedPrice()).isEqualTo(9000); // 10% 할인
+
+        verify(lineRepository).save(canceledLine);
+    }
+
+    @Test
+    void subscribe_shouldCreateNewLineIfExistingLineIsActive() {
+        // given: 이미 등록된 전화번호지만 상태가 active인 회선 존재
+        Line activeLine = Line.builder()
+                .id("line-active")
+                .userId("user123")
+                .planId("other-plan")
+                .phoneNumber("010-1234-5678")
+                .status(Line.LineStatus.active)
+                .discountedPrice(8000)
+                .startDate(LocalDateTime.now().minusMonths(1))
+                .build();
+
+        when(planRepository.findById("plan123")).thenReturn(Optional.of(plan));
+        when(userRepository.findById("user123")).thenReturn(Optional.of(user));
+        when(lineRepository.findByPhoneNumber("010-1234-5678")).thenReturn(Optional.of(activeLine));
+
+        // when
+        service.subscribe(dto, "user123");
+
+        // then
+        // 기존 회선은 재활성화 대상이 아님 -> 새 회선 생성
+        verify(lineRepository, times(1)).save(argThat(line ->
+                        line.getPhoneNumber().equals("010-1234-5678") &&
+                        line.getPlanId().equals("plan123") &&
+                        line.getStatus() == Line.LineStatus.active
+        ));
+    }
+
+
+
 
 }
