@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.plan.service;
 
+import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.common.exception.ForbiddenException;
 import com.eureka.ip.team1.urjung_main.common.exception.InvalidInputException;
 import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;
@@ -24,6 +25,7 @@ public class PlanReviewServiceImpl implements PlanReviewService {
 
     private final PlanReviewRepository planReviewRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ForbiddenWordService forbiddenWordService;
 
     // 요금제 리뷰 목록
     @Override
@@ -45,6 +47,12 @@ public class PlanReviewServiceImpl implements PlanReviewService {
     @Override
     @Transactional
     public PlanReviewResponseDto createReview(String planId, String userId, PlanReviewRequestDto requestDto) {
+
+        // 1. 금칙어 검사
+        if (forbiddenWordService.containsForbiddenWord(requestDto.getContent())){
+            throw new InvalidInputException("금칙어가 포함된 리뷰는 등록할 수 없습니다.");
+        }
+
         PlanReview review = PlanReview.builder()
                 .planId(planId)
                 .userId(userId)
@@ -80,6 +88,10 @@ public class PlanReviewServiceImpl implements PlanReviewService {
 
         if (!review.getPlanId().equals(planId)) {
             throw new InvalidInputException("잘못된 요금제 ID입니다");
+        }
+
+        if (forbiddenWordService.containsForbiddenWord(updateDto.getContent())){
+            throw new InvalidInputException("금칙어가 포함된 리뷰는 수정할 수 없습니다.");
         }
 
         // 수정 적용
