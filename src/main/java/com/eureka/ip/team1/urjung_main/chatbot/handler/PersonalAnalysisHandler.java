@@ -12,6 +12,8 @@ import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.*;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
+import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
+import com.eureka.ip.team1.urjung_main.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 @Component
@@ -32,6 +36,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private final CardFactory cardFactory;
     private final PersonalAnalysisQuestionProvider questionProvider;
     private final PlanProvider planProvider;
+    private final UserService userService;
 
     @Override
     public ChatState getState() {
@@ -118,7 +123,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
             return handleNextQuestion(nextStep, validationResult);
         }
 
-        return handleAnalysisCompletion(sessionId, validationResult);
+        return handleAnalysisCompletion(sessionId, userId, validationResult);
     }
 
     private void saveAnswerAndUpdateStep(String sessionId, String message, String userId, int currentStep) {
@@ -141,7 +146,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         );
     }
 
-    private Flux<ChatResponseDto> handleAnalysisCompletion(String sessionId, ChatbotRawResponseDto validationResult) {
+    private Flux<ChatResponseDto> handleAnalysisCompletion(String sessionId, String userId, ChatbotRawResponseDto validationResult) {
+        UserDto userDto = userService.findById(userId);
         return chatStateService.setState(sessionId, ChatState.IDLE)
                 .thenMany(
                         Flux.concat(
@@ -151,20 +157,22 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
 
                                 // 이후 AI 분석 → 최종 응답 반환
                                 Mono.fromCallable(() -> chatLogService.getAnalysis(sessionId))
-                                        .flatMapMany(analysisResult -> processAnalysisResult(sessionId, validationResult, analysisResult))
+                                        .flatMapMany(analysisResult -> processAnalysisResult(userDto, validationResult, analysisResult))
                         )
                 );
     }
 
-    private Flux<ChatResponseDto> processAnalysisResult(String sessionId, ChatbotRawResponseDto validationResult,
+    private Flux<ChatResponseDto> processAnalysisResult(UserDto userDto, ChatbotRawResponseDto validationResult,
                                                         UserChatAnalysis analysisResult) {
-        String finalPrompt = createFinalAnalysisPrompt(analysisResult);
+        String finalPrompt = createFinalAnalysisPrompt(userDto, analysisResult);
         log.info(finalPrompt);
         return chatBotService.handleAnalysisAnswer(finalPrompt, "")
                 .flatMapMany(finalRaw -> createFinalResponse(validationResult, finalRaw));
     }
 
-    private String createFinalAnalysisPrompt(UserChatAnalysis analysisResult) {
+    private String createFinalAnalysisPrompt(UserDto userDto, UserChatAnalysis analysisResult) {
+        String userName = userDto.getName();
+        int age = Period.between(userDto.getBirth(), LocalDate.now()).getYears();
         String a1 = analysisResult.getAnswers().getOrDefault(0, "");
         String a2 = analysisResult.getAnswers().getOrDefault(1, "");
         String a3 = analysisResult.getAnswers().getOrDefault(2, "");
@@ -172,7 +180,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         List<PlanDto> plans = planProvider.getPlans();
         String plansJson = JsonUtil.toJson(plans);
 
-        return PromptTemplateProvider.buildFinalAnalysisPrompt(a1, a2, a3, plansJson);
+        return PromptTemplateProvider.buildFinalAnalysisPrompt(userName,age,a1, a2, a3, plansJson);
     }
 
     private Flux<ChatResponseDto> createFinalResponse(ChatbotRawResponseDto validationResult, ChatbotRawResponseDto finalRaw) {
