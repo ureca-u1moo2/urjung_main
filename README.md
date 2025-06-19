@@ -126,12 +126,6 @@
 | 📝 수행일지 | [Google Docs](https://docs.google.com/document/d/18qC8GnYpRZdRfVA_0l-X0g1_VJ1Wr7gMZ659A6PfJX4/edit?tab=t.0) | 6월 2주차 프로젝트 수행일지 |
 
 </div>
-<details>
-<summary><b>📦 ERD (Entity Relationship Diagram)</b></summary>
-
-<img src="https://i.imgur.com/yourERDimage.png" width="100%" alt="ERD"/>
-
-</details>
 
 ---
 
