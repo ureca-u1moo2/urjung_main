@@ -261,6 +261,13 @@
 </div>
 
 ---
+## 🖥️프로젝트 실행 방법
+<summary><b>프로젝트 실행 방법 및 순서 (Entity Relationship Diagram)</b></summary>
+
+<img src="" width="100%" alt="ERD"/>
+
+</details>
+
 
 <div align="center">
 
