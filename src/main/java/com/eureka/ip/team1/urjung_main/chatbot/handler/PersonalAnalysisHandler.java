@@ -1,15 +1,17 @@
 package com.eureka.ip.team1.urjung_main.chatbot.handler;
 
+import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatbotRawResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.UserChatAnalysis;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
-import com.eureka.ip.team1.urjung_main.chatbot.service.*;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.*;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
-import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -45,7 +47,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
 
         if (isAnalysisCompleted(analysis)) {
             chatLogService.clearAnalysis(sessionId);
-            analysis = getOrCreateAnalysis(sessionId,userId);
+            analysis = getOrCreateAnalysis(sessionId, userId);
         }
 
         return processAnalysisStep(sessionId, userId, message, analysis);
@@ -97,14 +99,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
         log.info("Invalid answer - sessionId: {}, staying at step: {}", sessionId, currentStep);
         String questionText = questionProvider.getQuestion(currentStep);
 
-        ChatResponseDto feedback = ChatResponseDto.builder()
-                .message(validationResult.getReply())
-                .build();
-
-        ChatResponseDto retryQuestion = ChatResponseDto.builder()
-                .message(questionText)
-                .type(ChatResponseType.ANALYSIS_REPLY)
-                .build();
+        ChatResponseDto feedback = ChatResponseDto.ofFeedBack(validationResult.getReply());
+        ChatResponseDto retryQuestion = ChatResponseDto.ofAnalysisReply(questionText);
 
         return Flux.concat(
                 Mono.just(feedback),
@@ -135,14 +131,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private Flux<ChatResponseDto> handleNextQuestion(int nextStep, ChatbotRawResponseDto validationResult) {
         String nextQuestion = questionProvider.getQuestion(nextStep);
 
-        ChatResponseDto feedback = ChatResponseDto.builder()
-                .message(validationResult.getReply())
-                .build();
-
-        ChatResponseDto question = ChatResponseDto.builder()
-                .message(nextQuestion)
-                .type(ChatResponseType.ANALYSIS_REPLY)
-                .build();
+        ChatResponseDto feedback = ChatResponseDto.ofFeedBack(validationResult.getReply());
+        ChatResponseDto question = ChatResponseDto.ofAnalysisReply(nextQuestion);
 
         return Flux.concat(
                 Mono.just(feedback),
@@ -156,9 +146,8 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
                 .thenMany(
                         Flux.concat(
                                 // 먼저 대기 메시지 전송
-                                Flux.just(ChatResponseDto.builder()
-                                        .message("모든 질문에 답변해주셔서 감사합니다 😊\n고객님께 어울리는 요금제를 분석해드릴게요! 잠시만 기다려주세요")
-                                        .build()),
+                                Flux.just(ChatResponseDto.ofWaitingReply("모든 질문에 답변해주셔서 감사합니다 😊\n고객님께 어울리는 요금제를 분석해드릴게요! 잠시만 기다려주세요"))
+                                ,
 
                                 // 이후 AI 분석 → 최종 응답 반환
                                 Mono.fromCallable(() -> chatLogService.getAnalysis(sessionId))
@@ -188,8 +177,9 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
 
     private Flux<ChatResponseDto> createFinalResponse(ChatbotRawResponseDto validationResult, ChatbotRawResponseDto finalRaw) {
         return Flux.just(ChatResponseDto.builder()
-                .type(ChatResponseType.MAIN_REPLY)
+                .type(ChatResponseType.ANALYSIS_REPLY)
                 .message(finalRaw.getReply().trim())
+                .buttons(List.of(Button.planPage(), Button.recommendStart()))
                 .cards(cardFactory.createFromPlanIds(finalRaw.getPlanIds()))
                 .build());
     }

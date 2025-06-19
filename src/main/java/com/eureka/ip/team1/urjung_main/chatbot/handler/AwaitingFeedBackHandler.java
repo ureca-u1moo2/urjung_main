@@ -1,5 +1,6 @@
 package com.eureka.ip.team1.urjung_main.chatbot.handler;
 
+import com.eureka.ip.team1.urjung_main.chatbot.component.Button;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ChatContext;
@@ -13,7 +14,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PromptTemplateProvider;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
-import com.eureka.ip.team1.urjung_main.plan.service.PlanService;
 import com.eureka.ip.team1.urjung_main.user.dto.UsageResponseDto;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
 import com.eureka.ip.team1.urjung_main.user.service.UserService;
@@ -53,12 +53,12 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
                     if (!Boolean.TRUE.equals(result.getResult())) {
                         return Flux.just(ChatResponseDto.builder()
                                 .message(result.getReply().trim())
-                                        .type(ChatResponseType.ANALYSIS_REPLY)
+                                .type(ChatResponseType.ANALYSIS_REPLY)
                                 .build());
                     }
                     return Flux.just(ChatResponseDto.builder()
                             .message(result.getReply().trim())
-                                    .type(ChatResponseType.ANALYSIS_REPLY)
+                            .type(ChatResponseType.ANALYSIS_REPLY)
                             .build()).concatWith(generateRecommendationResponse(userId, sessionId, message));
                 });
     }
@@ -72,12 +72,14 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
         String usageSummary = buildUsageSummary(context.getUsages());
 
         int age = Period.between(user.getBirth(), LocalDate.now()).getYears();
-        String finalPrompt = PromptTemplateProvider.buildFinalAnalysisByLinePrompt(user.getGender(), age,usageSummary, context.getPlanId(), message, plansJson);
+        String finalPrompt = PromptTemplateProvider.buildFinalAnalysisByLinePrompt(user.getGender(), age, usageSummary, context.getPlanId(), message, plansJson);
 
         return chatStateService.setState(sessionId, ChatState.IDLE)
                 .thenMany(chatBotService.handleAnalysisAnswer(finalPrompt, null)
                         .flatMapMany(finalRaw -> Flux.just(
                                 ChatResponseDto.builder()
+                                        .type(ChatResponseType.ANALYSIS_REPLY)
+                                        .buttons(List.of(Button.planPage(), Button.recommendStart()))
                                         .message(finalRaw.getReply().trim())
                                         .cards(cardFactory.createFromPlanIds(finalRaw.getPlanIds()))
                                         .build()
