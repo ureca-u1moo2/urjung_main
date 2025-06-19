@@ -127,6 +127,13 @@
 
 </div>
 
+<details>
+<summary><b>📦 ERD (Entity Relationship Diagram)</b></summary>
+
+![ERD]!(https://github.com/user-attachments/assets/acedcf23-8985-45fa-99b4-abd0ae6ad244)
+
+</details>
+
 ---
 
 ## 📈 프로젝트 진행 기록
