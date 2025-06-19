@@ -14,7 +14,7 @@ public final class LineAnalysisPrompts {
             🎯 응답 형식:
             ```json
             {
-              "reply": "반응 메시지",
+              "reply": "반응 메시지. 반드시 \\n 으로 줄바꿈을 표현하세요.",
               "result": true 또는 false
             }
             ```
