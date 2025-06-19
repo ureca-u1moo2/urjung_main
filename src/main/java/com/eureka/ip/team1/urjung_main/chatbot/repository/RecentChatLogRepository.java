@@ -3,6 +3,8 @@ package com.eureka.ip.team1.urjung_main.chatbot.repository;
 import java.util.List;
 
 import com.eureka.ip.team1.urjung_main.chatbot.dto.Content;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -38,14 +40,18 @@ public class RecentChatLogRepository {
 	// 최근 대화 내역 key에 저장
 	public void saveHistory(String userId, String sessionId, Content content) {
 		try {
-			String key = generateKey(userId, sessionId);
-			
 			String json = objectMapper.writeValueAsString(content);
-			
-			stringRedisTemplate.opsForList().leftPush(key, json);
-			
-			trimToMaxMessages(userId, sessionId);
-			
+
+			stringRedisTemplate.executePipelined((RedisCallback<?>) action -> {
+				StringRedisConnection conn = (StringRedisConnection) action;
+				String key = generateKey(userId, sessionId);
+
+				conn.lPush(key, json);
+				conn.lTrim(key, 0, MAX_MESSAGES - 1);
+				return null;
+			});
+
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException("메시지 저장에 실패하였습니다.");
@@ -58,20 +64,7 @@ public class RecentChatLogRepository {
 		
 		return stringRedisTemplate.hasKey(key);
 	}
-	
-	// 최근 대화 내역 20개 제한 (삭제)
-	private void trimToMaxMessages(String userId, String sessionId) {
-		String key = generateKey(userId, sessionId);
-		
-		Long size = stringRedisTemplate.opsForList().size(key);
-		
-		if(size - MAX_MESSAGES > 0) {
-			 Long trimSize = size - MAX_MESSAGES;
-			
-			 stringRedisTemplate.opsForList().trim(key, 0, MAX_MESSAGES - 1);
-		}
-	}
-	
+
 	// key 생성 메소드
 	private String generateKey(String userId, String sessionId) {
 		return KEY_FORMAT.formatted(userId, sessionId);
