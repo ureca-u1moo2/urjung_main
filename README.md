@@ -101,6 +101,9 @@
   <img src="https://github.com/user-attachments/assets/49f2c8a7-dffe-44a3-a048-e5bc63f4c4a5" width="45%" />
   <img src="https://github.com/user-attachments/assets/1f16540c-dd91-44bf-b7fe-104591565fb4" width="45%" />
 </div>
+
+## 3. 요금제 목록 페이지
+![Image](https://github.com/user-attachments/assets/5056837c-78f8-44f0-af95-a9816d2847f0)
 </details>
 
 ---
