@@ -107,6 +107,13 @@
 
 ## 4. FAQ 페이지
 ![Image](https://github.com/user-attachments/assets/2b419ee5-2bd4-4804-b9ea-2fad034a65d7)
+
+## 5. 챗봇 페이지
+<div align="center">
+  <img src="[https://github.com/user-attachments/assets/49f2c8a7-dffe-44a3-a048-e5bc63f4c4a5](https://github.com/user-attachments/assets/370aff56-6da1-4cdd-8920-30e726cd808f)" width="45%" />
+  <img src="[https://github.com/user-attachments/assets/1f16540c-dd91-44bf-b7fe-104591565fb4](https://github.com/user-attachments/assets/e408cc47-1437-47aa-ace2-c79c2a5ccf37)" width="45%" />
+</div>
+
 </details>
 
 ---
