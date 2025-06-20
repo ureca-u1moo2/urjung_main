@@ -100,21 +100,7 @@
 ---
 </div>
 
-## 🔗 프로젝트 자료
 
-<div align="center">
-
-| 📋 문서 | 🔗 링크 | 📝 설명 |
-|:---:|:---:|:---:|
-| 📄 기획안 | [Google Docs](https://docs.google.com/document/d/1RFvzAa7Amh1WPt2UKVyiIdVeLcTwyKSFmenKTzG4pDA/edit?tab=t.0) | 프로젝트 전체 기획서 |
-| 📊 WBS | [Google Sheets](https://docs.google.com/spreadsheets/d/1H4jPiWKxPKsJQByPJhL61SquUI-iqkK9vX4k1c8HgyU/edit?gid=881356559#gid=881356559) | 작업 분해 구조 |
-| 🖌 와이어프레임 | [Excalidraw](https://excalidraw.com/#room=c9f1f3cab06fe706f5b9,rnOkx3tL04rYI7KXJayPWg) | UI/UX 설계도 |
-| 👥 사용자 UML | [Lucid Chart](https://lucid.app/lucidchart/eeda806c-2c79-48b1-99de-cbfe48c6babe/edit?invitationId=inv_85460dac-0f3b-408c-aed5-295030fac104&referringApp=slack&page=0_0#) | 사용자 시스템 설계 |
-| 🛠 어드민 UML | [Lucid Chart](https://lucid.app/lucidchart/b060893d-c04f-456d-8c7b-ffebaf0d2942/edit?invitationId=inv_d9711542-1776-4475-8aee-e2b350d0b56e&referringApp=slack&page=0_0#) | 관리자 시스템 설계 |
-| 📋 멘토링 문서 | [Notion](https://www.notion.so/20f8f7bcc50a805f9c63c9e545837867) | 멘토링 기록 정리 |
-| 📝 수행일지 | [Google Docs](https://docs.google.com/document/d/18qC8GnYpRZdRfVA_0l-X0g1_VJ1Wr7gMZ659A6PfJX4/edit?tab=t.0) | 6월 2주차 프로젝트 수행일지 |
-
-</div>
 
 <details>
 <summary><b>📦 ERD (Entity Relationship Diagram)</b></summary>
