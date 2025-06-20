@@ -102,13 +102,16 @@
   <img src="https://github.com/user-attachments/assets/1f16540c-dd91-44bf-b7fe-104591565fb4" width="45%" />
 </div>
 
-## 3. 요금제 목록 페이지
+## 3. 마이페이지
+![Image](https://github.com/user-attachments/assets/1e531e5e-4d3b-4327-9094-23034551b7c2)
+
+## 4. 요금제 목록 페이지
 ![Image](https://github.com/user-attachments/assets/5056837c-78f8-44f0-af95-a9816d2847f0)
 
-## 4. FAQ 페이지
+## 5. FAQ 페이지
 ![Image](https://github.com/user-attachments/assets/2b419ee5-2bd4-4804-b9ea-2fad034a65d7)
 
-## 5. 챗봇 페이지
+## 6. 챗봇 페이지
 <div align="center">
   <img src="https://github.com/user-attachments/assets/1c1ca758-0ad0-499d-9c6a-e0fbf8694d1f" width="45%" />
   <img src="https://github.com/user-attachments/assets/97ae453e-7112-47ea-b55f-60a9b8dfe7da" width="45%" />
