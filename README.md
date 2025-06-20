@@ -110,8 +110,8 @@
 
 ## 5. 챗봇 페이지
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/49f2c8a7-dffe-44a3-a048-e5bc63f4c4a5" width="45%" />
-  <img src="https://github.com/user-attachments/assets/1f16540c-dd91-44bf-b7fe-104591565fb4" width="45%" />
+  <img src="https://github.com/user-attachments/assets/1c1ca758-0ad0-499d-9c6a-e0fbf8694d1f" width="45%" />
+  <img src="https://github.com/user-attachments/assets/97ae453e-7112-47ea-b55f-60a9b8dfe7da" width="45%" />
 </div>
 
 </details>
