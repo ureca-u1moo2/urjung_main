@@ -93,6 +93,7 @@
 <details>
 <summary><b>프로젝트 실행 화면 (Entity Relationship Diagram)</b></summary>
 
+##  1. 메인 페이지
 ![Image](https://github.com/user-attachments/assets/7bd0efe8-c9b6-4890-8a81-f5942dc44228)
 
 </details>
