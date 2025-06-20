@@ -106,6 +106,8 @@ public class ChatLogProcessor {
     public Mono<Void> saveElasticsearchLog(String userId, ChatRequestDto requestDto, ChatResponseDto response, Topic topic, long latency) {
         return Mono.fromRunnable(() -> {
 
+            if (topic == null) return;
+
             // 카드 이름 목록 추출
             List<String> recommendedItems = Optional.ofNullable(response.getCards())
                     .orElse(Collections.emptyList())
