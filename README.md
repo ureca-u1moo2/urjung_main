@@ -51,7 +51,7 @@
         <sub>Logging/Analytics</sub>
       </td>
       <td align="center" style="width: 25%; padding: 20px;">
-        <img src="https://i.imgur.com/3GgEVsE.gif" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;" alt="Team Member 7"/><br />
+        <img src="https://github.com/user-attachments/assets/61d26e87-3fb4-4099-a698-03b5b3e314da" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;" alt="Team Member 7"/><br /> 
         <sub><b>@rxgx424</b></sub><br />
         <sub>Auth/Session</sub>
       </td>
@@ -62,29 +62,7 @@
 
 ---
 
-## 💡 프로젝트 소개
 
-### 🎯 프로젝트 목적
-> 챗봇 기반 요금제·기종 추천 서비스 및 관리자용 통합 관리 시스템 구축을 통해 사용자에게 최적화된 통신 서비스를 제공
-
-- 🗣️ **자연어 상담**을 통한 맞춤형 요금제 추천
-- 🛡️ **금칙어 관리, 사용자 분석** 및 관리자 백오피스를 통한 서비스 품질 향상
-- 🧠 **대화 토픽 분류**를 통한 질문 문맥 기반 대화 가능
-- 🗂️ **Redis 와 MongoDB**를 활용한 대화 내역 저장 및 분석
-- 📊 **Elsaticsearch + Kibana** 연동으로 사용자 행동 로그 시각화 및 분석
-
-
-### ✨ 핵심 차별점
-
-<div align="center">
-  
-| 🤖 AI 기반 분석 | 🎯 개인화 추천 | 💬 멀티턴 대화 |
-|:---:|:---:|:---:|
-| Gemini AI | 사용 성향 맞춤 분석 | 지능형 대화 시스템 |
-
-</div>
-
----
 
 ## 🛠 기술 스택
 
@@ -95,91 +73,25 @@
 | - | - |
 | Backend | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750320970954?alt=media&token=930c4d9b-06ba-43f8-a395-c956d01ebb9b)](https://github.com/msdio/stackticon) |
 | Frontend | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750321043857?alt=media&token=afc93f42-9d5e-4e6d-bf1a-a67ffd8e5cbd)](https://github.com/msdio/stackticon) |
-| AI/ML | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750321207033?alt=media&token=83196575-12ff-49fc-ab10-e98bb19c3bc9)](https://github.com/msdio/stackticon) |
+| AI/ML | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750382291101?alt=media&token=492e38ef-c56d-457a-8881-89937c4bb235)](https://github.com/msdio/stackticon)
 | DevOps & Monitoring | [![stackticon](https://firebasestorage.googleapis.com/v0/b/stackticon-81399.appspot.com/o/images%2F1750321248550?alt=media&token=b447ee61-68af-4528-9439-aeeeff93ccfb)](https://github.com/msdio/stackticon) |
 ---
 </div>
 
-## 🔗 프로젝트 자료
 
-<div align="center">
 
-| 📋 문서 | 🔗 링크 | 📝 설명 |
-|:---:|:---:|:---:|
-| 📄 기획안 | [Google Docs](https://docs.google.com/document/d/1RFvzAa7Amh1WPt2UKVyiIdVeLcTwyKSFmenKTzG4pDA/edit?tab=t.0) | 프로젝트 전체 기획서 |
-| 📊 WBS | [Google Sheets](https://docs.google.com/spreadsheets/d/1H4jPiWKxPKsJQByPJhL61SquUI-iqkK9vX4k1c8HgyU/edit?gid=881356559#gid=881356559) | 작업 분해 구조 |
-| 🖌 와이어프레임 | [Excalidraw](https://excalidraw.com/#room=c9f1f3cab06fe706f5b9,rnOkx3tL04rYI7KXJayPWg) | UI/UX 설계도 |
-| 👥 사용자 UML | [Lucid Chart](https://lucid.app/lucidchart/eeda806c-2c79-48b1-99de-cbfe48c6babe/edit?invitationId=inv_85460dac-0f3b-408c-aed5-295030fac104&referringApp=slack&page=0_0#) | 사용자 시스템 설계 |
-| 🛠 어드민 UML | [Lucid Chart](https://lucid.app/lucidchart/b060893d-c04f-456d-8c7b-ffebaf0d2942/edit?invitationId=inv_d9711542-1776-4475-8aee-e2b350d0b56e&referringApp=slack&page=0_0#) | 관리자 시스템 설계 |
-| 📋 멘토링 문서 | [Notion](https://www.notion.so/20f8f7bcc50a805f9c63c9e545837867) | 멘토링 기록 정리 |
-| 📝 수행일지 | [Google Docs](https://docs.google.com/document/d/18qC8GnYpRZdRfVA_0l-X0g1_VJ1Wr7gMZ659A6PfJX4/edit?tab=t.0) | 6월 2주차 프로젝트 수행일지 |
 
-</div>
-
-<details>
-<summary><b>📦 ERD (Entity Relationship Diagram)</b></summary>
+## 📦 ERD (Entity Relationship Diagram)
 
 <img src="https://github.com/user-attachments/assets/56d6c3c3-5a66-46c4-9104-5f0bdec21bf3" width="100%" alt="ERD"/>
 
-</details>
-
----
-
-
-## ❓ 핵심 기술적 도전과제
-
-<details>
-<summary><b>🧠 MongoDB 기반 유저 대화 분석</b></summary>
-
-- **현재 상황**: MongoDB 기반 유저 대화 기록 + Gemini 요약 분석 구현
-- **고민사항**: 분석 결과의 실용적 활용 방안 및 확장 방향성
-- **목표**: 사용자 성향 분석 정확도 향상
-
-</details>
-
-<details>
-<summary><b>🎯 멀티턴 토픽 분류 최적화</b></summary>
-
-- **현재 상황**: 최근 대화 포함 방식으로 구현
-- **고민사항**: 멀티턴 분류 정확도 개선 필요
-- **목표**: 대화 맥락을 고려한 정확한 토픽 분류
-
-</details>
-
-<details>
-<summary><b>💾 Redis 세션 관리 최적화</b></summary>
-
-- **현재 상황**: 유저/봇 각 10개씩 총 20개 대화 유지
-- **고민사항**: 적절한 세션 크기 및 관리 방식
-- **목표**: 효율적인 대화 컨텍스트 관리
-
-</details>
-
-<details>
-<summary><b>📊 Elasticsearch 로그 활용도 극대화</b></summary>
-
-- **현재 상황**: 기본 모니터링 기능 구현
-- **고민사항**: 실시간 자동 반영 시스템 구축 필요성
-- **목표**: 로그 데이터 기반 서비스 자동 개선
-
-</details>
-
-<details>
-<summary><b>🔍 챗봇 추천 시스템 고도화</b></summary>
-
-- **현재 상황**: 임베딩 기반 전체 질문 검색 후 필터링
-- **고민사항**: 더 정밀한 추천 로직 설계 필요
-- **목표**: 사용자 의도에 맞는 정확한 추천
-
-</details>
-
 
 
 ---
 
-## 🖥️프로젝트 실행 방법
+## 🖥️프로젝트 실행 화면
 <details>
-<summary><b>프로젝트 실행 방법 및 순서 (Entity Relationship Diagram)</b></summary>
+<summary><b>프로젝트 실행 화면 (Entity Relationship Diagram)</b></summary>
 
 <img src="" width="100%" alt="1."/>
 
