@@ -33,7 +33,9 @@ public class PlanLLMConverter {
                             .dataAmountText(dataText)
                             .callAmount(plan.getCallAmount())
                             .smsAmount(plan.getSmsAmount())
-                            .tags(plan.getTags().stream().map(Tag::getTagName).collect(Collectors.toList()))
+                            .tags(plan.getTags() == null
+                                    ? List.of()
+                                    : plan.getTags().stream().map(Tag::getTagName).collect(Collectors.toList()))
                             .build();
                 })
                 .toList();
