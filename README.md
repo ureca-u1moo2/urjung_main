@@ -102,8 +102,14 @@
   <img src="https://github.com/user-attachments/assets/1f16540c-dd91-44bf-b7fe-104591565fb4" width="45%" />
 </div>
 
-## 3. 마이페이지
+## 3-1. 마이페이지 가입한 요금제 조회
 ![Image](https://github.com/user-attachments/assets/1e531e5e-4d3b-4327-9094-23034551b7c2)
+
+## 3-2. 마이페이지 월별 사용량 조회
+![Image](https://github.com/user-attachments/assets/b4bc84d0-f985-4e5a-bc8e-454040313915)
+
+## 3-3. 마이페이지 회원 정보 페이지
+![Image](https://github.com/user-attachments/assets/7a82777f-cc93-458d-92ee-28fb37395850)
 
 ## 4. 요금제 목록 페이지
 ![Image](https://github.com/user-attachments/assets/5056837c-78f8-44f0-af95-a9816d2847f0)
