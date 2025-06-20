@@ -51,7 +51,7 @@
         <sub>Logging/Analytics</sub>
       </td>
       <td align="center" style="width: 25%; padding: 20px;">
-        <img src="https://i.imgur.com/3GgEVsE.gif" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;" alt="Team Member 7"/><br />
+        <img src="https://github.com/user-attachments/assets/61d26e87-3fb4-4099-a698-03b5b3e314da" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;" alt="Team Member 7"/><br /> 
         <sub><b>@rxgx424</b></sub><br />
         <sub>Auth/Session</sub>
       </td>
