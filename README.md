@@ -96,6 +96,11 @@
 ##  1. 메인 페이지
 ![Image](https://github.com/user-attachments/assets/7bd0efe8-c9b6-4890-8a81-f5942dc44228)
 
+## 2. 로그인, 회원가입 페이지
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/49f2c8a7-dffe-44a3-a048-e5bc63f4c4a5" width="45%" />
+  <img src="https://github.com/user-attachments/assets/1f16540c-dd91-44bf-b7fe-104591565fb4" width="45%" />
+</div>
 </details>
 
 ---
