@@ -104,6 +104,9 @@
 
 ## 3. 요금제 목록 페이지
 ![Image](https://github.com/user-attachments/assets/5056837c-78f8-44f0-af95-a9816d2847f0)
+
+## 4. FAQ 페이지
+![Image](https://github.com/user-attachments/assets/2b419ee5-2bd4-4804-b9ea-2fad034a65d7)
 </details>
 
 ---
