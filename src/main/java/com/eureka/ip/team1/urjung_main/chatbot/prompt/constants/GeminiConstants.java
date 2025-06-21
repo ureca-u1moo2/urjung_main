@@ -13,6 +13,7 @@ public final class GeminiConstants {
 
     public static final String SYSTEM_INSTRUCTION = "systemInstruction";
     public static final String CONTENTS = "contents";
+    public static final String GENERATION_CONFIG = "generationConfig";
 
     public static final String FIELD_REPLY = "reply";
     public static final String FIELD_PLAN_IDS = "planIds";

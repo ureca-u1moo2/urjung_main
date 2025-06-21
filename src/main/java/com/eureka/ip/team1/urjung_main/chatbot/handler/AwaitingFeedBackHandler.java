@@ -74,7 +74,7 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
         String finalPrompt = PromptTemplateProvider.buildFinalAnalysisByLinePrompt(user.getGender(), age, usageSummary, context.getPlanId(), message, plansJson);
 
         return chatStateService.setState(sessionId, ChatState.IDLE)
-                .thenMany(chatBotService.handleAnalysisAnswer(finalPrompt, null)
+                .thenMany(chatBotService.requestRecommendationByAnalysis(finalPrompt)
                         .flatMapMany(finalRaw -> Flux.just(
                                 ChatResponseDto.builder()
                                         .type(ChatResponseType.ANALYSIS_REPLY)
