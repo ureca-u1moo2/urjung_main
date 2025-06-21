@@ -72,7 +72,7 @@ public class AwaitingLineSelectionHandler implements ChatStateHandler {
         return ChatResponseDto.builder()
                 .type(ChatResponseType.INFO)
                 .message("해당 회선은 최근 3개월 사용내역이 부족하여 추천드리기 어렵습니다.\n다른 회선을 선택하시거나 성향 분석을 진행해주세요!")
-                .buttons(List.of(Button.recommendStart(), Button.cancel()))
+                .buttons(List.of(Button.personalAnalysisStart(), Button.cancel()))
                 .lineSelectButton(LineSelectButton.of(allPhoneNumbers))
                 .build();
     }
