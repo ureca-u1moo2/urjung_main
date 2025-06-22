@@ -16,7 +16,6 @@ public class Button {
     public static Button recommendStart() {
         return Button.builder()
                 .label("내게 맞는 요금제 찾기")
-                .value("http://localhost:8080/api/chat/recommend/start")
                 .type(ButtonType.EVENT)
                 .build();
     }
@@ -24,7 +23,6 @@ public class Button {
     public static Button personalAnalysisStart() {
         return Button.builder()
                 .label("성향 분석 하기")
-                .value("http://localhost:8080/api/chat/analysis/start")
                 .type(ButtonType.EVENT)
                 .build();
     }
@@ -33,7 +31,6 @@ public class Button {
     public static Button cancel() {
         return Button.builder()
                 .label("요금제 추천 모드 종료")
-                .value("http://localhost:8080/api/chat/state/default")
                 .type(ButtonType.EVENT)
                 .build();
     }

@@ -52,7 +52,15 @@ public class GeminiService implements ChatBotService {
     // 성향 분석 질문에 대한 응답 확인
     @Override
     public Mono<ChatbotRawResponseDto> handleAnalysisAnswer(String prompt, String message) {
-        Map<String, Object> requestBody = buildAnalysis(prompt, message);
+        Map<String, Object> requestBody = buildValidAnswerBody(prompt, message);
+        return sendChatRequest(requestBody)
+                .map(GeminiResponseUtils::extractTextFromResponse)
+                .map(GeminiResponseParser::toChatbotResponse);
+    }
+
+    @Override
+    public Mono<ChatbotRawResponseDto> requestRecommendationByAnalysis(String prompt) {
+        Map<String, Object> requestBody = buildRecommendByAnalysisBody(prompt);
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)
                 .map(GeminiResponseParser::toChatbotResponse);

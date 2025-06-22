@@ -30,7 +30,7 @@ public class GeminiResponseParser {
             }
 
             Boolean needMyPlan = null;
-            if( root.has("need_my_plan")){
+            if (root.has("need_my_plan")) {
                 needMyPlan = true;
             }
 
@@ -53,18 +53,25 @@ public class GeminiResponseParser {
 
     public static ClassifiedTopicResult toTopicResult(String raw) {
         log.info("topic raw : {}", raw);
-        String[] split = raw.split(":", 2);
-        String topicStr = split[0].trim();
-        String waitMessage = (split.length > 1) ? split[1].trim() : "";
 
         try {
-            Topic topic = Topic.valueOf(topicStr);
-            return new ClassifiedTopicResult(topic, waitMessage);
-        } catch (IllegalArgumentException e) {
-            log.error("토픽 변환 실패: {}", e.getMessage());
-            throw new ChatBotException();
+            // JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode node = objectMapper.readTree(raw);
+
+            String topicStr = node.get("topic").asText();
+            String message = node.get("message").asText();
+
+            Topic topic = Topic.valueOf(topicStr); // Enum 변환
+            return new ClassifiedTopicResult(topic, message);
+
+        } catch (Exception e) {
+            log.error("토픽 파싱 실패: {}", e.getMessage(), e);
+            // 실패 시 ETC로 fallback
+            return new ClassifiedTopicResult(Topic.ETC, "잠시만 기다려주세요");
         }
     }
+
 
     private static String extractPureJson(String raw) {
         int start = raw.indexOf("{");

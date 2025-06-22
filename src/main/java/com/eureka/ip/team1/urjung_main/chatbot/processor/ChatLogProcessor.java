@@ -11,7 +11,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.embedding.service.EmbeddingService;
 import com.eureka.ip.team1.urjung_main.log.dto.ChatLogDto;
 import com.eureka.ip.team1.urjung_main.log.service.ElasticsearchLogService;
-import com.eureka.ip.team1.urjung_main.plan.dto.PlanDetailDto;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +60,7 @@ public class ChatLogProcessor {
         });
     }
 
-    public Mono<Void> savePermanentMongoLog(String userId, ChatRequestDto requestDto, ChatResponseDto response) {
+    public Mono<Void> savePermanentLog(String userId, ChatRequestDto requestDto, ChatResponseDto response) {
         return Mono.fromRunnable(() -> {
             String userMessage = createUserLogMessage(requestDto);
             String modelMessage = createModelLogMessage(response);
