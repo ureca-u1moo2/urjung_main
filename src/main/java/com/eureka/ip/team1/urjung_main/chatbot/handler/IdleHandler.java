@@ -5,7 +5,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatRequestDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ChatResponseDto;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.ClassifiedTopicResult;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.PlanForLLMDto;
-import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatCommand;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.Topic;
@@ -13,7 +12,6 @@ import com.eureka.ip.team1.urjung_main.chatbot.prompt.generator.PromptStrategyFa
 import com.eureka.ip.team1.urjung_main.chatbot.prompt.strategy.PromptStrategy;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.JsonUtil;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanLLMConverter;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.PlanProvider;
@@ -32,13 +30,12 @@ import java.util.stream.Collectors;
 @Component
 @Primary
 @RequiredArgsConstructor
-public class DefaultHandler implements ChatStateHandler {
+public class IdleHandler implements ChatStateHandler {
 
     private final ChatBotService chatBotService;
     private final ChatLogService chatLogService;
     private final PlanProvider planProvider;
     private final PromptStrategyFactory promptStrategyFactory;
-    private final ForbiddenWordService forbiddenWordService;
 
     @Override
     public ChatState getState() {
@@ -47,17 +44,10 @@ public class DefaultHandler implements ChatStateHandler {
 
     @Override
     public Flux<ChatResponseDto> handle(String userId, ChatRequestDto requestDto) {
-        if (requestDto.getCommand().equals(ChatCommand.CHAT) && forbiddenWordService.containsForbiddenWord(requestDto.getMessage())) {
-            ChatResponseDto responseDto = ChatResponseDto.builder()
-                    .message("입력할 수 없는 단어가 포함되어 있습니다.")
-                    .type(ChatResponseType.MAIN_REPLY)
-                    .build();
-            return Flux.just(responseDto);
-        }
         String recentChatHistory =
                 JsonUtil.toJson(chatLogService.getRecentChatHistory(userId, requestDto.getSessionId()));
 
-        return chatBotService.classifyTopic(requestDto.getMessage(), recentChatHistory)
+        return chatBotService.classifyUserIntent(requestDto.getMessage(), recentChatHistory)
                 .flatMapMany(result -> {
                     Mono<ChatResponseDto> waitMessage = buildWaitMessage(result);
                     if (result.getTopic() == Topic.ALL_PLAN_LIST) {
@@ -75,7 +65,7 @@ public class DefaultHandler implements ChatStateHandler {
     }
 
     private Flux<ChatResponseDto> handleAllPlanTopic(ChatRequestDto requestDto) {
-        return chatBotService.handleUserMessage(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
+        return chatBotService.generateChatReply(generatePromptByTopic(Topic.ALL_PLAN_LIST), requestDto.getMessage(), null)
                 .flatMapMany(raw -> {
                     // 전체 요금제 목록 직접 생성
                     List<PlanDto> plans = planProvider.getTop5();
@@ -90,9 +80,9 @@ public class DefaultHandler implements ChatStateHandler {
 
     private Flux<ChatResponseDto> handleGeneralTopic(Topic topic, ChatRequestDto requestDto, String chatHistoryJson) {
         // 일반 토픽 처리
-        return chatBotService.handleUserMessage(generatePromptByTopic(topic), requestDto.getMessage(), chatHistoryJson)
+        return chatBotService.generateChatReply(generatePromptByTopic(topic), requestDto.getMessage(), chatHistoryJson)
                 .flatMapMany(raw -> Flux.just(
-                                ChatResponseDto.ofMainReply(raw.getReply().trim(), createCards(raw.getPlanIds()), Topic.ALL_PLAN_LIST)
+                                ChatResponseDto.ofMainReply(raw.getReply().trim(), createCards(raw.getPlanIds()), topic)
                         )
                 );
     }

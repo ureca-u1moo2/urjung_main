@@ -106,11 +106,11 @@ public class ChatLogServiceImpl implements ChatLogService {
         UserChatAnalysis analysis = getAnalysis(sessionId); // 기존 방식 사용
         if (analysis != null) {
             analysis.setCurrentStep(nextStep);
-            saveAnalysis(sessionId, analysis); // Redis나 DB에 다시 저장
+            saveAnalysis(analysis); // Redis나 DB에 다시 저장
         }
     }
 
-    public void saveAnalysis(String sessionId, UserChatAnalysis analysis) {
+    public void saveAnalysis(UserChatAnalysis analysis) {
         chatAnalysisRepository.save(analysis);
     }
 

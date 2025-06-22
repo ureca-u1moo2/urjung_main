@@ -41,9 +41,4 @@ public class ChatStateServiceImpl implements ChatStateService {
                     return Mono.just(state);
                 });
     }
-
-    @Override
-    public Mono<Boolean> isInState(String userId, ChatState state) {
-        return getState(userId).map(current -> current == state);
-    }
 }

@@ -1,13 +1,12 @@
 package com.eureka.ip.team1.urjung_main.chatbot.service;
 
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
-import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordServiceImpl;
+import com.eureka.ip.team1.urjung_main.forbiddenword.repository.ForbiddenWordRepository;
+import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;

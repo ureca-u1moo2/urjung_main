@@ -85,7 +85,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
 
         String validationPrompt = PromptTemplateProvider.buildPersonalValidationPrompt(questionText);
 
-        return chatBotService.handleAnalysisAnswer(validationPrompt, message)
+        return chatBotService.validateAnalysisAnswer(validationPrompt, message)
                 .doOnNext(result -> log.info("Validation result - sessionId: {}, result: {}, reply: {}",
                         sessionId, result.getResult(), result.getReply()))
                 .flatMapMany(validationResult -> processValidationResult(sessionId, userId, message, currentStep, totalSteps, validationResult));
@@ -166,7 +166,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
                                                         UserChatAnalysis analysisResult) {
         String finalPrompt = createFinalAnalysisPrompt(userDto, analysisResult);
         log.info(finalPrompt);
-        return chatBotService.requestRecommendationByAnalysis(finalPrompt)
+        return chatBotService.generateFinalRecommendation(finalPrompt)
                 .flatMapMany(finalRaw -> createFinalResponse(validationResult, finalRaw));
     }
 

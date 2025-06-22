@@ -43,6 +43,4 @@ public class PromptTemplateProvider {
                 plansJson
         );
     }
-
-    // 추후 RecommendationPrompts 등 확장 가능
 }

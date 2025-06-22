@@ -6,5 +6,4 @@ import reactor.core.publisher.Mono;
 public interface ChatStateService {
     Mono<ChatState> getState(String sessionId);
     Mono<ChatState> setState(String sessionId, ChatState state);
-    Mono<Boolean> isInState(String sessionId, ChatState state);
 }

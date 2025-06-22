@@ -29,9 +29,10 @@ public class GeminiService implements ChatBotService {
 
     // 토픽별 응답 처리
     @Override
-    public Mono<ChatbotRawResponseDto> handleUserMessage(String prompt, String message, String recentChatHistory) {
+    public Mono<ChatbotRawResponseDto> generateChatReply(String prompt, String message, String recentChatHistory) {
         log.info(prompt);
         Map<String, Object> requestBody = buildChatBody(prompt, message, recentChatHistory);
+        log.info("챗봇 요청 : {}",requestBody);
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)
                 .map(GeminiResponseParser::toChatbotResponse);
@@ -39,7 +40,7 @@ public class GeminiService implements ChatBotService {
 
     // 토픽 분류
     @Override
-    public Mono<ClassifiedTopicResult> classifyTopic(String message, String recentChatHistory) {
+    public Mono<ClassifiedTopicResult> classifyUserIntent(String message, String recentChatHistory) {
         Map<String, Object> requestBody = buildTopicClassifyBody(message, recentChatHistory);
 
 
@@ -51,7 +52,7 @@ public class GeminiService implements ChatBotService {
 
     // 성향 분석 질문에 대한 응답 확인
     @Override
-    public Mono<ChatbotRawResponseDto> handleAnalysisAnswer(String prompt, String message) {
+    public Mono<ChatbotRawResponseDto> validateAnalysisAnswer(String prompt, String message) {
         Map<String, Object> requestBody = buildValidAnswerBody(prompt, message);
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)
@@ -59,7 +60,7 @@ public class GeminiService implements ChatBotService {
     }
 
     @Override
-    public Mono<ChatbotRawResponseDto> requestRecommendationByAnalysis(String prompt) {
+    public Mono<ChatbotRawResponseDto> generateFinalRecommendation(String prompt) {
         Map<String, Object> requestBody = buildRecommendByAnalysisBody(prompt);
         return sendChatRequest(requestBody)
                 .map(GeminiResponseUtils::extractTextFromResponse)

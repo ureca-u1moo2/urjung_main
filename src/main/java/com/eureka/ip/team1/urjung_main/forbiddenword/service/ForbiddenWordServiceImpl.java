@@ -1,11 +1,10 @@
-package com.eureka.ip.team1.urjung_main.chatbot.service;
+package com.eureka.ip.team1.urjung_main.forbiddenword.service;
 
 import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
-import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
+import com.eureka.ip.team1.urjung_main.forbiddenword.repository.ForbiddenWordRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLOutput;
 import java.util.*;
 
 @Service

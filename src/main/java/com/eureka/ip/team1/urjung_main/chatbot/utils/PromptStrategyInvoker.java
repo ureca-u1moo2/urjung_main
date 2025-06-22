@@ -17,13 +17,4 @@ public class PromptStrategyInvoker {
         }
         throw new ClassCastException("NoArgsPromptStrategy 타입이 아님");
     }
-
-    public static <T, U> String invokeDoubleArgStrategy(PromptStrategy strategy, T data1, U data2) {
-        if (strategy instanceof DoubleArgsPromptStrategy<?, ?> doubleStrategy) {
-            @SuppressWarnings("unchecked")
-            DoubleArgsPromptStrategy<T, U> casted = (DoubleArgsPromptStrategy<T, U>) doubleStrategy;
-            return casted.generatePrompt(data1, data2);
-        }
-        throw new ClassCastException("DoubleArgsPromptStrategy 타입이 아님");
-    }
 }

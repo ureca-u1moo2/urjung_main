@@ -1,8 +1,8 @@
-package com.eureka.ip.team1.urjung_main.chatbot.controller;
+package com.eureka.ip.team1.urjung_main.forbiddenword.controller;
 
 import com.eureka.ip.team1.urjung_main.chatbot.dto.FilterRequest;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.FilterResponse;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

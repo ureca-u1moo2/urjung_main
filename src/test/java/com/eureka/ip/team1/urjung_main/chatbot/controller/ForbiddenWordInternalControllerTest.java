@@ -1,7 +1,7 @@
 package com.eureka.ip.team1.urjung_main.chatbot.controller;
 
-import com.eureka.ip.team1.urjung_main.chatbot.controller.ForbiddenWordController;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.forbiddenword.controller.ForbiddenWordInternalController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.doNothing;
