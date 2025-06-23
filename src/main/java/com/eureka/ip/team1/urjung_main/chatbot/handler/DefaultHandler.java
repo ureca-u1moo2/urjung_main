@@ -92,7 +92,7 @@ public class DefaultHandler implements ChatStateHandler {
         // 일반 토픽 처리
         return chatBotService.handleUserMessage(generatePromptByTopic(topic), requestDto.getMessage(), chatHistoryJson)
                 .flatMapMany(raw -> Flux.just(
-                                ChatResponseDto.ofMainReply(raw.getReply().trim(), createCards(raw.getPlanIds()), Topic.ALL_PLAN_LIST)
+                                ChatResponseDto.ofMainReply(raw.getReply().trim(), createCards(raw.getPlanIds()), topic)
                         )
                 );
     }
