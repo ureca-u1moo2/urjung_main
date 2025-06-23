@@ -11,6 +11,7 @@ import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatBotService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatLogService;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
+import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.chatbot.utils.*;
 import com.eureka.ip.team1.urjung_main.plan.dto.PlanDto;
 import com.eureka.ip.team1.urjung_main.user.dto.UserDto;
@@ -37,6 +38,7 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     private final PersonalAnalysisQuestionProvider questionProvider;
     private final PlanProvider planProvider;
     private final UserService userService;
+    private  final ForbiddenWordService forbiddenWordService;
 
     @Override
     public ChatState getState() {
@@ -47,6 +49,13 @@ public class PersonalAnalysisHandler implements ChatStateHandler {
     public Flux<ChatResponseDto> handle(String userId, ChatRequestDto requestDto) {
         String sessionId = requestDto.getSessionId();
         String message = requestDto.getMessage();
+
+        if (forbiddenWordService.containsForbiddenWord(message)) {
+            return Flux.just(ChatResponseDto.ofInfoReply(
+                    "금칙어가 포함된 메시지는 전송될 수 없습니다.",
+                    List.of(Button.cancel())
+            ));
+        }
 
         UserChatAnalysis analysis = getOrCreateAnalysis(sessionId, userId);
 
