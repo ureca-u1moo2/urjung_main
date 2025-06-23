@@ -37,4 +37,5 @@ public class ForbiddenWord {
 
     @Column(name = "class", nullable = false) // refactor
     private String wordClass;
+
 }
