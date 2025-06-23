@@ -46,7 +46,7 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
 
         String validatePrompt = PromptTemplateProvider.buildAdditionalFeedbackValidationPrompt(message);
 
-        return chatBotService.handleAnalysisAnswer(validatePrompt, message)
+        return chatBotService.validateAnalysisAnswer(validatePrompt, message)
                 .flatMapMany(result -> {
                     if (!Boolean.TRUE.equals(result.getResult())) {
                         return Flux.just(ChatResponseDto.builder()
@@ -74,7 +74,7 @@ public class AwaitingFeedBackHandler implements ChatStateHandler {
         String finalPrompt = PromptTemplateProvider.buildFinalAnalysisByLinePrompt(user.getGender(), age, usageSummary, context.getPlanId(), message, plansJson);
 
         return chatStateService.setState(sessionId, ChatState.IDLE)
-                .thenMany(chatBotService.requestRecommendationByAnalysis(finalPrompt)
+                .thenMany(chatBotService.generateFinalRecommendation(finalPrompt)
                         .flatMapMany(finalRaw -> Flux.just(
                                 ChatResponseDto.builder()
                                         .type(ChatResponseType.ANALYSIS_REPLY)

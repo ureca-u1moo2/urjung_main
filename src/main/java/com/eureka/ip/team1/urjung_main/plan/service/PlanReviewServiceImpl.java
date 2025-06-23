@@ -1,6 +1,6 @@
 package com.eureka.ip.team1.urjung_main.plan.service;
 
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordService;
 import com.eureka.ip.team1.urjung_main.common.exception.ForbiddenException;
 import com.eureka.ip.team1.urjung_main.common.exception.InvalidInputException;
 import com.eureka.ip.team1.urjung_main.common.exception.NotFoundException;

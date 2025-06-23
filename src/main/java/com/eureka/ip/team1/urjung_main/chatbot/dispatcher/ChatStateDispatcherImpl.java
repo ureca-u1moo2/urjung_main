@@ -8,7 +8,9 @@ import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatState;
 import com.eureka.ip.team1.urjung_main.chatbot.handler.ChatStateHandler;
 import com.eureka.ip.team1.urjung_main.chatbot.processor.ChatLogProcessor;
+import com.eureka.ip.team1.urjung_main.chatbot.processor.ForbiddenWordProcessor;
 import com.eureka.ip.team1.urjung_main.chatbot.service.ChatStateService;
+import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class ChatStateDispatcherImpl implements ChatStateDispatcher {
 
     private final ChatStateService chatStateService;
+    private final ForbiddenWordProcessor forbiddenWordProcessor;
     private final List<ChatStateHandler> handlers;
     private final ChatStateHandler defaultHandler;
     private final ChatLogProcessor chatLogProcessor;
@@ -62,6 +65,11 @@ public class ChatStateDispatcherImpl implements ChatStateDispatcher {
     }
 
     private Flux<ChatResponseDto> dispatchByCurrentState(String userId, ChatRequestDto requestDto) {
+        // 금칙어 필터링
+        Flux<ChatResponseDto> filtered = forbiddenWordProcessor.filter(requestDto);
+        if (!filtered.equals(Flux.empty())) {
+            return filtered;
+        }
         long start = System.currentTimeMillis();
 
         return chatStateService.getState(requestDto.getSessionId())

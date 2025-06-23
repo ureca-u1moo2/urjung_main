@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicBasedPrompts.ALL_PLAN;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicPrompts.ALL_PLAN;
 
 @Component
 public class AllPlanPromptStrategy implements NoArgsPromptStrategy {

@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.GeminiConstants.*;
-import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.SystemPrompts.SYSTEM_PROMPT;
 import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicClassificationPrompts.getTopicClassifyPrompt;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicPrompts.TOPIC_BASED_PROMPT;
 
 public class GeminiRequestFactory {
     private static final Map<String, Object> thinkingConfig = Map.of(
@@ -71,7 +71,7 @@ public class GeminiRequestFactory {
 
     public static Map<String, Object> buildChatBody(String topicPrompt, String message, String recentChatHistory) {
         return Map.of(
-                SYSTEM_INSTRUCTION, createSystem(SYSTEM_PROMPT + "\n" + topicPrompt),
+                SYSTEM_INSTRUCTION, createSystem(TOPIC_BASED_PROMPT + "\n" + topicPrompt),
                 CONTENTS, List.of(createUserContent("이것은 최근 대화 기록 입니다 : " + recentChatHistory)
                         , createUserContent("\n이것은 현재 사용자의 메세지입니다" + message)),
                 GENERATION_CONFIG, generationReplyWithPlanIdsConfig

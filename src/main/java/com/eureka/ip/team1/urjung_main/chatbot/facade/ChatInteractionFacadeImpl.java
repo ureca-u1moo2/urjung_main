@@ -6,7 +6,7 @@
 //import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatCommand;
 //import com.eureka.ip.team1.urjung_main.chatbot.enums.ChatResponseType;
 //import com.eureka.ip.team1.urjung_main.chatbot.processor.ChatLogProcessor;
-//import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+//import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordService;
 //import lombok.RequiredArgsConstructor;
 //import lombok.extern.slf4j.Slf4j;
 //import org.springframework.stereotype.Service;

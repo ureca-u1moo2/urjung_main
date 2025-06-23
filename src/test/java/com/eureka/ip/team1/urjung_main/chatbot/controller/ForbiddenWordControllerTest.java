@@ -1,8 +1,8 @@
 package com.eureka.ip.team1.urjung_main.chatbot.controller;
 
-import com.eureka.ip.team1.urjung_main.chatbot.controller.ForbiddenWordController;
+import com.eureka.ip.team1.urjung_main.forbiddenword.controller.ForbiddenWordController;
 import com.eureka.ip.team1.urjung_main.chatbot.dto.FilterRequest;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.forbiddenword.service.ForbiddenWordService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

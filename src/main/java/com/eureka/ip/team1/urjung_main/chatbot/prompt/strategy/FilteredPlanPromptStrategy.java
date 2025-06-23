@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicBasedPrompts.PLAN_LIST;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicPrompts.PLAN_LIST;
 
 @Component
 public class FilteredPlanPromptStrategy implements SingleArgsPromptStrategy {

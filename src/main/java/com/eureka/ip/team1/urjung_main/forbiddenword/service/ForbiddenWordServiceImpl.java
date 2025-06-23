@@ -1,10 +1,9 @@
-package com.eureka.ip.team1.urjung_main.chatbot.service;
+package com.eureka.ip.team1.urjung_main.forbiddenword.service;
 
-import com.eureka.ip.team1.urjung_main.chatbot.repository.ForbiddenWordRepository;
-import com.eureka.ip.team1.urjung_main.chatbot.service.ForbiddenWordService;
+import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
+import com.eureka.ip.team1.urjung_main.forbiddenword.repository.ForbiddenWordRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
-import com.eureka.ip.team1.urjung_main.chatbot.entity.ForbiddenWord;
 
 import java.util.*;
 
@@ -20,8 +19,8 @@ public class ForbiddenWordServiceImpl implements ForbiddenWordService {
     // 노드 정의
     private static class TrieNode {
         Map<Character, TrieNode> children = new HashMap<>();
-        TrieNode fail = null;
-        boolean isEnd = false;
+        TrieNode fail = null;       // 실패 링크
+        boolean isEnd = false;      // 금칙어 끝 표시
     }
 
     private final TrieNode root = new TrieNode();

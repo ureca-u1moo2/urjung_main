@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicBasedPrompts.ETC_BASE_PROMPT;
+import static com.eureka.ip.team1.urjung_main.chatbot.prompt.constants.TopicPrompts.ETC_BASE_PROMPT;
 
 @Component
 public class EtcPromptStrategy implements NoArgsPromptStrategy {

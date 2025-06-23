@@ -24,31 +24,4 @@ public class JsonUtil {
             throw new RuntimeException("JSON 직렬화 실패", e);
         }
     }
-
-    // JSON 문자열 → 단일 객체
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        try {
-            return objectMapper.readValue(json, clazz);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 역직렬화 실패", e);
-        }
-    }
-
-    // JSON 문자열 → 리스트
-    public static <T> List<T> fromJsonToList(String json, Class<T> clazz) {
-        try {
-            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 리스트 역직렬화 실패", e);
-        }
-    }
-
-    // JSON 문자열 → 제네릭 객체 (복잡한 타입)
-    public static <T> T fromJson(String json, TypeReference<T> typeRef) {
-        try {
-            return objectMapper.readValue(json, typeRef);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 복합 타입 역직렬화 실패", e);
-        }
-    }
 }
